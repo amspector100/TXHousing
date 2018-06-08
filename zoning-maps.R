@@ -1,6 +1,7 @@
 #setwd("C:/Users/aspector/Documents/R Projects/TX Housing/data/Zoning Shapefiles")
 
 # This will prevent the zoning-maps-inputs script from doing extra work
+# Make sure the working directory is set for this
 options(run.main = FALSE)
 source('zoning-maps-inputs.R')
 options(run.main = TRUE)
