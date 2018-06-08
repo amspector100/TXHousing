@@ -1,6 +1,9 @@
 # Don't copy the data over
 data/
 
+# Copy this one script though
+!data/Zoning Shapefiles/zoning-maps-inputs.R
+
 
 # _____ Defaults _______
 # History files
