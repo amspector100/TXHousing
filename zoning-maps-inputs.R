@@ -65,7 +65,7 @@ dallas_inputs <- list(
   name = 'Dallas',
   path = 'dallas_zoning/BaseZoning.shp',
   sf = c('A(A)', 'D(A)', 'TH', 'R'),
-  mf = c('CH', 'MF'),
+  mf = c('CH', 'MF', 'MU'),
   or = c('MH(A)'),
   separator = '-',
   feature = 'LONG_ZONE_',

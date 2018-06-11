@@ -178,10 +178,10 @@ gg <- ggplot(final_data) +
        title = 'Income Distribution of Dallas and its Planned Development Zones',
        caption = 'Data from 2016 ACS Estimates and the City of Dallas GIS Services')
 
-setwd('C:/Users/aspector/Documents/R Projects/TX Housing')
-png('Figures/pd-dev-dallas-hist.png', w=800, h=500)
-print(gg)
-dev.off()
+#setwd('C:/Users/aspector/Documents/R Projects/TX Housing')
+#png('Figures/pd-dev-dallas-hist.png', w=800, h=500)
+#print(gg)
+#dev.off()
 
 #svg('Figures/pd-dev-dallas-hist-nonscaled.svg', w=8, h=5)
 #print(gg)
