@@ -12,6 +12,7 @@ library(tidyr)
 library(ggplot2)
 library(broom)
 library(rgdal)
+library(sf)
 library(maptools)
 library(tibble)
 library(sf)
@@ -101,7 +102,3 @@ print(formatted_data[1:100, ])
 
 
 
-
-
-
-  
