@@ -44,7 +44,7 @@ mapImage <- get_map(location = c(lon = -96.8, lat = 32.8),
                     color = "color",
                     source = "google",
                     #maptype = "terrain",
-                    zoom = 10.8)
+                    zoom = 11)
 
 graph <- ggmap(mapImage) +
   geom_sf(data = all_data, aes(fill = median_income), color = NA, inherit.aes = FALSE,
@@ -53,7 +53,7 @@ graph <- ggmap(mapImage) +
   geom_sf(data = zoning_data, aes(), fill = NA,
           color = 'black', inherit.aes = FALSE) +
   labs(x = 'Longitude', y = 'Latitude', title = 'Planned Developement Zones and Median Income 
-       in Dallas Texas', caption = expression(paste('Planned Development zones overlaid in light yellow. 
+       in Dallas Texas', caption = expression(paste('Planned Development zones outlined in black. 
 Data for median income from 5 year ACS estimates in 2016, Dallas City Open Data.')))
 
 #setwd('C:/Users/aspector/Documents/R Projects/TX Housing')
@@ -90,12 +90,13 @@ tract_shapes <- st_read(tract_shapes_path)
 # Change coordinate system to lat-long
 tract_shapes <- st_transform(tract_shapes, '+init=EPSG:4326')
 
-all_data <- inner_join(tract_data, tract_shapes, by = c('GEO.id' = 'AFFGEOID'))
+census_data <- inner_join(tract_data, tract_shapes, by = c('GEO.id' = 'AFFGEOID')) #I have checked this does not yield duplicates
+census_data <- st_sf(census_data) 
 
 # Now we'll divide by the land area (in square meters) to get the density per
 # square meter by income group in each tract. 
 
-all_data <- all_data %>% gather('variable', 'value', new_cols) %>% 
+all_data <- census_data %>% gather('variable', 'value', new_cols) %>% 
   mutate(value = as.numeric(value)/ALAND) %>%
   spread(variable, value)
 
@@ -149,8 +150,9 @@ final_PD_data <- as.data.frame(merged_data) %>%
 final_PD_data <- 100*final_PD_data/sum(final_PD_data)
 
 # Do the same for city-wide income data
-final_city_data <- as.data.frame(all_data) %>% 
+final_city_data <- as.data.frame(census_data) %>% 
   select(new_cols) %>%
+  mutate_all(as.numeric) %>%
   summarise_all(sum)
 
 final_city_data <- 100*final_city_data/sum(final_city_data)
@@ -181,8 +183,6 @@ gg <- ggplot(final_data) +
 #print(gg)
 #dev.off()
 
-#svg('Figures/pd-dev-dallas-hist.svg', w=8, h=5)
+#svg('Figures/pd-dev-dallas-hist-nonscaled.svg', w=8, h=5)
 #print(gg)
 #dev.off()
-
-
