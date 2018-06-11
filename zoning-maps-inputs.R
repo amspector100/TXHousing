@@ -7,6 +7,8 @@
 # as some type of residential area in most cases. 
 # (c) If multifamily housing is permitted but with some restrictions, 
 # the area is classified as multifamily housing. 
+# However, it is worth noting that that is not necessarily the case for the larger datasets which have their own methodologies
+# (i.e. the Dallas + surrounding counties dataset). 
 
 library(rgdal)
 library(maptools)
@@ -45,10 +47,17 @@ austin_inputs <- list(
 
 # DALLAS -----------------------------------------------------------------
 
+
+# Downloaded from http://data-nctcoggis.opendata.arcgis.com/datasets/2015-land-use
 north_texas_inputs <- list(
   name = 'North Texas', 
-  path = '2015_North_Texas_Land_Use/2015_Land_Use.shp'
-  
+  path = '2015_North_Texas_Land_Use/2015_Land_Use.shp',
+  feature = 'CATEGORY',
+  sf = c('Single family'),
+  mf= c('Multi-family'),
+  or = c('Mixed use', 'Residential acreage'),
+  separator = 'no_separator', 
+  proj4string = lat_long
 )
 
 
@@ -77,7 +86,7 @@ denton_inputs <- list(
 
 if (getOption('run.main', default=TRUE)) {
   
-  print('hello')
+  print('')
   
 
 }

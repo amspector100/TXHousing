@@ -1,4 +1,5 @@
 #setwd("C:/Users/aspector/Documents/R Projects/TX Housing/data/Zoning Shapefiles")
+#setwd("C:/Users/amspe/Documents/R/MI2018/TXHousing/data/Zoning Shapefiles")
 
 # This will prevent the zoning-maps-inputs script from doing extra work
 # Make sure the working directory is set for this
@@ -12,6 +13,9 @@ library(ggplot2)
 library(broom)
 library(rgdal)
 library(maptools)
+library(tibble)
+library(sf)
+
 
 coarse_format_data <- function(raw_data, sf, mf, or, feature, 
                                separator = '-', path = NA, read_shapefile = FALSE){
@@ -28,6 +32,8 @@ coarse_format_data <- function(raw_data, sf, mf, or, feature,
   
   # Else, just manipulate the data
   zoning_data <- raw_data@data %>%
+    # select first to save memory
+    select_(feature) %>%
     tidyr::separate_(feature, into = c('zone_code'), sep=separator) %>% 
     select('zone_code') %>% 
     mutate(zone_code = case_when(
@@ -44,16 +50,28 @@ coarse_format_data <- function(raw_data, sf, mf, or, feature,
 #raw_dallas_data@proj4string <- dallas_inputs$proj4string
 #transformed_dallas_data <- spTransform(raw_dallas_data, lat_long)
 
+# ------------------------------- DALLAS ------------------------------------------------
+# Note that this these commands will take a very long time to perform on almost all computers,
+# even ones with substantial amounts of ram. On my PC with 8 gigs of memory the first command alone
+# took around half an hour. It probably will be easier to read in the .RData file I saved. 
 
-test_inputs <- north_texas_inputs
+# Step 1: Load and format data
 
-print('Test one, manipulating data')
+#raw_data <- readShapePoly(north_texas_inputs$path, delete_null_obj = TRUE)
+data <- st_read(north_texas_inputs$path)
+#save(raw_data, file = 'North_Texas_Data.RData')
+raw_data@proj4string <- north_texas_inputs$proj4string
+formatted_data <- coarse_format_data(raw_data, 
+                                     north_texas_inputs$sf,
+                                     north_texas_inputs$mf,
+                                     north_texas_inputs$or,
+                                     north_texas_inputs$feature,
+                                     north_texas_inputs$separator) %>%
+  tibble::rownames_to_column('id')
 
-raw_data <- readShapePoly(test_inputs$path, delete_null_obj = TRUE)
-raw_data@proj4string <- test_inputs$proj4string
-transformed_data <- spTransform(raw_data, lat_long)
+polygons_data <- broom::tidy(raw_data) # This step will take a while unfortunately
 
-print('Test two, graphing data')
+# Step 2: Graph
 
 library(ggmap)
 mapImage <- get_map(location = c(lon = -96.8, lat = 32.7),
@@ -61,11 +79,6 @@ mapImage <- get_map(location = c(lon = -96.8, lat = 32.7),
                     source = "google",
                     #maptype = "terrain",
                     zoom = 9)
-
-cleaned_data <- broom::tidy(transformed_data)
-
-library(RColorBrewer)
-colors <- brewer.pal(9, "BuGn")
 
 ggmap(mapImage) +
   geom_polygon(aes(x = long, y = lat, group = group),
