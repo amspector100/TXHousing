@@ -17,21 +17,16 @@ library(tibble)
 library(sf)
 
 
-coarse_format_data <- function(raw_data, sf, mf, or, feature, 
-                               separator = '-', path = NA, read_shapefile = FALSE){
+coarse_format_data <- function(data, sf, mf, or, feature, 
+                               separator = '-'){
   
   # -----------------------------------------------------------
-  # Formats shapefile data. Assumes that the SpatialPolygons object will have an 
-  # @data slot. The 'feature' should be the zoning data column name. 
+  # Formats shapefile data. Assumes that the raw_data is of the sf class.
+  # The 'feature' should be the zoning data column name. 
   # -----------------------------------------------------------
-  
-  # If specified, read in the shapefile
-  if (read_shapefile){
-    raw_data <- readShapePoly(path) # This operation is expensive
-  }
-  
-  # Else, just manipulate the data
-  zoning_data <- raw_data@data %>%
+
+  # Not converting to a data frame will preserve the geometry
+  data <- data %>%
     # select first to save memory
     select_(feature) %>%
     tidyr::separate_(feature, into = c('zone_code'), sep=separator) %>% 
@@ -43,7 +38,7 @@ coarse_format_data <- function(raw_data, sf, mf, or, feature,
       TRUE ~ 'NR'
     ))
     
-  return(zoning_data)
+  return(data)
 }
 
 #raw_dallas_data <- readShapePoly(dallas_inputs$path)
@@ -51,25 +46,16 @@ coarse_format_data <- function(raw_data, sf, mf, or, feature,
 #transformed_dallas_data <- spTransform(raw_dallas_data, lat_long)
 
 # ------------------------------- DALLAS ------------------------------------------------
-# Note that this these commands will take a very long time to perform on almost all computers,
-# even ones with substantial amounts of ram. On my PC with 8 gigs of memory the first command alone
-# took around half an hour. It probably will be easier to read in the .RData file I saved. 
 
 # Step 1: Load and format data
 
-#raw_data <- readShapePoly(north_texas_inputs$path, delete_null_obj = TRUE)
 data <- st_read(north_texas_inputs$path)
-#save(raw_data, file = 'North_Texas_Data.RData')
-raw_data@proj4string <- north_texas_inputs$proj4string
-formatted_data <- coarse_format_data(raw_data, 
+formatted_data <- coarse_format_data(data, 
                                      north_texas_inputs$sf,
                                      north_texas_inputs$mf,
                                      north_texas_inputs$or,
                                      north_texas_inputs$feature,
-                                     north_texas_inputs$separator) %>%
-  tibble::rownames_to_column('id')
-
-polygons_data <- broom::tidy(raw_data) # This step will take a while unfortunately
+                                     north_texas_inputs$separator)
 
 # Step 2: Graph
 
@@ -80,28 +66,10 @@ mapImage <- get_map(location = c(lon = -96.8, lat = 32.7),
                     #maptype = "terrain",
                     zoom = 9)
 
-ggmap(mapImage) +
-  geom_polygon(aes(x = long, y = lat, group = group),
-               data = cleaned_data,
-               color = colors[6], 
-               fill = colors[5], 
-               alpha = 1) +
+# This call will take a while just because it's a ton of data/shapes (450K shapes)
+ggmap(mapImage) + 
+  geom_sf(data = formatted_data, aes(fill = zone_code), 
+          alpha = 0.8, inherit.aes = FALSE) +
   labs(x = 'longitude', y = 'latitude')
 
-print('Test three, cleaning data')
-
-formatted_data <- coarse_format_data(transformed_data,
-                   test_inputs$sf,
-                   test_inputs$mf,
-                   test_inputs$or,
-                   test_inputs$feature, 
-                   separator = test_inputs$separator)
-
-print(formatted_data[1:100, ])
-
-
-
-
-
-
-  
+# ----------------------------- AUSTIN --------------------------------------------------
