@@ -56,7 +56,7 @@ dallas_raw_data <- st_read(north_texas_inputs$path) # ~0.6 GB, 45 sec
 # Moreover, this function doesn't work super well on lat/long coordinates, so before using it,
 # we'll transform to another coordinate system (North Central Texas system), and then transform back
 dallas_raw_data <- st_transform(dallas_raw_data, '+init=EPSG:2276') # Takes about 20 seconds
-dallas_simplified_data <- st_simplify(dallas_raw_data, preserveTopology = FALSE, dTolerance = 3000) # Takes about 1-2 min, depending on dTolerance value
+dallas_simplified_data <- st_simplify(dallas_raw_data, preserveTopology = TRUE, dTolerance = 3000) # Takes about 1-2 min, depending on dTolerance value
 
 dallas_formatted_data <- coarse_format_data(dallas_simplified_data, 
                                             north_texas_inputs$sf,
@@ -78,9 +78,12 @@ mapImage <- get_map(location = c(lon = -96.8, lat = 32.7),
                     zoom = 9)
 
 # This call will take a while just because it's a ton of data/shapes (450K shapes)
+time0 <- proc.time()
 ggmap(mapImage) + 
-  geom_sf(data = dallas_formatted_data, aes(fill = zone_code), 
+  geom_sf(data = dallas_formatted_data[1:10000, ], aes(fill = zone_code), 
           alpha = 0.8, inherit.aes = FALSE) +
   labs(x = 'longitude', y = 'latitude')
+proc.time() - time0
+
 
 # ----------------------------- AUSTIN --------------------------------------------------
