@@ -95,7 +95,16 @@ library(ggmap)
 mapImage <- get_map(location = c(lon = -96.8, lat = 32.8),
                     color = "bw",
                     source = "google",
-                    #maptype = "terrain", 
-                    zoom = 8)
+                    #maptype = "terrain",
+                    zoom = 9)
+
+# This call will take a while just because it's a ton of data/shapes (450K shapes)
+time0 <- proc.time()
+ggmap(mapImage) + 
+  geom_sf(data = dallas_formatted_data[1:10000, ], aes(fill = zone_code), 
+          alpha = 0.8, inherit.aes = FALSE) +
+  labs(x = 'longitude', y = 'latitude')
+proc.time() - time0
+
 
 # ----------------------------- AUSTIN --------------------------------------------------
