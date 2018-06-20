@@ -3,13 +3,29 @@ import matplotlib.pyplot as plt
 import shapely
 import json
 import pandas as pd
-import geopandas as gdp
+import geopandas as gpd
 import shapefile as shp
 import os
 import time
+import sys
 import folium
 from shapely.geometry.multilinestring import *
 import copy
+
+# Helper color function - adapted from https://stackoverflow.com/questions/35516318/plot-colored-polygons-with-geodataframe-in-folium
+def convert_to_hex(rgba_color):
+    red = str(hex(int(rgba_color[0]*255)))[2:].capitalize()
+    green = str(hex(int(rgba_color[1]*255)))[2:].capitalize()
+    blue = str(hex(int(rgba_color[2]*255)))[2:].capitalize()
+
+    if blue=='0':
+        blue = '00'
+    if red=='0':
+        red = '00'
+    if green=='0':
+        green='00'
+
+    return '#'+ red + green + blue
 
 # Just format shp_inputs quickly
 class zoning_inputs():
@@ -71,12 +87,15 @@ austin_inputs = zoning_inputs(path = "austin_zoning/geo_export_571668ee-52f1-4ac
                               feature = 'zoning_zty',
                               separator = '-',
                               proj4string = 'EPSG:4326',
-                              base_zones = {1:['SF'], 2:['MF'],
-                                            3:['MH', 'RR', 'LA'], 4:[]},
+                              base_zones = {'Single Family':['SF'], 'Multifamily':['MF'],
+                                            'Other Residential':['MH', 'RR', 'LA'], 'Other':[]},
                               long = 30.267,
                               lat = -97.743,
                               zoom = 9,
                               title = 'Base Zones in Austin, Texas')
+
+austin_parcel_path = "Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
+austin_parcel_feature = 'basezone'
 
 os.chdir("C:/Users/amspe/Documents/R/MI2018/TXHousing/data/Zoning Shapefiles")
 
@@ -100,7 +119,7 @@ def simple_process_shapefile(input, plot = True,
 
     # Read data and process zone codes
     print('Reading file')
-    raw_data = gdp.read_file(input.path)
+    raw_data = gpd.read_file(input.path)
     print('Finished reading file, took {}'.format(time.time() - time0))
 
     def get_zone(text):
@@ -133,14 +152,14 @@ def simple_process_shapefile(input, plot = True,
         print('Beginning to graph zoning data')
         for zone in [key for key in input.base_zones]:
             filtered_data = raw_data.loc[raw_data['zone_code'] == zone]
-            gdp.plotting.plot_polygon_collection(ax, filtered_data['geometry'].copy(), color = color_dic[zone], alpha = 0.7, label = zone)
+            gpd.plotting.plot_polygon_collection(ax, filtered_data['geometry'].copy(), color = color_dic[zone], alpha = 0.7, label = zone)
             legend_handlers.append(plt.scatter([], [], color=color_dic[zone]))
         print('Finished graphing zoning data, took {}'.format(time.time() - time0))
 
         if plot_boundaries:
             print('Reading and plotting boundary data')
-            boundary_data = gdp.read_file(boundary_inputs.path)
-            gdp.plotting.plot_linestring_collection(ax, boundary_data['geometry'].boundary, color = 'black', linewidths = (0.5,))
+            boundary_data = gpd.read_file(boundary_inputs.path)
+            gpd.plotting.plot_linestring_collection(ax, boundary_data['geometry'].boundary, color = 'black', linewidths = (0.5,))
             for point, countyname in zip(boundary_data['geometry'].centroid, boundary_data['COUNTY']):
                 ax.text(point.coords[:][0][0], point.coords[:][0][1], countyname, size = 6, ha = 'center')
 
@@ -150,11 +169,11 @@ def simple_process_shapefile(input, plot = True,
         # Highways
         if plot_highways:
             print('Reading and plotting highway data')
-            highway_data = gdp.read_file(highway_inputs.path)
+            highway_data = gpd.read_file(highway_inputs.path)
 
             primary_highways = highway_data.loc[highway_data['CLASS'] == 'Primary Highway']
             print(primary_highways)
-            gdp.plotting.plot_linestring_collection(ax, primary_highways['geometry'], alpha = 1,
+            gpd.plotting.plot_linestring_collection(ax, primary_highways['geometry'], alpha = 1,
                                                     color = 'black', linewidths = (0.3, ))
 
             # Plot highwaynames
@@ -173,7 +192,7 @@ def simple_process_shapefile(input, plot = True,
                     continue
 
             secondary_highways = highway_data.loc[highway_data['CLASS'] == 'Secondary Highway']
-            gdp.plotting.plot_linestring_collection(ax, secondary_highways['geometry'], alpha = 1,
+            gpd.plotting.plot_linestring_collection(ax, secondary_highways['geometry'], alpha = 1,
                                                     color = 'black', linewidths = (0.2, ))
             print('Finished handling highway data, time is {}'.format(time.time() - time0))
 
@@ -194,36 +213,257 @@ def simple_process_shapefile(input, plot = True,
 # More complicated graphing with osm basefile using folium
 def layered_graphing(input, **kwargs):
 
+    # Get basemap
+    print('Retreiving basemap')
+    basemap = folium.Map([input.long, input.lat], zoom_start=input.zoom)
+
+    # Get the data
     try:
         processed_data = kwargs['processed_data']
     except:
         processed_data = simple_process_shapefile(input, plot = False)
 
+    # Perhaps filter it
+    try:
+        filter = kwargs['filter']
+        print('Filtering data to only include the {} base zone'.format(filter))
+        processed_data = processed_data.loc[processed_data['zone_code'] == filter, ]
+        plot_polygons = True
+
+    except KeyError:
+        print('Not filtering the data - creating colors for each zone')
+        plot_polygons = False
+
+        # Get colors
+        try:
+            colors = kwargs['colors']
+        except:
+            colors = plt.cm.tab10(np.linspace(0, 1, len(input.base_zones)))
+            colors = [convert_to_hex(color) for color in colors]
+
+        colordic = {base_zone:color for base_zone, color in zip([key for key in input.base_zones], colors)}
+        print('Legend functionality is not available, so instead we print the colordic')
+        print('Here it is: {}'.format(colordic))
+
+        processed_data['color'] = processed_data['zone_code'].map(colordic)
+
     processed_data = processed_data.to_crs({'init': 'epsg:4326'})
 
-    # Get basemap
-    print('Retreiving basemap')
-    basemap = folium.Map([input.long, input.lat], zoom_start=input.zoom)
+
 
     # Plot choropleth
     time0 = time.time()
-    print('Plotting choropleth')
-    basemap.choropleth(geo_data = processed_data,
-                       data = processed_data,
-                       columns = ['shape_area', 'zone_code'],
-                       key_on = 'feature.properties.shape_area',
-                       fill_color = 'PuBuGn',
-                       legend_name = 'Base Zone',
-                       fill_opacity = 0.6,
-                       line_opacity = 0)
+    if plot_polygons:
+        print('Plotting polygons')
+        folium.GeoJson(
+            processed_data,
+            style_function=lambda feature: {
+                'fillColor': 'Blue',
+                'color': 'Blue',
+                'weight': 1,
+                'fillOpacity': 0.5,
+            }
+        ).add_to(basemap)
 
-    print('Finished with choropleth call, took {}'.format(time.time() - time0))
+    else:
+        print('Plotting choropleth')
+        folium.GeoJson(
+            processed_data,
+            style_function=lambda feature: {
+                'fillColor': feature['properties']['color'],
+                'color': feature['properties']['color'],
+                'weight': 1,
+                'fillOpacity': 0.5,
+            }
+        ).add_to(basemap)
+
+
+    print('Finished with plotting, took {}'.format(time.time() - time0))
     return basemap
 
+# Naive attempt
+def plot_historic_districts(input, signature = '-H', savename = False, plot_national_districts = True, use_nris_data = True,
+                            plot_landmarks = True, landmarks_path = False, marker_cluster = True):
+    """
+    :param input: A "Zoning_Input" object.
+    :param signature: A string used to detect whether a zoning area is a historic district.
+    :return: None, but it will save a graph
+    """
+    
+    from folium import FeatureGroup, LayerControl
+
+    # Begin timing
+    time0 = time.time()
+
+    print('Retreiving basemap')
+    basemap = folium.Map([input.long, input.lat], zoom_start=input.zoom)
+
+    # National districts ----------------------------------------------------------
+
+    if plot_national_districts:
+
+        nat_dists_fg = FeatureGroup(name = 'National Registry Historic Districts')
+
+        if use_nris_data:
+
+            print("""You are using NRIS data, which is a bad idea, because this data has been simplified too much,
+            and it makes the polygons wacky. Don't say I didn't warn you""")
+
+            # These are not inputs, they're constant
+            nat_hd_path = 'NRIS_CR_Standards_Public.gdb'
+            nris_cdist = 'NRIS_crdist_py.shp'
+
+            data = gpd.read_file(nat_hd_path, layer='NRIS_MAIN')
+            data = data.loc[data['CITY'].isin(['Austin', 'Houston', 'Dallas'])]
+            data = data.set_index('REFNUM')
+            data = data[[column for column in data.columns if column != 'geometry']]  # Get rid of duplicate column
+
+            # Work around fiona bug
+            geodata = gpd.read_file(nris_cdist)
+            geodata = geodata.set_index('NRIS_Rf')
+            geodata = geodata[['geometry']]  # We don't need the other data in this layer
+            national_districts = geodata.join(data, how='inner').to_crs({'init': 'epsg:4326'})
+
+            print(national_districts)
+
+            print('Plotting national districts')
+            folium.GeoJson(
+                national_districts,
+                style_function=lambda feature: {
+                    'fillColor': 'Red',
+                    'color': 'Red',
+                    'weight': 1,
+                    'fillOpacity': 0.5,
+                }
+            ).add_to(nat_dists_fg)
+
+        else:
+
+            # Use texas historical sites data
+            tx_hd_path = "NationalRegisterPY_shp/NationalRegisterPY.shp"
+            tx_hd_data = gpd.read_file(tx_hd_path)
+
+            print('Plotting national districts')
+            folium.GeoJson(
+                tx_hd_data,
+                style_function=lambda feature: {
+                    'fillColor': 'Green',
+                    'color': 'Green',
+                    'weight': 1,
+                    'fillOpacity': 0.5,
+                }
+            ).add_to(nat_dists_fg)
+
+        nat_dists_fg.add_to(basemap)
+
+    # Local districts -----------------------------------------------------------------
+
+    local_dists_fg = FeatureGroup(name = 'Local Historic Districts')
+
+    # Make sure input is correct
+    if isinstance(input, zoning_inputs) == False:
+        warning('Error, Input must be of class zoning_inputs')
+        return None
+
+    # Read data and process zone codes
+    print('Reading local HD file')
+    raw_data = gpd.read_file(input.path)
+    print('Finished reading file, took {}'.format(time.time() - time0))
+
+    # Only consider historic districts
+    print('Filtering to only include historic districts')
+    raw_data[input.feature].to_csv('HDistricts.txt')
+    raw_data = raw_data.loc[[signature in text for text in raw_data[input.feature]]]
+    processed_data = raw_data.to_crs({'init': 'epsg:4326'})
+
+    print('Plotting local districts')
+    folium.GeoJson(
+        processed_data,
+        style_function=lambda feature: {
+            'fillColor': 'Blue',
+            'color': 'Blue',
+            'weight': 1,
+            'fillOpacity': 0.5,
+        }
+    ).add_to(local_dists_fg)
+
+    local_dists_fg.add_to(basemap)
+
+    # Specific historical landmarks
+    if plot_landmarks:
+
+        landmark_fg = FeatureGroup('Historic Landmarks')
+
+        # This needs to be an input at some point
+        landmark_data = gpd.read_file(landmarks_path)
+
+        if marker_cluster:
+
+            def retrieve_coords(point):
+                result = list(point.coords[:][0][0:])
+                result.reverse()
+                return result
+
+            locations = [retrieve_coords(point) for point in landmark_data['geometry']]
+            print(locations)
+
+            print('Plotting the marker cluster')
+            from folium.plugins import FastMarkerCluster
+            marker_cluster = FastMarkerCluster(locations).add_to(landmark_fg)
+
+        else:
+
+            print('Plotting landmarks')
+
+            folium.GeoJson(landmark_data).add_to(landmark_fg)
+
+        landmark_fg.add_to(basemap)
+
+    LayerControl().add_to(basemap)
+
+    if savename is False:
+        basemap.save('HistoricDistricts.html')
+    else:
+        print('Saving under {}'.format(savename))
+        basemap.save(savename)
+
+def plot_historic_districts_parcel(input, cache = False, cached = True):
+
+    # Now plot histogram of historic district data
+    if cached:
+        pass
+
+
+
 if __name__ == '__main__':
+    landmarks_path = "Historical Landmarks/geo_export_ce453b58-d8ca-47d4-8934-76d636d24ca3.shp"
 
-    processed_data = simple_process_shapefile(austin_inputs, plot = False, plot_boundaries=False, plot_highways=False)
+    plot_historic_districts(austin_inputs, landmarks_path = landmarks_path, use_nris_data=False, signature = '-HD', savename = 'Austin_All_Hist_Districts.html')
 
-#else:
-    #data = simple_process_shapefile(north_texas_inputs, plot = True, title = 'Base Zoning in and around Dallas, TX')
-    #small_data = data.iloc[1:1000]
+
+    sys.exit()
+
+
+    time0 = time.time()
+    print('Starting to read Austin parcel data')
+    austin_parcel = gpd.read_file(austin_parcel_path)
+    print('Finished, took {} seconds'.format(time.time() - time0))
+    print(austin_parcel.columns)
+
+    for_histogram = austin_parcel[['basezone', 'market_val']]
+    for_histogram.to_csv('HDHistogramData.csv')
+
+
+
+
+
+    # Old stuff -------------------------------------------------------------------------------------------
+    #plot_historic_districts(austin_inputs, 'Austin')
+
+
+    #simple_process_shapefile(austin_inputs, plot = False)
+
+    #filter = 'Multifamily'
+    #mymap = layered_graphing(austin_inputs, filter = filter)
+    #print('Saving the map')
+    #mymap.save(filter + 'Austinmap.html')
