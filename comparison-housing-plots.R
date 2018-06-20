@@ -20,7 +20,7 @@ stopifnot(length(new_cols) == length(old_cols))
 
 
 # Initial read of data
-path <- "Comparison_ACS_16_5YR_DP04/ACS_16_5YR_DP04.csv"
+path <- "Typology_Comparison_ACS_16_5YR_DP04/ACS_16_5YR_DP04.csv"
 data <- read_csv(path) %>%
   select(one_of(old_cols)) %>%
   rename_at(vars(old_cols), ~ new_cols) %>%

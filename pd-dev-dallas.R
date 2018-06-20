@@ -14,7 +14,7 @@ library(maptools)
 
 # Part 1.1: Median Income Data -----------------------------------------------
 # Get shapes/shapefile for census tracts
-tract_shapes_path <- "cb_2017_48_tract_500k_TX_Census_Tract_Shapefile/Cb_2017_48_tract_500k.shp"
+tx_tract_shapes_path <- "cb_2017_48_TX_tract_500k/Cb_2017_48_tract_500k.shp"
 tract_shapes <- st_read(tract_shapes_path) 
 # Change coordinate system to lat-long
 tract_shapes <- st_transform(tract_shapes, '+init=EPSG:4326')
@@ -85,7 +85,7 @@ tract_data <- read_csv(data_path) %>%
   rename_at(vars(old_cols), ~new_cols)
 
 # Get shapes/shapefile for census tracts
-tract_shapes_path <- "cb_2017_48_tract_500k_TX_Census_Tract_Shapefile/Cb_2017_48_tract_500k.shp"
+tx_tract_shapes_path <- "cb_2017_48_TX_tract_500k/Cb_2017_48_tract_500k.shp"
 tract_shapes <- st_read(tract_shapes_path) 
 # Change coordinate system to lat-long
 tract_shapes <- st_transform(tract_shapes, '+init=EPSG:4326')
