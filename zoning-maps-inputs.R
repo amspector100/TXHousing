@@ -45,6 +45,69 @@ austin_inputs <- list(
   proj4string = lat_long
 )
 
+round_rock_inputs <- list(
+  name = 'Round Rock', 
+  path = "round_rock_zoning/ZONING_1.shp",
+  feature = 'BASE_ZONIN',
+  sf = c('SF', 'TH', 'SF1', 'SF2', 'SF3', 'SF4', 'SF5', 'SF6'),
+  mf = c('MF', 'MU', 'TF'),
+  or = c(),
+  separator = '-',
+  proj4string = texas_central
+)
+
+pflugerville_inputs <- list(
+  name = 'Pflugerville',
+  path = "pflugerville_zoning/Zoning_Districts.shp",
+  feature = 'ZOINING_TY', # This is not a typo - it is spelled wrong in the data
+  sf = c('A', 'SF'), 
+  mf = c('2', 'CL3', 'CL4', 'CL5'),
+  or= 'MH',
+  separator = '-',
+  proj4string = texas_central 
+)
+
+georgetown_inputs <- list(
+  name = 'Georgetown',
+  path = "georgetown_zoning/Zoning.shp",
+  feature = 'ZONE', 
+  sf = c('AG', 'RE', 'RL', 'RS', 'TH'),
+  mf = c('TF', 'MF', 'MU', 'MU-DT', 'MUDT'),
+  or = c('MH'),
+  separator = '-',
+  proj4string = texas_central
+)
+
+cedar_park_inputs <- list(
+  name = 'Cedar Park',
+  path = "cedar_park_zoning/Zoning__Zoning_Districts.shp",
+  feature = 'ZoningType',
+  separator = ' -',
+  sf = c('RA', 'SR', 'SU', 'UR'),
+  mf = c('MU', 'MF'),
+  or = c(),
+  proj4string = texas_central
+)
+
+hutto_inputs <- list(
+  name = 'Hutto',
+  path = "hutto_zoning/Zoning_Districts.shp",
+  feature = 'ZONING',
+  separator = 'no_separator',
+  # Not totally sure about urban residential/residential classifications
+  sf = c('Single Family', 'Residential'),
+  mf = c('Two Family', 'Multi-Family', 'Urban Residential', 'Co-op District'),
+  or = c(),
+  proj4string = texas_central
+)
+
+# Need a data dictionary for this, otherwise it's useless
+all_austin_inputs <- list(
+  name <- 'Austin Area',
+  path = 'central_land_use_2010/land_use_2010.shp',
+  proj4string = texas_central
+)
+
 # DALLAS -----------------------------------------------------------------
 
 

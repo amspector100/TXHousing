@@ -283,7 +283,7 @@ graph <- ggplot(final_data, aes(x = bin, y = percent)) +
   labs(x = 'Population per Acre', y = 'Percent of Population in Municipality',
        caption = 'Data from 2016 5-Year ACS Estimates (Block-level)',
        title = 'Population Density by Municipality')
-print(graph)
+#print(graph)
 
 #setwd("C:/Users/aspector/Documents/R Projects/TX Housing")
 #svg('Figures/comparison-densities-block.svg', w = 8, h = 5)
