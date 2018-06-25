@@ -93,17 +93,24 @@ def get_regulation_data(zones, regulations_path, regulation_feature, fill = None
     :return: A series of the desired regulation feature, i.e. minimum lot size.
     """
 
-    # Get regulations data, only consider base zones
+    # Get regulations data
     reg_data = pd.read_csv(regulations_path, index_col = 0, encoding = 'Latin-1')
-    reg_data = reg_data.loc[reg_data['class'] == 'base']
+
+    # If the data includes non-base zones, only include base zones in this particular search
+    if 'class' in reg_data.columns:
+        reg_data = reg_data.loc[reg_data['class'] == 'base']
+
     reg_data = reg_data[regulation_feature]
     reg_data.index = [str(ind) for ind in reg_data.index]
+    # Add missing object just in case
+
 
     # Fill missing values
     if fill is None:
         pass
     else:
         reg_data = reg_data.fillna(fill)
+        reg_data['Unknown'] = fill
 
     # Process the zoning data - this function is well defined, I checked
     base_zones = reg_data.index.unique().tolist()
@@ -111,6 +118,7 @@ def get_regulation_data(zones, regulations_path, regulation_feature, fill = None
         for i in base_zones:
             if i in text:
                 return i
+        return 'Unknown'
 
     # Process and then you're done
     pzones = zones.map(process_zone)
@@ -152,8 +160,8 @@ def process_demand_data(input, graph = False, style = 'Line', date = dt.date(yea
     elif input.source == 'Realtor':
         data = raw_data[[input.feature]]
         metadata = raw_data[[geo_filter]]
-        data.index = [str(ind) for ind in data.index]
-        metadata.index = [str(ind) for ind in metadata.index]
+        data.index = [str(int(ind)) for ind in data.index]
+        metadata.index = [str(int(ind)) for ind in metadata.index]
 
     # Now graph
     if graph:

@@ -68,6 +68,22 @@ austin_inputs = zoning_inputs(path = "data/Zoning Shapefiles/austin_zoning/geo_e
                               zoom = 9,
                               title = 'Base Zones in Austin, Texas')
 
+# From dallas's open data site
+dallas_inputs = zoning_inputs(path = "data/Zoning Shapefiles/DallasBaseZoning/BaseZoning.shp",
+                              feature = 'ZONE_DIST',
+                              separator = '-',
+                              proj4string = 'EPSG:2276',
+                              base_zones = {'Single Family':['A(A)', 'D(A)', 'TH', 'R'],
+                                            'Multifamily': ['CH', 'MF', 'MU'],
+                                            'Other Residential':['MH(A)'],
+                                            'Other':[]},
+                              lat = north_texas_inputs.lat,
+                              long = north_texas_inputs.long,
+                              zoom = 9,
+                              title = 'Base Zones in Dallas, Texas')
+
+
+
 # City class  --------------------------------------------------------------------------------------------------------
 class City:
     def __init__(self, name, long, lat, zoom, xlims = [None, None], ylims = [None, None]):
@@ -232,9 +248,36 @@ austin_regulation_types = {"min_lot":0, "min_lot_wid":0, "max_units_lot":10, "ma
                            "min_site_area_unit":0, "min_site_area_build":0}
 
 
+austin_zip_features_dic = {'Median DOM (vs CBSA)':['Median Days on Market', 'Median Days on Market, Data from Realtor'],
+                    'far':['Floor to Area Ratio', 'Floor to Area Ratio, Data from City of Austin'],
+                    'min_lot':['Minimum Lot Size', 'Minimum Lot Size (Square Feet)'],
+                    'max_build_cov':['Maximum Building Coverage', 'Maximum Building Coverage (%)'],
+                   'sf_avg_listing': ['Single Family Homes Price', 'Average Single Family Home Listing Price (Realtor)'],
+                   'mf_avg_listing': ['Multifamily Homes Price', 'Average Multifamily Home Listing Price (Realtor)']}
+
 # Demand features
 
+dallas_zips = [75203, 75204, 75205, 75208, 75209, 75210, 75211, 75212, 75214, 75201, 75202, 75206, 75207, 75215, 75216,
+75217, 75218, 75222, 75223, 75224, 75225, 75230, 75231, 75232, 75233, 75236, 75237, 75238, 75240, 75246, 75251, 75252,
+75253, 75219, 75220, 75221, 75226, 75227, 75228, 75229, 75234, 75235, 75241, 75242, 75243, 75244, 75247, 75248, 75249,
+75250, 75254, 75260, 75261, 75265, 75266, 75267, 75270, 75275, 75284, 75285, 75262, 75263, 75264, 75277, 75283, 75287,
+75301, 75315, 75320, 75326, 75355, 75356, 75357, 75358, 75370, 75371, 75372, 75373, 75381, 75382, 75389, 75390, 75393,
+75394, 75395, 75303, 75312, 75313, 75336, 75339, 75342, 75354, 75359, 75360, 75367, 75368, 75374, 75376, 75378, 75379,
+75380, 75391, 75392, 75397, 75398]
 
+dallas_zips = [str(zip) for zip in dallas_zips]
+
+# The fill values for: far and height are in question
+dallas_regulation_types = {'front':0, 'side':0, 'inv_density':0, 'far':15, 'height':200, 'coverage':100}
+
+dallas_zip_features_dic = {'Median DOM (vs CBSA)':['Median Days on Market', 'Median Days on Market, Data from Realtor'],
+                           'far': ['Floor to Area Ratio', 'Floor to Area Ratio, Data from City of Dallas'],
+                           'inv_density': ['Minimum Dwelling Size', 'Minimum Dwelling Size (Square Feet)'],
+                           'coverage': ['Maximum Building Coverage', 'Maximum Building Coverage (%)'],
+                           'sf_avg_listing': ['Single Family Homes Price', 'Average Single Family Home Listing Price (Realtor)'],
+                           'mf_avg_listing': ['Multifamily Homes Price', 'Average Multifamily Home Listing Price (Realtor)']}
+
+dallas_parcel_data_path = "data/Zoning Shapefiles/Dallas County Parcels 2013/geo_export_9b090abf-d5d9-4c74-a6be-4486e75ee147.shp"
 
 # And colors - divide by 256 for consistency with matplotlib
 import numpy as np

@@ -15,11 +15,13 @@ import math
 from tqdm import tqdm
 import helpers
 
+# Everything in this file should be sufficiently general as to work without modifications for any city in the United States
+
 # Basically meant to simplify very complex zoning data for categorical features ---------------------------------------
 
 # Global granularity variable
-max_comb = 20
-alpha = 0.00000000001
+max_comb = 30
+alpha = 0.01 # I got this by experimenting
 
 # Check if something is a multipolygon
 def is_polygon(something):
@@ -38,8 +40,8 @@ def make_valid_buffer(poly):
 
 # Ignore multipolygons and make invalid polygons valid
 def process_geometry(gdf):
-    gdf = gdf.loc[gdf['geometry'].apply(is_polygon)]
     gdf.at[:, 'geometry'] = gdf['geometry'].apply(make_valid_buffer)
+    gdf = gdf.loc[gdf['geometry'].apply(is_polygon)]
     return gdf
 
 # Adapted from http://blog.thehumangeo.com/2014/05/12/drawing-boundaries-in-python/
@@ -128,11 +130,12 @@ def combine(data, feature, spatial_index, k, max_comb = max_comb, alpha = alpha)
     new_index = spatial_index.nearest(test_polygon.bounds, num_results = max_comb) # .16 milliseconds on average
     polys = data.loc[list(new_index)]
     good_polys = [Point(coord) for coord in list(test_polygon.exterior.coords)]
+    # good_polys =
     good_inds = [k]
 
     # Loop through to see which ones are in the right zone
     for ind, row in polys.iterrows():
-        if row[feature] == test_zone:
+        if row[feature] == test_zone and row['flag'] == False:
             good_polys.extend([Point(coord) for coord in list(row['geometry'].exterior.coords)])
             #good_polys.append(row['geometry'])
             good_inds.append(ind)
@@ -144,10 +147,43 @@ def combine(data, feature, spatial_index, k, max_comb = max_comb, alpha = alpha)
     result = alpha_shape(good_polys, alpha)# This is the part that takes a while
     return result, good_inds, test_zone
 
-def combine_all(data, feature, max_comb = max_comb, centroids = False, ignore_features = False, to_ignore = ['Other']):
+# Combine data - new idea - unfinished
+def combine_v2(data, feature, spatial_index, k, max_comb = max_comb, alpha = alpha):
+
+    # Get polygon and zone
+    test_polygon = data.loc[k, 'geometry']
+    test_zone = data.loc[k, feature]
+
+    # Create index and find polygons
+    new_index = spatial_index.nearest(test_polygon.bounds, num_results = max_comb) # .16 milliseconds on average
+    polys = data.loc[list(new_index)]
+
+    # Possible matches
+    possible_polys = polys.loc[polys['broad_zone'] == test_zone]
+    # Non-matches
+    bad_polys = polys.loc[polys['broad_zone'] != test_zone]
+    # Initialize list of good matches, both indices and coordinates
+    good_poly_coords = []
+    good_inds = [k]
+
+    for ind, row in possible_polys.iterrows():
+        possible_poly = row['geometry']
+        line = geometry.linestring.LineString([test_polygon.centroid.coords[:][0], possible_poly.centroid.coords[:][0]])
+        if any([line.intersects(bad_poly) for bad_poly in bad_polys['geometry']]):
+            continue
+        else:
+            good_poly_coords.extend([Point(coord) for coord in list(row['geometry'].exterior.coords)])
+            good_inds.append(ind)
+
+    result = alpha_shape(good_poly_coords, alpha)# This is the part that takes a while
+    return result, good_inds, test_zone
+
+def combine_all(data, feature, max_comb = max_comb, centroids = False, ignore_features = False, to_ignore = ['Other'],
+                alpha = alpha, use_v2 = False):
     """
     :param data: Geodataframe. Index should be a rangeindex. Geometry should be polygons. One other column.
     :param max_comb: Granularity.
+    :param use_v2: Use a slightly different combine tactic.
     :return: Geodataframe with a rangeindex and polygon geometry (as well as that one other column).
     """
 
@@ -180,7 +216,11 @@ def combine_all(data, feature, max_comb = max_comb, centroids = False, ignore_fe
             print('i = {}'.format(i))
 
         # Combine polygons around it
-        poly, good_inds, zone = combine(data, feature, spatial_index, i, max_comb = max_comb)
+        if use_v2:
+            poly, good_inds, zone = combine_v2(data, feature, spatial_index, i, max_comb = max_comb, alpha = alpha)
+        else:
+            poly, good_inds, zone = combine(data, feature, spatial_index, i, max_comb = max_comb, alpha = alpha)
+
         data.at[good_inds, 'flag'] = 1
         all_good_inds.extend(good_inds)
         result.loc['new' + str(i)] = [zone, poly]
@@ -202,6 +242,7 @@ def zip_intersect(gdf, zips):
     # Make sure zips input and data index is full of strings
     zips = [str(something) for something in zips]
     gdf.index = [str(ind) for ind in gdf.index]
+    gdf = gdf.to_crs({'init': 'EPSG:4326'})
 
     # Get the zip code geodata
     zipdata = helpers.get_zip_boundaries()
@@ -235,18 +276,20 @@ if __name__ == '__main__':
     from helpers import process_zoning_shapefile
 
     # The data is indexed by a range index (start = 0, stop = 21623)
-    data = process_zoning_shapefile(austin_inputs)
+    data = process_zoning_shapefile(austin_inputs, broaden = True)
+    data['broad_zone'] = data['broad_zone'].apply(str)
 
     # Process data by only considering the polygons - might fix this later, it only excludes 40/21.6K zones though.
     data = process_geometry(data)
+    data = data.loc[data['broad_zone'].notnull()]
 
 
     # For testing intersection function ---------------------------------------------------
-    from inputs import austin_zips
-    zip_intersect(data, austin_zips)
+    #from inputs import austin_zips
+    #zip_intersect(data, austin_zips)
 
-    import sys
-    sys.exit()
+    #import sys
+    #sys.exit()
 
     # For testing simplifying function -------------------------------------------------
 
@@ -254,26 +297,35 @@ if __name__ == '__main__':
     # Get initial dataset in several steps
 
     # Step 1: Get centroids and index
-    data['centroids'] = data['geometry'].centroid # Takes about 0.25 seconds
-    data = data[['broad_zone', 'geometry', 'centroids']]
-    data = data.set_geometry('centroids')
+    #data = data[['broad_zone', 'geometry']]
     spatial_index = data.sindex
 
     # Step 2: Find test polygon and only consider data closest to it
     n = 208
-    test_polygon = data['geometry'][n]
-    subset = spatial_index.nearest(test_polygon.bounds, num_results=5000)  # .16 milliseconds on average
-    data = data.loc[subset]
+    test_polygon = data.ix[n, 'geometry']
+    subset = list(spatial_index.nearest(test_polygon.bounds, num_results=250))  # .16 milliseconds on average
+    data = data.iloc[subset]
 
     # Step 3: Reset data's index for convenience)
     data.index = np.arange(0, len(data.index), 1)
-    data = data.set_geometry('geometry')
     data.plot(column = 'broad_zone', legend = True)
 
     # Run
-    data = combine_all(data, 'broad_zone', max_comb = 20)
-    data.set_geometry('geometry').plot(column = 'broad_zone', legend = True)
-    print(len(data))
+    data1 = combine_all(data, 'broad_zone', max_comb = 5, alpha = 0.000001, use_v2=True)
+    data1.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
+
+    data1 = combine_all(data1, 'broad_zone', max_comb = 5, alpha = 0.000001, use_v2=True)
+    data1.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
+
+
+    data1 = combine_all(data1, 'broad_zone', max_comb = 5, alpha = 0.000001, use_v2=True)
+    data1.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
+
+    #data2 = combine_all(data1, 'broad_zone', max_comb = 25, alpha = 400, use_v2=True)
+    #data2.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
+    #data3 = combine_all(data, 'broad_zone', max_comb = 25, alpha = 0.5)
+    #data3.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
+
 
     plt.show()
 
