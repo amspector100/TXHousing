@@ -79,7 +79,13 @@ def process_zoning_shapefile(input, broaden = True):
         return([key for key in input.base_zones][-1])
 
     raw_data['broad_zone'] = raw_data[input.feature].apply(get_zone)
-    print('Finished processing zones, took {}'.format(time.time() - time0))
+
+    # Manually set CRS if necessary
+    if input.crs is not None:
+        raw_data.crs = input.crs
+
+    print('Finished processing zones and crs, took {}'.format(time.time() - time0))
+
 
     return raw_data
 
@@ -206,3 +212,64 @@ def get_zip_boundaries():
     zipdata.index = [str(ind) for ind in zipdata.index]
     return zipdata
 
+
+# Join old and new dallas parcel data
+def join_dallas_parcel_data():
+
+    time0 = time.time()
+    print('Reading 2013 file')
+    p2013 = gpd.read_file(dallas_parcel_data_path_2013)
+    p2013.drop_duplicates('gis_acct', inplace = True) # Only drops about 700/300K
+    p2013.columns = [str(col) + '_2013' for col in p2013.columns]
+    p2013 = p2013.rename(columns = {'gis_acct_2013': 'gis_acct'})
+
+    print('Finished reading 2013 file, took {}. Now reading 2016 file.'.format(time.time() - time0))
+    p2016 = gpd.read_file(dallas_parcel_data_path_2016)
+    p2016.drop_duplicates('gis_acct', inplace = True) # Only drops about 750/400K
+    p2016.columns = [str(col) + '_2016' for col in p2016.columns]
+    p2016 = p2016.rename(columns = {'gis_acct_2016': 'gis_acct'})
+
+
+    print('Finished reading 2016 file, took {}. Now merging files.'.format(time.time() - time0))
+    parcel_data = p2016.merge(p2013, on = 'gis_acct')
+    parcel_data = gpd.GeoDataFrame(data = parcel_data[[col for col in parcel_data.columns if 'geometry' not in col]],
+                                   geometry = parcel_data['geometry_2016'])
+    print(parcel_data.columns, parcel_data.index)
+    return parcel_data
+
+    # This doesn't work
+    #print('Finished merging files, took {}. Now saving file.'.format(time.time() - time0))
+    #parcel_data.to_file(dallas_processed_parcel_data_path)
+    #print('Finished, took {}'.format(time.time() - time0))
+
+def process_dallas_parcel_data():
+
+    time0 = time.time()
+
+    print('Loading data')
+    parcel_data = join_dallas_parcel_data()
+    print('Finished loading data, took {} seconds. Now normalizing data conditionally on land use.'.format(time.time() - time0))
+
+    parcel_data['area'] = 1000*parcel_data['geometry'].area
+
+    parcel_data.loc[:, 'value_per_area'] = parcel_data['tot_val_2013'].divide(parcel_data['area'])
+    land_use_means = {}
+    land_use_stds = {}
+    for code in parcel_data['sptbcode_2013'].unique():
+        subset = parcel_data.loc[parcel_data['sptbcode_2013'] == code]
+        land_use_means[code] = subset['value_per_area'].mean()
+        land_use_stds[code] = subset['value_per_area'].std()
+
+    # Normalize - there should be no key errors because we just called parcel_data['land_use'].unique().
+    vpa_mean = parcel_data['sptbcode_2013'].map(land_use_means)
+    vpa_std = parcel_data['sptbcode_2013'].map(land_use_stds)
+    norm_pva = (parcel_data['value_per_area'] - vpa_mean).divide(vpa_std)
+    parcel_data['normalized_value_per_area'] = norm_pva
+
+    return parcel_data
+
+
+
+if __name__ == '__main__':
+
+    pass

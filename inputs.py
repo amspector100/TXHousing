@@ -6,7 +6,7 @@ zip_boundaries_path = "data\cb_2017_us_zcta510_500k\cb_2017_us_zcta510_500k.shp"
 class zoning_inputs():
 
     def __init__(self, path, feature, separator, proj4string, base_zones, lat = 0, long = 0, zoom = 10,
-                 title = '', xlims = [None, None], ylims = [None, None]):
+                 title = '', xlims = [None, None], ylims = [None, None], crs = None):
         self.path = path
         self.feature = feature
         self.separator = separator
@@ -18,6 +18,7 @@ class zoning_inputs():
         self.title = title
         self.xlims = xlims
         self.ylims = ylims
+        self.crs = crs
 
 # Downloaded from http://data-nctcoggis.opendata.arcgis.com/datasets/2015-land-use
 north_texas_inputs = zoning_inputs(path = 'data/Zoning Shapefiles/2015_North_Texas_Land_Use/2015_Land_Use.shp',
@@ -25,7 +26,7 @@ north_texas_inputs = zoning_inputs(path = 'data/Zoning Shapefiles/2015_North_Tex
                                    separator = 'no_separator',
                                    proj4string = 'EPSG:4326',
                                    base_zones = { 'Single Family':['Single family'],
-                                               'Multi-Family':['Mixed use', 'Multi-family'],
+                                               'Multifamily':['Mixed use', 'Multi-family'],
                                                'Other Residential':['Residential acreage'],
                                                'Other':[]},
                                    long = 32.7767,
@@ -66,7 +67,8 @@ austin_inputs = zoning_inputs(path = "data/Zoning Shapefiles/austin_zoning/geo_e
                               long = 30.267,
                               lat = -97.743,
                               zoom = 9,
-                              title = 'Base Zones in Austin, Texas')
+                              title = 'Base Zones in Austin, Texas',
+                              crs = {'init': 'epsg:4326'})
 
 # From dallas's open data site
 dallas_inputs = zoning_inputs(path = "data/Zoning Shapefiles/DallasBaseZoning/BaseZoning.shp",
@@ -255,6 +257,12 @@ austin_zip_features_dic = {'Median DOM (vs CBSA)':['Median Days on Market', 'Med
                    'sf_avg_listing': ['Single Family Homes Price', 'Average Single Family Home Listing Price (Realtor)'],
                    'mf_avg_listing': ['Multifamily Homes Price', 'Average Multifamily Home Listing Price (Realtor)']}
 
+austin_processed_parcel_data_path = 'data/Processed Austin Parcel Data/processed_parcel_data.shp'
+austin_downzone_path = 'data/Zoning Shapefiles/Austin Downzoning/austin_downzoning.shp'
+austin_construction_path = 'data/Zoning Shapefiles/Austin Construction/austin_construction.shp'
+
+
+
 # Demand features
 
 dallas_zips = [75203, 75204, 75205, 75208, 75209, 75210, 75211, 75212, 75214, 75201, 75202, 75206, 75207, 75215, 75216,
@@ -277,7 +285,14 @@ dallas_zip_features_dic = {'Median DOM (vs CBSA)':['Median Days on Market', 'Med
                            'sf_avg_listing': ['Single Family Homes Price', 'Average Single Family Home Listing Price (Realtor)'],
                            'mf_avg_listing': ['Multifamily Homes Price', 'Average Multifamily Home Listing Price (Realtor)']}
 
-dallas_parcel_data_path = "data/Zoning Shapefiles/Dallas County Parcels 2013/geo_export_9b090abf-d5d9-4c74-a6be-4486e75ee147.shp"
+dallas_parcel_data_path_2013 = "data/Zoning Shapefiles/Dallas County Parcels 2013/geo_export_9b090abf-d5d9-4c74-a6be-4486e75ee147.shp"
+dallas_parcel_data_path_2016 = "data/Zoning Shapefiles/Dallas County Parcels 2016/geo_export_bd65f212-41ce-4166-804a-5dc5ef85ee84.shp"
+
+dallas_processed_parcel_data_path = 'data/Processed Dallas Parcel Data/processed_parcel_data.shp' # This doesn't work for some reason
+dallas_downdev_path = 'data/Zoning Shapefiles/Dallas Downdevelopments/dallas_downdevelopments.shp'
+dallas_construction_path = 'data/Zoning Shapefiles/Dallas Construction/dallas_construction.shp'
+
+
 
 # And colors - divide by 256 for consistency with matplotlib
 import numpy as np

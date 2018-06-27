@@ -9,11 +9,12 @@ from shapely.geometry.multipolygon import *
 from shapely.geometry.multipoint import *
 from shapely.geometry.point import *
 from shapely import geometry
-from shapely.ops import cascaded_union, polygonize
+from shapely.ops import cascaded_union, polygonize, unary_union
 from scipy.spatial import Delaunay
 import math
 from tqdm import tqdm
 import helpers
+import copy
 
 # Everything in this file should be sufficiently general as to work without modifications for any city in the United States
 
@@ -87,8 +88,11 @@ def alpha_shape(points, alpha = 0.001):
         c = math.sqrt((pc[0] - pa[0]) ** 2 + (pc[1] - pa[1]) ** 2)
         # Semiperimeter of triangle
         s = (a + b + c) / 2.0
-        # Area of triangle by Heron's formula
-        area = math.sqrt(s * (s - a) * (s - b) * (s - c))
+        # Area of triangle by Heron's formula. Sometimes this comes out as a negative number, who knows why.
+        try:
+            area = math.sqrt(s * (s - a) * (s - b) * (s - c))
+        except:
+            continue
         # Prevent div by 0 errors
         if area == 0:
             continue
@@ -231,6 +235,31 @@ def combine_all(data, feature, max_comb = max_comb, centroids = False, ignore_fe
     print('Data of length {} took {}, cut it down to length {}'.format(len(data), time.time() - time0, len(result)))
     return(result)
 
+def process_combined_result(data, factor = 'broad_zone'):
+    """
+    Takes unary unions of each type of zone or feature to reduce the size of the result. Also makes sure nothing overlaps.
+    :param result: Result of a combine_all call
+    :return: gdf with one row per unique value in the factor column.
+    """
+
+    result = gpd.GeoDataFrame(columns = ['geometry'])
+    for zone in data[factor].unique():
+        result.at[zone, 'geometry'] = data.loc[data[factor] == zone, 'geometry'].unary_union
+    result['area'] = result['geometry'].area
+    result.sort_values(by = 'area', ascending = True, inplace = True)
+
+    print('Combining final result of combine_all call')
+    for zone in tqdm(result.index):
+        if zone == result.index[0]:
+            running_union = result.loc[zone, 'geometry']
+        else:
+            cached_geometry = copy.copy(result.loc[zone, 'geometry'])
+            result.at[zone, 'geometry'] = unary_union(cached_geometry.difference(running_union))
+            running_union = cached_geometry.union(running_union)
+
+    result[factor] = result.index
+    return result
+
 # Intersect zoning with zip codes -------------------------------------------------------------------------------------
 def zip_intersect(gdf, zips):
     """
@@ -303,7 +332,7 @@ if __name__ == '__main__':
     # Step 2: Find test polygon and only consider data closest to it
     n = 208
     test_polygon = data.ix[n, 'geometry']
-    subset = list(spatial_index.nearest(test_polygon.bounds, num_results=250))  # .16 milliseconds on average
+    subset = list(spatial_index.nearest(test_polygon.bounds, num_results=1500))  # .16 milliseconds on average
     data = data.iloc[subset]
 
     # Step 3: Reset data's index for convenience)
@@ -311,15 +340,15 @@ if __name__ == '__main__':
     data.plot(column = 'broad_zone', legend = True)
 
     # Run
-    data1 = combine_all(data, 'broad_zone', max_comb = 5, alpha = 0.000001, use_v2=True)
+    data1 = combine_all(data, 'broad_zone', max_comb = 10, alpha = 0.000001, use_v2=True)
     data1.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
 
-    data1 = combine_all(data1, 'broad_zone', max_comb = 5, alpha = 0.000001, use_v2=True)
-    data1.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
+    result = process_combined_result(data1, factor = 'broad_zone')
+    result.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
 
 
-    data1 = combine_all(data1, 'broad_zone', max_comb = 5, alpha = 0.000001, use_v2=True)
-    data1.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
+    #data1 = combine_all(data1, 'broad_zone', max_comb = 5, alpha = 0.000001, use_v2=True)
+    #data1.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
 
     #data2 = combine_all(data1, 'broad_zone', max_comb = 25, alpha = 400, use_v2=True)
     #data2.set_geometry('geometry').plot(column = 'broad_zone', legend = True, alpha = 0.5)
