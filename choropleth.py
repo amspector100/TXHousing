@@ -14,12 +14,13 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import folium
 from folium import FeatureGroup, LayerControl
-from folium.plugins import MarkerCluster
+from folium.plugins import MarkerCluster, FastMarkerCluster
 import branca.colormap as cm
 
 from inputs import *
 import helpers
 from helpers import *
+from zipcode_scrape import *
 import spatial_functions as sf
 import nonspatialgraphing as nsg
 from BindColorMap import *
@@ -29,10 +30,36 @@ from BindColorMap import *
 
 # Globals
 os.chdir("C:/Users/amspe/Documents/R/MI2018/TXHousing")
-austin_regulations_path = "data/austin zoning standards.csv"
-dallas_regulations_path = 'data/dallas zoning standards.csv'
 global_weight = 1
-global_alpha = 0.7
+global_alpha = 0.6
+
+# Actually retrieve coords from shapely point
+def retrieve_coords(point):
+    result = list(point.coords[:][0][0:])
+    result.reverse()
+    return result
+
+# Marker Cluster processing function
+def make_marker_cluster(gdf, make_centroids = True, points_column = 'geometry', fast = False, **kwargs):
+    """
+    :param gdf: Geodataframe
+    :param layer_name: Name of eventual Marker Cluster layer
+    :param make_centroids:
+    :param points_column:
+    :return: MarkerCluster object
+    """
+
+    if make_centroids:
+        gdf['centroids'] = gdf['geometry'].centroid
+        points_column = 'centroids'
+
+    points = [retrieve_coords(point) for point in gdf[points_column]]
+
+    if fast:
+        return FastMarkerCluster(points, **kwargs)
+    else:
+        return MarkerCluster(points, **kwargs)
+
 
 # Very basic choropleth functions -------------------------------------------------------------------------------------
 def categorical_choropleth(gdf, factor, colors = None, quietly = False, weight = global_weight, alpha = global_alpha,
@@ -84,7 +111,20 @@ def categorical_choropleth(gdf, factor, colors = None, quietly = False, weight =
 
 #  continuous colormap
 def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = global_weight, alpha = global_alpha,
-                          start_color = 'blue', end_color = 'red', show = False, geometry_column = 'geometry'):
+                          mid_color = '#00ccff', end_color = '#000066', show = False, geometry_column = 'geometry'):
+    """
+    :param gdf: Geodataframe
+    :param factor: factor for analysis
+    :param layer_name: Name of feature group layer
+    :param scale_name: Name of scale
+    :param weight: Weight
+    :param alpha: Alpha of polygons
+    :param start_color: I.e. white, for min data
+    :param end_color: I.e. black, for max data
+    :param show: Show by default on start
+    :param geometry_column: 'geometry'
+    :return:
+    """
 
     # Get rid of nas
     gdf = gdf.loc[gdf[factor].notnull()]
@@ -93,7 +133,7 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = g
     min_data = gdf[factor].min()
     max_data = gdf[factor].max()
 
-    colormap =  cm.LinearColormap(colors = [start_color, end_color], vmin = min_data, vmax = max_data)
+    colormap =  cm.LinearColormap(colors = ['white', mid_color, end_color], vmin = min_data, vmax = max_data).to_step(12, method = 'log')
     if scale_name is None:
         colormap.caption = layer_name
     else:
@@ -114,6 +154,11 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = g
         )
 
     return gjson, colormap
+
+
+
+
+
 
 # Calculate non-categorical values for all zip codes ----------------------------------------------------------------
 def create_regulatory_layers(zoning_input, zips, regulations_path, regulation_types, broaden = True):
@@ -190,8 +235,11 @@ def final_austin_graph(zoning_input, zip_features_dic):
 
     time0 = time.time()
 
+    print('Retreiving Austin basemap')
+    basemap = folium.Map([zoning_input.lat, zoning_input.long], zoom_start=zoning_input.zoom)
+
     # Get initial parcel data, zip data, and zoning data
-    print('Reading initial data')
+    print('Finished retrieving basemap, took {}. Reading initial data'.format(time.time() - time0))
 
     # Make sure input is correct
     if isinstance(zoning_input, zoning_inputs) == False:
@@ -203,39 +251,63 @@ def final_austin_graph(zoning_input, zip_features_dic):
 
     # Simplify categorically for plotting
     simplified_zoning_data = sf.process_geometry(raw_zoning_data)
-    simplified_zoning_data.index = np.arange(0, len(simplified_zoning_data), 1)
-    simplified_zoning_data = sf.combine_all(simplified_zoning_data, 'broad_zone', max_comb = 15, use_v2 = True, ignore_features = True)
-    simplified_zoning_data = sf.process_combined_result(simplified_zoning_data, factor = 'broad_zone')
-    simplified_zoning_data = simplified_zoning_data.loc[simplified_zoning_data['broad_zone'].isin(['Single Family', 'Multifamily'])]
+    #simplified_zoning_data.index = np.arange(0, len(simplified_zoning_data), 1)
+    #simplified_zoning_data = sf.combine_all(simplified_zoning_data, 'broad_zone', max_comb = 15, use_v2 = True, ignore_features = True)
+    #simplified_zoning_data = sf.process_combined_result(simplified_zoning_data, factor = 'broad_zone')
+    #simplified_zoning_data = simplified_zoning_data.loc[simplified_zoning_data['broad_zone'].isin(['Single Family', 'Multifamily'])]
 
     # Manually set CRS if necessary
     if simplified_zoning_data.crs is None:
         simplified_zoning_data.crs = {'init': 'epsg:4326'}
 
     base_zones = FeatureGroup('Base Zoning', show = False)
-    categorical_choropleth(simplified_zoning_data, 'broad_zone').add_to(base_zones)
+    #categorical_choropleth(simplified_zoning_data, 'broad_zone').add_to(base_zones)
 
     # ---------------------------------------------------See print statement---------------------------------------------
-    print('Finished reading processed parcel data and zoning data, took {}. Starting to create downzone and construction color markers.'.format(time.time() - time0))
+    print('Finished reading and processing zoning data, took {}. Starting to create downzone and construction color markers.'.format(time.time() - time0))
 
-    downzone = gpd.read_file(austin_downzone_path)
-    construction = gpd.read_file(austin_construction_path)
-
-    # Make marker clusters
-    def retrieve_coords(point):
-        result = list(point.coords[:][0][0:])
-        result.reverse()
-        return result
-
-    downzone['centroids'] = downzone['geometry'].centroid
-    downzonepts = [retrieve_coords(point) for point in downzone['centroids']]
     downzone_fg = FeatureGroup(name='Downzoned Locations', show = False)
-    MarkerCluster(downzonepts).add_to(downzone_fg)
+    downzone = gpd.read_file(austin_downzone_path)
+    make_marker_cluster(downzone, make_centroids = True).add_to(downzone_fg)
 
-    construction['centroids'] = construction['geometry'].centroid
-    constructionpts = [retrieve_coords(point) for point in construction['centroids']]
-    construction_fg = FeatureGroup(name = 'New Construction', show = False)
-    MarkerCluster(constructionpts).add_to(construction_fg)
+
+    # Single family construction - - - - - - - - -
+
+    # Marker
+    sf_cons_fg = FeatureGroup('Single Family Residential Construction (Markers)', show = True)
+    sfconstruction = process_austin_permit_data(searchfor = ['101 single family houses'], earliest = 2013)
+    make_marker_cluster(sfconstruction, make_centroids=False, fast=True).add_to(sf_cons_fg)
+    sf_cons_fg.add_to(basemap)
+
+
+    sfconstruction_grid = sf.make_point_grid(sfconstruction)
+    gjson, colormap = continuous_choropleth(sfconstruction_grid, factor = 'value',
+                                              layer_name='Single Family Residential Construction (Choropleth)',
+                                              scale_name = 'Number of new Single Family Home Construction Permits in Area', show = True)
+    colormap.add_to(basemap)
+    gjson.add_to(basemap)
+    BindColormap(gjson, colormap).add_to(basemap)
+
+    # Multifamily construction - - - - - - - - - -
+
+    # Marker
+    mf_cons_fg = FeatureGroup('Multifamily Residential Construction (Markers)', show = False)
+    mfconstruction = process_austin_permit_data(searchfor=    ['103 two family bldgs',
+                                                               '104 three & four family bldgs',
+                                                               '105 five or more family bldgs'],
+                                                earliest=2013)
+    make_marker_cluster(mfconstruction, make_centroids=False, fast=True).add_to(mf_cons_fg)
+    mf_cons_fg.add_to(basemap)
+
+    # Choropleth
+    mfconstruction_grid = sf.make_point_grid(mfconstruction)
+    gjson, colormap = continuous_choropleth(mfconstruction_grid, factor='value',
+                                              layer_name='Multifamily Residential Construction (Choropleth)',
+                                              scale_name='Number of new Multifamily Construction Permits in Area',
+                                            mid_color='red', end_color='#660000', show=False)
+    colormap.add_to(basemap)
+    gjson.add_to(basemap)
+    BindColormap(gjson, colormap).add_to(basemap)
 
     # ---------------------------------------------------See print statement---------------------------------------------
     print('Finished creating downzone and construction color markers, took {}. Now creating historic zones markers.'.format(time.time() - time0))
@@ -244,6 +316,7 @@ def final_austin_graph(zoning_input, zip_features_dic):
     national_hd_fg = FeatureGroup(name = 'National Historic Registry Zones', show = False)
     tx_hd_path = "data/Zoning Shapefiles/NationalRegisterPY_shp/NationalRegisterPY.shp"
     tx_hd_data = gpd.read_file(tx_hd_path)
+    tx_hd_data = tx_hd_data.loc[tx_hd_data['CITY'] == 'Austin']
 
     folium.GeoJson(
         tx_hd_data,
@@ -294,26 +367,24 @@ def final_austin_graph(zoning_input, zip_features_dic):
     zip_geodata = add_demand_data(zip_geodata=zip_geodata, demand_input = realtor_avg_cth_price, city = 'Austin, TX', feature_name = 'mf_avg_listing')
 
 
-
-    print('Retreiving basemap')
-    basemap = folium.Map([zoning_input.long, zoning_input.lat], zoom_start=zoning_input.zoom)
-
-
     print('Adding things to basemap')
     # Add regulatory and demand factors
     for factor in zip_features_dic:
-        gjson, colormap = continuous_choropleth(zip_geodata, factor, zip_features_dic[factor][0], zip_features_dic[factor][1], show = False)
+        gjson, colormap = continuous_choropleth(zip_geodata, factor, zip_features_dic[factor][0], zip_features_dic[factor][1],
+                                                mid_color='blue', end_color='red', show=False)
         colormap.add_to(basemap)
         gjson.add_to(basemap)
         BindColormap(gjson, colormap).add_to(basemap)
 
     # Add to basemap
     base_zones.add_to(basemap)
-    construction_fg.add_to(basemap)
     downzone_fg.add_to(basemap)
     national_hd_fg.add_to(basemap)
     local_hd_fg.add_to(basemap)
     landmark_fg.add_to(basemap)
+
+    # Add dark layer for visualization and layer control
+    folium.TileLayer('cartodbdark_matter').add_to(basemap)
     LayerControl().add_to(basemap)
 
     print("Saving basemap, time is {}".format(time.time() - time0))
@@ -331,7 +402,12 @@ def dallas_final_graph(zoning_input, zip_features_dic, included_counties = ['Dal
 
     time0 = time.time()
 
+    print('Retreiving Dallas basemap')
+    basemap = folium.Map([zoning_input.lat, zoning_input.long], zoom_start=zoning_input.zoom)
+
     # Reading initial data
+    print('Finished retrieving basemap, took {}. Reading initial data'.format(time.time() - time0))
+
     base_zones = FeatureGroup('Base Zoning', show = False)
 
 
@@ -441,34 +517,54 @@ def dallas_final_graph(zoning_input, zip_features_dic, included_counties = ['Dal
     # Downzoning and construction layers
     print('In Dallas final graph call, starting to work on downdevelopment and construction layers at time {}'.format(time.time() - time0))
     downdevelopment = gpd.read_file(dallas_downdev_path)
-    construction = gpd.read_file(dallas_construction_path)
-
-    # Make marker clusters
-    def retrieve_coords(point):
-        result = list(point.coords[:][0][0:])
-        result.reverse()
-        return result
-
-    downdevelopment['centroids'] = downdevelopment.centroid
-    downdevelopment_points = [retrieve_coords(point) for point in downdevelopment['centroids']]
     downdevelopment_fg = FeatureGroup(name='Downdeveloped Locations', show = False)
-    MarkerCluster(downdevelopment_points).add_to(downdevelopment_fg)
+    make_marker_cluster(downdevelopment, make_centroids=True).add_to(downdevelopment_fg)
 
-    construction['centroids'] = construction.centroid
-    constructionpts = [retrieve_coords(point) for point in construction['centroids']]
-    construction_fg = FeatureGroup(name = 'New Residential Construction', show = False)
-    MarkerCluster(constructionpts).add_to(construction_fg)
+
+    # Construction
+    all_construction = get_corrected_dallas_permit_data(path = dpm_save_path)
+
+    # Construction -- single family - - - - - -
+
+    # Marker
+    sfconstruction = all_construction.loc[all_construction['Permit Type'] == 'Building (BU) Single Family  New Construction']
+    sf_cons_fg = FeatureGroup("Single Family Construction Permits (Marker)", show = True)
+    make_marker_cluster(sfconstruction, make_centroids = False, fast = True).add_to(sf_cons_fg)
+    sf_cons_fg.add_to(basemap)
+
+    sfconstruction_grid = sf.make_point_grid(sfconstruction)
+    gjson, colormap = continuous_choropleth(sfconstruction_grid, factor = 'value',
+                                              layer_name='Single Family Residential Construction (Choropleth)',
+                                              scale_name = 'Number of New Single Family Home Construction Permits in Area (2011-2016)',
+                                              show = True)
+    colormap.add_to(basemap)
+    gjson.add_to(basemap)
+    BindColormap(gjson, colormap).add_to(basemap)
+
+    # Construction -- Multifamily - - - - - -
+    mfconstruction = all_construction.loc[all_construction['Permit Type'] == 'Building (BU) Multi Family  New Construction']
+    mf_cons_fg = FeatureGroup('Multifamily Construction Permits (Marker)', show = False)
+    make_marker_cluster(mfconstruction, make_centroids = False, fast = True).add_to(mf_cons_fg)
+    mf_cons_fg.add_to(basemap)
+
+    mfconstruction_grid = sf.make_point_grid(mfconstruction)
+    gjson, colormap = continuous_choropleth(mfconstruction_grid, factor = 'value',
+                                            layer_name='Multifamily Residential Construction (Choropleth)',
+                                            scale_name='Number of New Multifamily Home Construction Permits in Area (2011-2016)',
+                                            mid_color='red', end_color='#660000', show=False)
+    colormap.add_to(basemap)
+    gjson.add_to(basemap)
+    BindColormap(gjson, colormap).add_to(basemap)
+
 
     # Final list of featuregroups: base_zones, conservation_fg, historic_overlay_fg, historic_subdistricts_fg,
     # construction_fg, downdevelopment_fg
-    print('Retreiving Dallas basemap')
-    basemap = folium.Map([zoning_input.long, zoning_input.lat], zoom_start=zoning_input.zoom)
-
 
     print('Adding things to Dallas basemap')
     # Add regulatory and demand factors
     for factor in zip_features_dic:
-        gjson, colormap = continuous_choropleth(zip_geodata, factor, zip_features_dic[factor][0], zip_features_dic[factor][1], show = False)
+        gjson, colormap = continuous_choropleth(zip_geodata, factor, zip_features_dic[factor][0], zip_features_dic[factor][1],
+                                                mid_color='blue', end_color='red', show=False)
         colormap.add_to(basemap)
         gjson.add_to(basemap)
         BindColormap(gjson, colormap).add_to(basemap)
@@ -478,8 +574,12 @@ def dallas_final_graph(zoning_input, zip_features_dic, included_counties = ['Dal
     conservation_fg.add_to(basemap)
     historic_overlay_fg.add_to(basemap)
     historic_subdistricts_fg.add_to(basemap)
-    construction_fg.add_to(basemap)
     downdevelopment_fg.add_to(basemap)
+
+    # Add dark basemap
+    folium.TileLayer('cartodbdark_matter').add_to(basemap)
+
+
     LayerControl().add_to(basemap)
 
     print("Saving basemap at {}".format(time.time() - time0))
@@ -499,12 +599,17 @@ def dallas_final_graph(zoning_input, zip_features_dic, included_counties = ['Dal
 #nbhd_boundaries.plot(ax = base, color = None, alpha = 0.5, edgecolor = 'black')
 #plt.show()
 
+if __name__ == '__main__':
 
-dallas_final_graph(north_texas_inputs, dallas_zip_features_dic, included_counties = ['Dallas'])
+    dallas_final_graph(north_texas_inputs, dallas_zip_features_dic, included_counties = ['Dallas'])
+
+    #final_austin_graph(austin_inputs, austin_zip_features_dic)
 
 
 
 
-#final_austin_graph(austin_inputs, austin_zip_features_dic)
+
+
+
 
 

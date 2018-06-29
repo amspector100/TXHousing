@@ -29,8 +29,8 @@ north_texas_inputs = zoning_inputs(path = 'data/Zoning Shapefiles/2015_North_Tex
                                                'Multifamily':['Mixed use', 'Multi-family'],
                                                'Other Residential':['Residential acreage'],
                                                'Other':[]},
-                                   long = 32.7767,
-                                   lat=-96.7970,
+                                   lat = 32.7767,
+                                   long = -96.7970,
                                    zoom = 10,
                                    title = 'Base Zones in and around Dallas, Texas')
                                    #xlims = [-97.3, -96.1],
@@ -64,8 +64,8 @@ austin_inputs = zoning_inputs(path = "data/Zoning Shapefiles/austin_zoning/geo_e
                               proj4string = 'EPSG:4326',
                               base_zones = {'Single Family':['SF'], 'Multifamily':['MF'],
                                             'Other Residential':['MH', 'RR', 'LA'], 'Other':[]},
-                              long = 30.267,
-                              lat = -97.743,
+                              lat = 30.267,
+                              long = -97.743,
                               zoom = 9,
                               title = 'Base Zones in Austin, Texas',
                               crs = {'init': 'epsg:4326'})
@@ -97,9 +97,9 @@ class City:
         self.ylims = ylims
 
 # Cities (needed for defining Demand_Input)
-austin = City('Austin', long=30.267, lat=-97.743, zoom=11, xlims = [29.25, 31.75], ylims = [96.5, 99])
-dallas = City('Dallas', long = 32.7767, lat=-96.7970, zoom = 11, xlims = [-97.3, -96.1], ylims = [32.25, 33.25])
-houston = City('Houston', long = 29.7604, lat = -95.3698, zoom = 11, xlims = [28, 31], ylims = [-93, -97])
+austin = City('Austin', lat =30.267, long =-97.743, zoom=11, xlims = [29.25, 31.75], ylims = [96.5, 99])
+dallas = City('Dallas', lat = 32.7767, long =-96.7970, zoom = 11, xlims = [-97.3, -96.1], ylims = [32.25, 33.25])
+houston = City('Houston', lat = 29.7604, long  = -95.3698, zoom = 11, xlims = [28, 31], ylims = [-93, -97])
 
 # Demand input class ------------------------------------------------------------------------------------------------
 class Demand_Input:
@@ -231,7 +231,9 @@ realtor_avg_cth_price = Demand_Input(path = "data/RDC_InventoryCoreMetrics_Zip_c
                                  geo_filter_values=['Dallas, TX', 'Austin, TX', 'Houston, TX'],
                                  name='Avg Listing Price, Condo / Townhomes')
 
-# Some more specific inputs -------------------------------------------------------------------------------------------
+# Some more specific inputs --------------------------------------------------------------------------------------------
+
+# Austin -------------------------------------------------------------------------------------------------------------
 
 # Parcel data
 austin_parcel_path = "data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
@@ -260,10 +262,11 @@ austin_zip_features_dic = {'Median DOM (vs CBSA)':['Median Days on Market', 'Med
 austin_processed_parcel_data_path = 'data/Processed Austin Parcel Data/processed_parcel_data.shp'
 austin_downzone_path = 'data/Zoning Shapefiles/Austin Downzoning/austin_downzoning.shp'
 austin_construction_path = 'data/Zoning Shapefiles/Austin Construction/austin_construction.shp'
+austin_permit_path = 'data/austin_construction_permits.csv'
 
+austin_regulations_path = "data/austin zoning standards.csv"
 
-
-# Demand features
+# Dallas -------------------------------------------------------------------------------------------------------------
 
 dallas_zips = [75203, 75204, 75205, 75208, 75209, 75210, 75211, 75212, 75214, 75201, 75202, 75206, 75207, 75215, 75216,
 75217, 75218, 75222, 75223, 75224, 75225, 75230, 75231, 75232, 75233, 75236, 75237, 75238, 75240, 75246, 75251, 75252,
@@ -291,8 +294,49 @@ dallas_parcel_data_path_2016 = "data/Zoning Shapefiles/Dallas County Parcels 201
 dallas_processed_parcel_data_path = 'data/Processed Dallas Parcel Data/processed_parcel_data.shp' # This doesn't work for some reason
 dallas_downdev_path = 'data/Zoning Shapefiles/Dallas Downdevelopments/dallas_downdevelopments.shp'
 dallas_construction_path = 'data/Zoning Shapefiles/Dallas Construction/dallas_construction.shp'
+dallas_permit_path = 'data/dallas_construction_permits.csv'
+
+dpm_save_path = "C:/Users/amspe/Documents/R/MI2018/TXHousing/data/Zoning Shapefiles/Dallas Corrected Permits/dallas_permits_corrected.shp"
+
+dallas_regulations_path = 'data/dallas zoning standards.csv'
+
+renovation_types_dallas = ['Building (BU) Commercial  Renovation', 'Building (BU) Single Family  Renovation',
+                           'Building (BU) Multi Family  Renovation', 'Flammable Liquid (FL) Commercial  Renovation',
+                           'Swimming Pool (SW) Single Family  Renovation', 'Tree Removal (TR) Commercial  Renovation',
+                           'Swimming Pool (SW) Multi Family  Renovation', 'Tent (TE) Commercial  Renovation',
+                           'Excavation (EX) Commercial  Renovation',
+                           'Grading and Paving (GP) Single Family  Renovation',
+                           'Grading and Paving (GP) Commercial  Renovation', 'Electrical (EW) Commercial  Renovation',
+                           'Plumbing (PL) Commercial  Renovation', 'Fence (FE) Single Family  Renovation',
+                           'Liquor License (LL) Commercial  Renovation', 'Swimming Pool (SW) Commercial  Renovation',
+                           'Tree Removal (TR) Multi Family  Renovation', 'Excavation (EX) Single Family  Renovation',
+                           'Tent (TE) Single Family  Renovation', 'Security System (SE) Commercial  Renovation',
+                           'Plumbing (PL) Single Family  Renovation', 'Tree Removal (TR) Single Family  Renovation',
+                           'Electrical (EL) Commercial  Renovation', 'Fence (FE) Multi Family  Renovation',
+                           'Fire Alarm (FA) Commercial  Renovation', 'Fence (FE) Commercial  Renovation',
+                           'Grading and Paving (GP) Multi Family  Renovation',
+                           'Paving (Sidewalk, Drive Approaches) (PV) Single Family  Renovation',
+                           'Mechanical (ME) Single Family  Renovation', 'Tree Mitigation (MI) Commercial  Renovation',
+                           'Barricade (BA) Commercial  Renovation', 'Electrical (EW) Single Family  Renovation',
+                           'Mechanical (ME) Commercial  Renovation', 'Lawn Sprinkler (LS) Single Family  Renovation',
+                           'Electrical (EL) Single Family  Renovation',
+                           'Fire Sprinkler (Minor Work) (FS) Commercial  Renovation',
+                           'Electrical (EL) Multi Family  Renovation', 'Mechanical (ME) Multi Family  Renovation',
+                           'Plumbing (PL) Multi Family  Renovation', 'Lawn Sprinkler (LS) Commercial  Renovation',
+                           'Excavation (EX) Multi Family  Renovation', 'Flammable Liquid (FL) Multi Family  Renovation',
+                           'Fire Sprinkler (Minor Work) (FS) Single Family  Renovation',
+                           'Electrical (EW) Multi Family  Renovation',
+                           'Fire Sprinkler (Minor Work) (FS) Multi Family  Renovation',
+                           'Medical Gas (MG) Commercial  Renovation', 'Backflow (BF) Commercial  Renovation',
+                           'Paving (Sidewalk, Drive Approaches) (PV) Commercial  Renovation',
+                           'Barricade (BA) Multi Family  Renovation', 'Tent (TE) Multi Family  Renovation']
 
 
+# Misc -------------------------------------------------------------------------------------------------------------
+
+# See metadata at https://www2.census.gov/geo/tiger/TIGER_DP/2016ACS/Metadata/BG_METADATA_2016.txt
+texas_blocks_path = "data/ACS_2016_5YR_BG_48_TEXAS.gdb"
+texas_places_path = "data/cb_2017_48_place_500k/cb_2017_48_place_500k.shp"
 
 # And colors - divide by 256 for consistency with matplotlib
 import numpy as np

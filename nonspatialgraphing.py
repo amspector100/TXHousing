@@ -225,16 +225,3 @@ if __name__ == '__main__':
     #dallas_development_histogram(parcel_data, plot = True, save = True)
     parcel_data = process_austin_parcel_data(zip_intersections = False, save = False)
     austin_development_histogram(parcel_data, plot = True, save = True)
-
-    import sys
-    sys.exit()
-    land_use_dic = {}
-    for land_use in parcel_data['land_use'].unique():
-        subset = parcel_data.loc[parcel_data['land_use'] == land_use]
-        land_use_dic[land_use] = [subset['value_per_area'].mean(), subset['value_per_area'].std()]
-
-    # Normalize - there should be no key areas because we just called parcel_data['land_use'].unique().
-    norm_pva = pd.Series(index=parcel_data.index)
-    for index, row in parcel_data[['value_per_area', 'land_use']].iterrows():
-        norm_pva[index] = (row['value_per_area'] - land_use_dic[row['land_use']][0]) / land_use_dic[row['land_use']][1]
-    parcel_data['normalized_value_per_area'] = norm_pva

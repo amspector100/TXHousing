@@ -328,4 +328,4 @@ def choropleth_processed_data(input, date = dt.date(year = 2018, month = 4, day 
             plt.show()
 
 #process_and_graph(sfhomes_nbhd, graph = True, style = 'bar')
-#choropleth_processed_data(realtor_avg_cth_price, plot_folium=True)
+choropleth_processed_data(realtor_hotness_cbsa, plot_folium=True)
