@@ -204,7 +204,10 @@ if plot_hds:
 
     # Get only residential areas
     austin_core = sf.get_urban_core(austin_inputs, radius)
+    austin_core = austin_core.intersection(austin_zones.loc[austin_zones['broad_zone'] != 'Other', 'geometry'].unary_union)
     dallas_core = sf.get_urban_core(dallas_inputs, radius)
+    dallas_core = dallas_core.intersection(dallas_zones.loc[dallas_zones['broad_zone'] != 'Other', 'geometry'].unary_union)
+
 
     # Get everything else
     def points_over_area(points, polygons, points_geometry_column = 'geometry', poly_geometry_column = 'geometry', newproj = 'epsg:2277', normalize_by_area = True):

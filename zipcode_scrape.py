@@ -160,3 +160,4 @@ def get_corrected_dallas_permit_data(path = dpm_save_path):
 if __name__ == '__main__':
     finish_geocoding()
     ignore_outliers()
+

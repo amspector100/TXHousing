@@ -51,6 +51,23 @@ def get_urban_core(zoning_input, radius, scale = 5280, newproj = 'epsg:2277'):
     core = core.to_crs({'init':'epsg:4326'})
     return core
 
+# Get area in miles. GDF must initially be in lat long
+def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', scale = 3.58701*10**(-8), name = 'area'):
+    """
+    Get area of polygons of a geodataframe in units. By default, gets it in miles.
+    :param gdf: Geodataframe with polygons in the geometry column.
+    :param geometry_column: Geometry column of the geodataframe, defaults to 'geometry'
+    :param newproj: The new projection to use to calculate units. Defaults to epsg:2277, which is probably fine for
+    Austin/Dallas/Houston and is in feet.
+    :param scale: A scale to multiply by. Defaults to 3.58701*10**(-8) which is the number of square miles in a square foot.
+    :param name: the name of the new column that will be created to store the area information. Defaults to 'area'.
+    :return: The geodataframe with a column named name (defualts to 'area') which has the area of each polygon in the desired units.
+    """
+    old_projection = gdf.crs
+    gdf = gdf.to_crs({'init':newproj})
+    gdf['area'] = scale*gdf[geometry_column].area
+    gdf = gdf.to_crs(old_projection)
+    return gdf
 
 # Block data ------------------------------------------------------------------------------------------------------------------block data
 
@@ -145,7 +162,7 @@ def get_average_by_area(data_source, spatial_index, polygon, density_feature = '
     result = precise_intersections[density_feature].dot(precise_intersections['area'])
     return result
 
-def get_all_averages_by_area(data_source, other_geometries, feature = 'B01001e1', density = False,
+def get_all_averages_by_area(data_source, other_geometries, feature = 'B01001e1',
                              data_source_geometry_column = 'geometry', other_geometries_column = 'geometry',
                              fillna = None):
     """

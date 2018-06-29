@@ -331,6 +331,10 @@ renovation_types_dallas = ['Building (BU) Commercial  Renovation', 'Building (BU
                            'Paving (Sidewalk, Drive Approaches) (PV) Commercial  Renovation',
                            'Barricade (BA) Multi Family  Renovation', 'Tent (TE) Multi Family  Renovation']
 
+# Houstin ---------------------------------------------------------------------------------------------------------------------- Houston
+
+houston_spec_min_setbacks = "data/Zoning Shapefiles/Houston_Special_Minimum_Building_Lines/Special_Minimum_Building_Lines.shp"
+houston_spec_min_lots = "data/Zoning Shapefiles/Houston_Spec_Minimum_Lot/Minimum_Lot_Size.shp"
 
 # Misc -------------------------------------------------------------------------------------------------------------
 
