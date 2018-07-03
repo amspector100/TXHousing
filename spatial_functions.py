@@ -126,6 +126,32 @@ def get_block_geodata(data_layers, cities=None):
         return geodata
 
 
+def point_intersect_polygon(points, polygon, spatial_index, points_geometry_column = 'geometry', factor = None, categorical = True, by = 'mean'):
+    """
+    Given many points and a polygon, finds one of three things. (1) If factor = None, the number of points inside the
+    polygon, (2) if factor is not None and categorical = True, the number of points inside the polygon subsetted by a
+    categorical factor, (3) if factor is not None and categorical = False, the summarized value (mean/median)
+    of a factor associated with each point of each point inside the polygon.
+    :param points: A GDF with a geometry column
+    :param polygon: The polygon to see whether the points are inside.
+    :param spatial_index: The spatial index of the points
+    :param factor: The factor to average over or subset by (if categorical).
+    :param categorical: If True, then the factor should be treated as a categorical variable.
+    :param by: If categorical is False, can either summarize using by = 'mean' or by = 'median'
+    :return: float or pandas series
+    """
+    # Get intersections
+    possible_matches_index = list(spatial_index.intersection(polygon.bounds))
+    possible_matches = points.iloc[possible_matches_index]
+    precise_matches_index = possible_matches[points_geometry_column].intersects(polygon)
+
+    if factor is None:
+        return sum(precise_matches_index)
+    elif categorical == True:
+        precise_matches = points.loc[precise_matches_index]
+
+
+
 def get_average_by_area(data_source, spatial_index, polygon, density_feature = 'B01001e1', geometry_column = 'geometry'):
     """
     Calculates the average 'feature' of a 'polygon' using a 'data_source' of different shapes which (in some combination)
@@ -154,17 +180,16 @@ def get_average_by_area(data_source, spatial_index, polygon, density_feature = '
 
     # Now actually find the intersections. Possible buffer them to avoid absurdly high numbers (area can be super small).
 
-    precise_intersections[geometry_column] = precise_intersections[geometry_column].intersection(polygon)
-    precise_intersections['area'] = precise_intersections[geometry_column].area
+    precise_intersections.loc[:, geometry_column] = precise_intersections[geometry_column].intersection(polygon)
+    precise_intersections.loc[:, 'area'] = precise_intersections[geometry_column].area
     precise_intersections = precise_intersections.loc[precise_intersections['area'] != 0] # For some reason we get 0 area every now and then, so get rid of these columns.
 
     # Now find feature for the polygon
     result = precise_intersections[density_feature].dot(precise_intersections['area'])
     return result
 
-def get_all_averages_by_area(data_source, other_geometries, feature = 'B01001e1',
-                             data_source_geometry_column = 'geometry', other_geometries_column = 'geometry',
-                             fillna = None):
+def get_all_averages_by_area(data_source, other_geometries, feature = 'B01001e1', data_source_geometry_column = 'geometry',
+                             other_geometries_column = 'geometry', drop_multipolygons = True, fillna = None, account_for_water = True):
     """
     Get averages of a 'feature' from 'data_source' by area. Note: data_source and other_geometries should have the
     same crs initially.
@@ -178,6 +203,7 @@ def get_all_averages_by_area(data_source, other_geometries, feature = 'B01001e1'
     :param data_source_geometry_column: geometry column for data_source
     :param other_geometries_column: geometry column for other_geometries
     :param fillna: if not None, fill na values with this value.
+    :param account_for_water: if true, will try to account for the % of an area which is covered by water. Only works for block data.
     :return: other_geometries but with a new column, feature, which has the averages by area.
     """
     time0 = time.time()
@@ -188,15 +214,24 @@ def get_all_averages_by_area(data_source, other_geometries, feature = 'B01001e1'
               'might cause issues.""".format(data_source.crs, other_geometries.crs))
 
     # Process data for convenience (just to prevent multipolygons/invalid polygons from messing things up)
-    data_source = process_geometry(data_source)
+    data_source = process_geometry(data_source, drop_multipolygons=drop_multipolygons)
     data_source.reset_index(drop = True)
     data_source.index = [str(ind) for ind in data_source.index]
-    data_source = data_source[[feature, data_source_geometry_column]] # Save a bit of memory
 
     # Get the feature in terms of units per area
-    data_source[feature] = data_source[feature].divide(data_source[data_source_geometry_column].area)
+    if account_for_water:
+        data_source.loc[:, 'percent_land'] = data_source['ALAND'].divide(data_source["ALAND"] + data_source['AWATER'])
+        data_source.loc[:, 'density'] = data_source[feature].divide(data_source[data_source_geometry_column].area).multiply(data_source['percent_land'])
+    else:
+        data_source.loc[:, 'density'] = data_source[feature].divide(data_source[data_source_geometry_column].area)
+    data_source = data_source[['density', data_source_geometry_column]] # Save a bit of memory
 
-    other_geometries = process_geometry(other_geometries)
+    other_geometries = process_geometry(other_geometries, drop_multipolygons = drop_multipolygons)
+    if len(other_geometries) == 0 and drop_multipolygons == True:
+
+        # Warn user in case'
+        print('Warning in get_all_averages_by_area: it looks like dropping multipolygons in the'
+              '"process geometry" call has eliminated all the data.')
 
 
     # Get spatial index
@@ -204,7 +239,7 @@ def get_all_averages_by_area(data_source, other_geometries, feature = 'B01001e1'
 
     # Quick function to apply to geometry column for other_geometries
     def get_avg(polygon):
-        result = get_average_by_area(data_source, spatial_index, polygon, density_feature = feature, geometry_column = data_source_geometry_column)
+        result = get_average_by_area(data_source, spatial_index, polygon, density_feature = 'density', geometry_column = data_source_geometry_column)
         if fillna is not None:
             if result == float('inf') or result == float('nan'):
                 result = fillna
@@ -258,9 +293,10 @@ def make_valid_buffer(poly):
         return poly
 
 # Ignore multipolygons and make invalid polygons valid
-def process_geometry(gdf, geometry_column = 'geometry'):
+def process_geometry(gdf, geometry_column = 'geometry', drop_multipolygons = True):
     gdf.loc[:, geometry_column] = gdf[geometry_column].apply(make_valid_buffer)
-    gdf = gdf.loc[gdf[geometry_column].apply(is_polygon)]
+    if drop_multipolygons:
+        gdf = gdf.loc[gdf[geometry_column].apply(is_polygon)]
     return gdf
 
 # Adapted from http://blog.thehumangeo.com/2014/05/12/drawing-boundaries-in-python/
@@ -628,6 +664,7 @@ def haversine(point1, point2):
     r = 3956  # Radius of earth in miles. Use 6371 for km
     return c * r
 
+
 def points_intersect_rings(gdf, zoning_input, factor = None, step = 1, categorical = True, by = 'mean',
                            geometry_column = 'geometry', per_square_mile = True):
 
@@ -727,7 +764,6 @@ def polygons_intersect_rings(gdf, zoning_input, factor = None, newproj = 'epsg:2
     gdf = gdf.to_crs({'init':newproj})
 
 
-
     # Get center and initialize output
     center_latlong = shapely.geometry.point.Point(zoning_input.long, zoning_input.lat)
     center_series = gpd.GeoSeries(center_latlong)
@@ -759,10 +795,10 @@ def polygons_intersect_rings(gdf, zoning_input, factor = None, newproj = 'epsg:2
 
 
     radius = 0
-    while radius <= maximum:
+    while radius <= maximum - step:
 
         radius += step
-        circle = center.buffer(feet_to_mile*radius)
+        circle = center.buffer(feet_to_mile*radius).difference(center.buffer(feet_to_mile*(radius - step)))
 
         # Find intersections, and be efficient for larger circles
         if radius <= maximum/2:
@@ -786,16 +822,19 @@ def polygons_intersect_rings(gdf, zoning_input, factor = None, newproj = 'epsg:2
         precise_matches.loc[:, 'area'] = precise_matches.loc[:, geometry_column].area
         total_area = precise_matches['area'].sum()
 
+        # In this case, the denominator is the total area within the ring
         if factor is None:
             if city is not None:
                 area = circle.intersection(city_shape).area
             else:
                 area = circle.area
             result.loc[radius] = total_area/area
+
+        # In all other cases, the denominator is the total area inside the 'factor' column
         elif categorical:
             result.loc[radius] = precise_matches[['area', factor]].groupby(factor)['area'].sum().divide(total_area)
         else:
-            result.loc[radius] = sum(precise_matches['area'].multiply(precise_matches[factor]))/(total_area)
+            result.loc[radius] = precise_matches['area'].dot(precise_matches[factor])/(total_area)
 
     return result
 

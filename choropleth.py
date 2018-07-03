@@ -202,24 +202,6 @@ def create_regulatory_layers(zoning_input, zips, regulations_path, regulation_ty
 
     return zip_geodata
 
-# Add demand noncategorical data to zip geodata
-def add_demand_data(zip_geodata, demand_input, city, feature_name = None):
-    """
-    :param zip_geodata: Zip geodata, should already have all the geometries for all of the zip codes in the city.
-    :param demand_input: A class demand_input.
-    :param city: The City, i.e. 'Austin, TX' or 'Dallas, TX'
-    :param feature_name: Updated feature name in case of conflicting features from different sources (i.e. 'Avg Listing Price' is in both the sfhomes and the cth homes dataset)
-    :return: zip_geodata updated with the new value
-    """
-
-    if feature_name is None:
-        feature_name = demand_input.feature
-
-    data, metadata = process_demand_data(demand_input, graph = False)
-    data = data.loc[[index for index in data.index if metadata.loc[index, demand_input.geo_filter] == city]]
-    zip_geodata[feature_name] = data[demand_input.feature]
-    return zip_geodata
-
 
 # Actually getting the final objects -------------------------------AUSTIN----------------------------------------------
 
@@ -275,7 +257,7 @@ def final_austin_graph(zoning_input, zip_features_dic):
 
     # Marker
     sf_cons_fg = FeatureGroup('Single Family Residential Construction (Markers)', show = True)
-    sfconstruction = process_austin_permit_data(searchfor = ['101 single family houses'], earliest = 2013)
+    sfconstruction = process_austin_permit_data(searchfor = ['101 single family houses'], earliest = 2013, permittypedesc = 'Building Permit', workclass = 'New')
     make_marker_cluster(sfconstruction, make_centroids=False, fast=True).add_to(sf_cons_fg)
     sf_cons_fg.add_to(basemap)
 
@@ -295,6 +277,8 @@ def final_austin_graph(zoning_input, zip_features_dic):
     mfconstruction = process_austin_permit_data(searchfor=    ['103 two family bldgs',
                                                                '104 three & four family bldgs',
                                                                '105 five or more family bldgs'],
+                                                permittypedesc='Building Permit',
+                                                workclass='New',
                                                 earliest=2013)
     make_marker_cluster(mfconstruction, make_centroids=False, fast=True).add_to(mf_cons_fg)
     mf_cons_fg.add_to(basemap)

@@ -300,7 +300,7 @@ dpm_save_path = "C:/Users/amspe/Documents/R/MI2018/TXHousing/data/Zoning Shapefi
 
 dallas_regulations_path = 'data/dallas zoning standards.csv'
 
-renovation_types_dallas = ['Building (BU) Commercial  Renovation', 'Building (BU) Single Family  Renovation',
+dallas_renovation_types = ['Building (BU) Commercial  Renovation', 'Building (BU) Single Family  Renovation',
                            'Building (BU) Multi Family  Renovation', 'Flammable Liquid (FL) Commercial  Renovation',
                            'Swimming Pool (SW) Single Family  Renovation', 'Tree Removal (TR) Commercial  Renovation',
                            'Swimming Pool (SW) Multi Family  Renovation', 'Tent (TE) Commercial  Renovation',

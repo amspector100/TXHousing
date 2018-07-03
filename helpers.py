@@ -60,12 +60,15 @@ def get_zip_boundaries():
 
 # Zoning data processing functions-------------------------------------------------------------------------------------------- Zoning Data
 
-def process_zoning_shapefile(input, broaden = True):
+def process_zoning_shapefile(input, broaden = True, overlay = {'-MU':'Multifamily'}):
     """"
     Processes shapefile.
     :param input: An input, of class 'zoning_inputs.'
     :param broaden: Boolean. Default true. If true, will decode zoning data into a broader classification (i.e. sf, mf)
     as specified by the zoning input class - this processed zoning data will go in a column labelled "broad_zone."
+    :param overlay: A dictionary which maps overlay strings to broadened outputs. This is mostly useful for dealing with
+    mixed use overlays in austin (there are no mixed-use base zones, so passing in {'-mu':'Multifamily'} will help the
+    function recognize that mixed-use zones are multifamily zones.
     """
 
     # Begin timing
@@ -81,20 +84,26 @@ def process_zoning_shapefile(input, broaden = True):
     raw_data = gpd.read_file(input.path)
     print('Finished reading file, took {}'.format(time.time() - time0))
 
-    def get_zone(text):
-        split_text = text.split(input.separator)[0]
-        for key in input.base_zones:
-            if split_text in input.base_zones[key]:
-                return(key)
-        return([key for key in input.base_zones][-1])
+    if broaden:
+        def get_zone(text):
+            split_text = text.split(input.separator)[0]
+            for key in input.base_zones:
+                if split_text in input.base_zones[key]:
+                    return(key)
+            return([key for key in input.base_zones][-1])
 
-    raw_data['broad_zone'] = raw_data[input.feature].apply(get_zone)
+        raw_data['broad_zone'] = raw_data[input.feature].apply(get_zone)
+
+        # Now put account for overlays
+        if overlay is not None:
+            for key in [key for key in overlay]:
+                raw_data.loc[raw_data[input.feature].str.contains(key), 'broad_zone'] = overlay[key]
 
     # Manually set CRS if necessary
     if input.crs is not None:
         raw_data.crs = input.crs
 
-    print('Finished processing zones and crs, took {}'.format(time.time() - time0))
+    print('Finished processing zones, mixed use overlay, and crs, took {}'.format(time.time() - time0))
 
 
     return raw_data
@@ -215,6 +224,25 @@ def process_demand_data(input, graph = False, style = 'Line', date = dt.date(yea
 
     return data, metadata
 
+# Add demand noncategorical data to zip geodata
+def add_demand_data(zip_geodata, demand_input, city, feature_name = None):
+    """
+    :param zip_geodata: Zip geodata, should already have all the geometries for all of the zip codes in the city.
+    :param demand_input: A class demand_input.
+    :param cities: Iterable of cities, i.e. ['Austin, TX'] or ['Austin, TX', 'Dallas, TX']
+    :param feature_name: Updated feature name in case of conflicting features from different sources (i.e. 'Avg Listing Price' is in both the sfhomes and the cth homes dataset)
+    :return: zip_geodata updated with the new value
+    """
+
+    if feature_name is None:
+        feature_name = demand_input.feature
+
+    data, metadata = process_demand_data(demand_input, graph = False)
+    data = data.loc[[index for index in data.index if metadata.loc[index, demand_input.geo_filter] == city]]
+    zip_geodata[feature_name] = data[demand_input.feature]
+    return zip_geodata
+
+
 # Parcel data -------------------------------------------------------------------------------------------------------------- parcel data
 
 # Join old and new dallas parcel data
@@ -269,18 +297,28 @@ def process_dallas_parcel_data():
 
     return parcel_data
 
-def process_austin_permit_data(searchfor, permittypedesc = 'Building Permit', workclass = 'New', permitclassmapped = 'Residential',
+def process_austin_permit_data(searchfor, permittypedesc = None, workclass = None,
                                earliest = None, latest = None):
+    """
+    :param searchfor:
+    :param permittypedesc: The permittypedesc to match. Ex: "Building Permit."
+    :param workclass: Workclass to match. Ex: "New"
+    :param earliest:
+    :param latest:
+    :return:
+    """
 
     time0 = time.time()
     print('Reading permit data')
     permit_data = pd.read_csv(austin_permit_path)
     print('Finished reading permit data, took {}. Now subsetting.'.format(time.time() - time0))
 
-    # Only consider residential construciton permits. Note that this could technically be construction for a garage.
-    construction = permit_data.loc[(permit_data['PermitTypeDesc'] == permittypedesc) &
-                                   (permit_data['WorkClass'] == workclass)] #&
-                                   #(permit_data['PermitClassMapped'] == permitclassmapped)]
+    # Initial subset
+    construction = permit_data
+    if permittypedesc is not None:
+        construction = construction.loc[(permit_data['PermitTypeDesc'] == permittypedesc)]
+    if workclass is not None:
+        construction = construction.loc[(permit_data['WorkClass'] == workclass)]
 
     # Get right timeframe
     if earliest is not None:
@@ -295,6 +333,7 @@ def process_austin_permit_data(searchfor, permittypedesc = 'Building Permit', wo
     # Now subset to just include entries where one of the 'searchfor' strings is in either the description or permit
     #  class column. Can use this to search for either multifamily or single family, or anything specific really.
     # Best to search based on permit class, see below.
+    searchfor = [str(x).lower() for x in searchfor]
     construction.loc[:, 'PermitClass'] = construction.loc[:, 'PermitClass'].apply(to_lowercase)
     construction.loc[:, 'Description'] = construction.loc[:, 'Description'].apply(to_lowercase)
     construction = construction.loc[(construction['PermitClass'].str.contains('|'.join(searchfor))) |

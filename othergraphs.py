@@ -1,56 +1,64 @@
 from inputs import *
 from helpers import *
 from zipcode_scrape import *
+from shapely.ops import cascaded_union
 import spatial_functions as sf
 import choropleth
+import matplotlib.pyplot as plt
+import time
+from tqdm import tqdm
 
+from plotnine import * # This won't pollute the namespace I don't think because it's exactly like ggplot2 commands
+
+# These booleans determine which graphs to graph in this run of the script. If you want to regenerate every graph,
+# just set everything to 'True'.
 plot = True
 save = True
-min_lot_size = False
+min_lot_size = False # Min lot size residential areas city
 far = False
 coverage = False
 plot_austin_permits = False
 plot_dallas_permits = False
 plot_austin_commercial_permits = False
 plot_dallas_commercial_permits = False
-plot_hds = True
-
+plot_hds_locations = False
+plot_hds_permits = False # This needs some updates/revisions
 broad_zone = False
+permit_scatter = True
+
 
 # Read data --------------------------------------------------
 dallas_zones = process_zoning_shapefile(dallas_inputs, broaden = True)
 austin_zones = process_zoning_shapefile(austin_inputs, broaden = True)
-
-
-
-
+time0 = time.time()
 
 # Minimum lot size graph -------------------------------------
 if min_lot_size:
 
-    # Currently excluding agricultural zones ( A(A) in Dallas, RR in Austin)
-
+    # Currently excluding agricultural zones ( A(A) in Dallas, RR in Austin) as well as non-residential zones
     dallas_zones['inv_density'] = get_regulation_data(dallas_zones[dallas_inputs.feature], dallas_regulations_path, 'inv_density', fill = 0)
     austin_zones['min_lot'] = get_regulation_data(austin_zones[austin_inputs.feature], austin_regulations_path, 'min_lot', fill = 0)
 
     print('Min lot size, intersection 1')
-    dallas_minlot_radii = sf.polygons_intersect_rings(dallas_zones.loc[dallas_zones[dallas_inputs.feature] != 'A(A)'],
+    dallas_minlot_radii = sf.polygons_intersect_rings(dallas_zones.loc[(dallas_zones[dallas_inputs.feature] != 'A(A)') &
+                                                                       (dallas_zones['broad_zone'] != 'Other')],
                                                       dallas_inputs, factor='inv_density', categorical=False,
-                                                                            newproj='epsg:2276', step=1, maximum = 19)
+                                                                            newproj='epsg:2276', step=1, maximum = 17)
 
     print('Min lot size, intersection 2')
-    austin_minlot_radii = sf.polygons_intersect_rings(austin_zones.loc[austin_zones[austin_inputs.feature] != 'RR'],
+    austin_minlot_radii = sf.polygons_intersect_rings(austin_zones.loc[(austin_zones[austin_inputs.feature] != 'RR') &
+                                                                       (austin_zones['broad_zone'] != 'Other')],
                                                       austin_inputs, factor='min_lot', categorical=False,
-                                                                            newproj='epsg:2277', step=1, maximum = 19)
+                                                                            newproj='epsg:2277', step=1, maximum = 17)
 
     minlot = pd.concat([dallas_minlot_radii, austin_minlot_radii], axis = 1)
     minlot.columns = ['Dallas', 'Austin']
     minlot.plot(kind='bar', legend = True)
-    plt.title('Minimum Lot Size in Austin and Dallas, Excluding Agricultural Land')
+    plt.title('Minimum Lot Size in Austin and Dallas, Excluding Agricultural and Nonresidential Land')
     plt.xlabel('Distance from the city center (Miles)')
     plt.ylabel('Average Lot Size (Square Feet)')
     if save:
-        plt.savefig('Figures/Bucket 2/Minimum_Lot_Size_No_Agriculture.png', bbox_inches = 'tight')
+        plt.savefig('Figures/Bucket 2/Minimum_Lot_Size_Residential_No_Agriculture.png', bbox_inches = 'tight')
     if plot:
         plt.show()
 
@@ -151,7 +159,10 @@ if plot_austin_commercial_permits:
 
     pass
 
-if plot_hds:
+if plot_hds_locations or plot_hds_permits:
+
+    # Make zones valid
+    austin_zones = sf.process_geometry(austin_zones)
 
     # Historic Districts (hds)
 
@@ -171,109 +182,227 @@ if plot_hds:
     dallas_nat_hds = tx_hd_data.loc[tx_hd_data['CITY'] == 'Dallas']
 
     # Now, just plot distance from city center ---------- - - - - - -
-    step = 0.5
-    maximum = 5
-    austin_local_data =  sf.polygons_intersect_rings(austin_local_hds, austin_inputs, factor=None, newproj='epsg:2276', step=step, maximum=maximum)
-    austin_local_data.name = 'Austin Local Historic Districts'
-    austin_nat_data = sf.polygons_intersect_rings(austin_nat_hds, austin_inputs, factor=None, newproj='epsg:2276', step=step, maximum=maximum)
-    austin_nat_data.name = 'Austin National Historic Districts'
+    if plot_hds_locations:
+        step = 0.5
+        maximum = 5
+        austin_local_data =  sf.polygons_intersect_rings(austin_local_hds, austin_inputs, factor=None, newproj='epsg:2276', step=step, maximum=maximum)
+        austin_local_data.name = 'Austin Local Historic Districts'
+        austin_nat_data = sf.polygons_intersect_rings(austin_nat_hds, austin_inputs, factor=None, newproj='epsg:2276', step=step, maximum=maximum)
+        austin_nat_data.name = 'Austin National Historic Districts'
 
-    dallas_cds_data = sf.polygons_intersect_rings(dallas_cds, dallas_inputs, factor=None, newproj='epsg:2276', step=step, maximum=maximum)
-    dallas_cds_data.name = 'Dallas Conservation Districts'
-    dallas_nat_data = sf.polygons_intersect_rings(dallas_nat_hds, dallas_inputs, factor=None, newproj='epsg:2276', step=step, maximum=maximum)
-    dallas_nat_data.name = 'Dallas Historic Districts'
+        dallas_cds_data = sf.polygons_intersect_rings(dallas_cds, dallas_inputs, factor=None, newproj='epsg:2276', step=step, maximum=maximum)
+        dallas_cds_data.name = 'Dallas Conservation Districts'
+        dallas_nat_data = sf.polygons_intersect_rings(dallas_nat_hds, dallas_inputs, factor=None, newproj='epsg:2276', step=step, maximum=maximum)
+        dallas_nat_data.name = 'Dallas Historic Districts'
 
 
-    all_loc_data = pd.concat([austin_local_data, austin_nat_data, dallas_cds_data, dallas_nat_data], axis = 1)
-    all_loc_data.plot(kind = 'bar', color = ['purple', 'blue', 'red', 'orange'], legend = True)
-    plt.title('Locations of Austin and Dallas Historic Zones in relation to the City Center')
-    plt.xlabel('Distance from the City Center, Miles')
-    plt.ylabel('Percent of Land Covered by District Type')
+        all_loc_data = pd.concat([austin_local_data, austin_nat_data, dallas_cds_data, dallas_nat_data], axis = 1)
+        all_loc_data.plot(kind = 'bar', color = ['purple', 'blue', 'red', 'orange'], legend = True)
+        plt.title('Locations of Austin and Dallas Historic Zones in relation to the City Center')
+        plt.xlabel('Distance from the City Center, Miles')
+        plt.ylabel('Percent of Land Covered by District Type')
+        if save:
+            plt.savefig('Figures/Bucket 2/HDLocations.png', bbox_inches = 'tight')
+        if plot:
+            plt.show()
+
+    # Now plot number of demolition permits in the areas ------------------ - -- - - - -
+    if plot_hds_permits:
+        # Get Renovation/Demolition (not construction) points/data.
+        dallas_points = process_dallas_permit_data(permit_types = ['Demolition Permit Commercial', 'Demolition Permit SFD/Duplex']) #dallas_renovation_types
+        austin_points = process_austin_permit_data(searchfor = ['demolition'], earliest = 2013)
+        austin_points = austin_points.loc[[not bool for bool in austin_points['Description'].str.contains('interior')]] # Don't care about interior remodels
+        print('Length of austin_points is {}'.format(len(austin_points)))
+
+        radius = 2
+
+        # Get residential cores. Need to simplify slightly to save a massive amount of time
+        dallas_core = sf.get_urban_core(dallas_inputs, radius)
+        print('Taking complex Dallas urban core intersection, time is {}'.format(time.time()-time0))
+        dallas_res_core = dallas_core.intersection(dallas_zones.loc[dallas_zones['broad_zone'] != 'Other', 'geometry'].unary_union)
+        dallas_res_core = gpd.GeoDataFrame(geometry = dallas_res_core)
+        dallas_res_core.loc[:, 'geometry']  = dallas_res_core['geometry'].simplify(tolerance = 0.001)
+
+        austin_core = sf.get_urban_core(austin_inputs, radius)
+        print('Taking complex Austin urban core intersection, time is {}'.format(time.time() - time0))
+        austin_res_core = austin_core.intersection(austin_zones.loc[austin_zones['broad_zone'] != 'Other', 'geometry'].unary_union)
+        austin_res_core = gpd.GeoDataFrame(geometry = austin_res_core)
+        austin_res_core.loc[:, 'geometry']  = austin_res_core['geometry'].simplify(tolerance = 0.001)
+
+
+        # Get everything else
+        def points_over_area(points, polygons, points_geometry_column = 'geometry', poly_geometry_column = 'geometry', normalize_by_area = True):
+            """
+            :param points: GeoDataframe of points, should be in lat long
+            :param polygons: Geodataframe of polygons
+            :param newproj: Transform data into this new projection to calculate areas more effectively. Units must be in feet.
+            :param: normalize_by_area: If true, will divide the number of points by the area of the location (in square miles).
+            :return: GeoDataFrame of polygons
+            """
+
+            # Process points and polys to make them valid
+            polygons = sf.process_geometry(polygons, drop_multipolygons = False)
+            polygons.reset_index(drop=True, inplace=True)
+            polygons.index = [str(ind) for ind in polygons.index]
+
+            points = points.loc[points[points_geometry_column].is_valid] #Ignore invalid points (i.e. with 'na's)
+            points.reset_index(drop=True, inplace=True)
+            points.index = [str(ind) for ind in points.index]
+
+            counter = 0
+
+            # Intersections (efficiently)
+            spatial_index = points.sindex
+            for poly in polygons[poly_geometry_column]:
+                possible_intersections_index = list(spatial_index.intersection(poly.bounds))
+                possible_intersections = points.iloc[possible_intersections_index]
+                precise_matches = possible_intersections[points_geometry_column].intersects(poly)
+                counter += sum(precise_matches.tolist())
+
+            # Return # of points divided by area
+            area = sf.get_area_in_units(polygons)['area'].sum()
+
+            if normalize_by_area:
+                return counter/area # Would be nice to get this area in miles. Oh well.
+            else:
+                return counter
+
+        # Label names
+        local_name = 'Conservation District (Dallas) or Local Historic Distrct (Austin)'
+        nat_name = 'National Historic District'
+        all_name = 'Urban Core ({} Miles from City Center)'.format(radius)
+
+        # Initialize and fill results
+        result = pd.DataFrame(index = ['Dallas', 'Austin'], columns = [local_name, nat_name, all_name])
+
+
+        # Get block data
+        block_data = sf.get_block_geodata(['X01_AGE_AND_SEX'], cities = ['Austin', 'Dallas'])
+
+
+        print('Filling hd result for Dallas, time is {}'.format(time.time() - time0))
+        for name, data in zip([local_name, nat_name], [dallas_cds, dallas_nat_hds]):
+            result.at['Dallas', name] = points_over_area(dallas_points, data, normalize_by_area = False)/(sf.get_all_averages_by_area(block_data['Dallas'], data, drop_multipolygons = False, fillna = 0, account_for_water = True)['B01001e1'].sum())
+
+        # Do this separately to save time in getting num_points
+        num_points = points_over_area(dallas_points,
+                                     dallas_core,
+                                     normalize_by_area=False)
+        pop = sf.get_all_averages_by_area(block_data['Dallas'],
+                                           dallas_res_core,
+                                           drop_multipolygons = False,
+                                           fillna = 0,
+                                           account_for_water = True)['B01001e1'].sum()
+        result.at['Dallas', all_name] = num_points/pop
+
+        print('Filling result for Austin, time is {}'.format(time.time() - time0))
+        for name, data in zip([local_name, nat_name], [austin_local_hds, austin_nat_hds]):
+            # Get number of points per area and then also divide by population
+            result.at['Austin', name] = points_over_area(austin_points, data, normalize_by_area = False)/(sf.get_all_averages_by_area(block_data['Austin'], data, drop_multipolygons = False, fillna = 0, account_for_water = True)['B01001e1'].sum())
+        # Do this separately to save time in getting num_points
+        num_points = points_over_area(austin_points,
+                                     austin_core,
+                                     normalize_by_area=False)
+        pop = sf.get_all_averages_by_area(block_data['Austin'],
+                                           austin_res_core,
+                                           drop_multipolygons = False,
+                                           fillna = 0,
+                                           account_for_water = True)['B01001e1'].sum()
+        result.at['Austin', all_name] = num_points/pop
+
+
+        result = 100*result.divide(result[all_name], axis = 0)
+        result.plot(kind = 'bar', legend = True)
+        plt.title('Demolition Permit Frequencies in the Urban Core and in Historic Districts, Austin and Dallas')
+        plt.xlabel('District Type')
+        plt.ylabel('Demolition Permits per Population, Scaled to Urban Core (%)')
+        if save:
+            plt.savefig('Figures/Bucket 2/HDDemolitionPermits.png', bbox_inches = 'tight')
+        if plot:
+            plt.show()
+
+if broad_zone:
+
+    # This currently excludes agricultural and nonresidential land.
+    maximum = 17
+
+    dallas_zones = process_zoning_shapefile(dallas_inputs, broaden=True)
+    austin_zones = process_zoning_shapefile(austin_inputs, broaden=True)
+
+    dallas_zone_rings = sf.polygons_intersect_rings(dallas_zones.loc[(dallas_zones[dallas_inputs.feature] != 'A(A)') &
+                                                                       (dallas_zones['broad_zone'] != 'Other')],
+                                                      dallas_inputs, factor='broad_zone', categorical=True,
+                                                                            newproj='epsg:2276', step=1, maximum = maximum)
+
+    dallas_zone_rings.columns = [str(col) + ' Dallas' for col in dallas_zone_rings.columns]
+
+
+
+
+    austin_zone_rings = sf.polygons_intersect_rings(austin_zones.loc[(austin_zones[austin_inputs.feature] != 'RR') &
+                                                                       (austin_zones['broad_zone'] != "Other")],
+                                                      austin_inputs, factor='broad_zone', categorical=True,
+                                                                            newproj='epsg:2277', step=1, maximum = maximum)
+    austin_zone_rings.columns = [str(col) + ' Austin' for col in austin_zone_rings.columns]
+
+
+
+    zone_rings = pd.concat([dallas_zone_rings, austin_zone_rings], axis = 1)
+    zone_rings[['Single Family Austin', 'Single Family Dallas']].plot(kind='bar', legend = True, color = ['cornflowerblue', '#8FBC8F'])
+    plt.title('Single Family Zoning in Austin and Dallas, Excluding Agricultural and Nonresidential Land')
+    plt.xlabel('Distance from the city center (Miles)')
+    plt.ylabel('Percentage of Residential Land Zoned')
     if save:
-        plt.savefig('Figures/Bucket 2/HDLocations.png', bbox_inches = 'tight')
+        plt.savefig('Figures/Bucket 2/SFZoningRings.png', bbox_inches = 'tight')
     if plot:
         plt.show()
 
-    # Now plot number of demolition permits in the areas ------------------ - -- - - - -
+    zone_rings[['Multifamily Austin', 'Multifamily Dallas']].plot(kind='bar', legend = True, color = ['cornflowerblue', '#8FBC8F'])
+    plt.title('Multifamily Zoning in Austin and Dallas, Excluding Agricultural and Nonresidential Land')
+    plt.xlabel('Distance from the city center (Miles)')
+    plt.ylabel('Percentage of Residential Land Zoned')
+    if save:
+        plt.savefig('Figures/Bucket 2/MFZoningRings.png', bbox_inches = 'tight')
+    if plot:
+        plt.show()
 
-    # Get RENOVATION (not construction) points/data.
-    dallas_points = process_dallas_permit_data(permit_types = ['Demolition Permit Commercial', 'Demolition Permit SFD/Duplex'])
-    austin_points = process_austin_permit_data(searchfor = ['demolition'])
+if permit_scatter:
 
-    radius = 5
+    # Get permit data
+    dallas_permits = get_corrected_dallas_permit_data(path = dpm_save_path)
+    austin_permits = process_austin_permit_data(searchfor=['101 single family houses',
+                                                           '103 two family bldgs',
+                                                           '104 three & four family bldgs',
+                                                           '105 five or more family bldgs'],
+                                                earliest=2013,
+                                                permittypedesc='Building Permit',
+                                                workclass='New')
 
-    # Get only residential areas
-    austin_core = sf.get_urban_core(austin_inputs, radius)
-    austin_core = austin_core.intersection(austin_zones.loc[austin_zones['broad_zone'] != 'Other', 'geometry'].unary_union)
-    dallas_core = sf.get_urban_core(dallas_inputs, radius)
-    dallas_core = dallas_core.intersection(dallas_zones.loc[dallas_zones['broad_zone'] != 'Other', 'geometry'].unary_union)
+    # Now get zip geodata - this is for the scatter of med housing price
+    zip_geodata = get_zip_boundaries()
+    austin_zip_geodata = zip_geodata.loc[[z for z in austin_zips if z in zip_geodata.index]]
+    dallas_zip_geodata = zip_geodata.loc[[z for z in dallas_zips if z in zip_geodata.index]]
+    # Loop through and add pricing data
+    for cityname, citydata in zip(['Autin, TX', 'Dallas, TX'], [austin_zip_geodata, dallas_zip_geodata]):
+        citydata = add_demand_data(zip_geodata=citydata, demand_input = realtor_avg_sf_price, city = cityname, feature_name = 'sf_avg_listing')
+        citydata = add_demand_data(zip_geodata=citydata, demand_input = realtor_avg_cth_price, city = cityname, feature_name = 'mf_avg_listing')
 
+    # Now find which points are in which zipcodes
+    for sfpermits, mfpermits, data in zip([austin_permits, dallas_permits], [austin_zip_geodata, dallas_zip_geodata]):
+        spatial_index = permits.sindex
+        # Initialize result column
+        permits['zipcode'] = None
+        for zipcode, polygon in tqdm(zip(data.index, data['geometry'])):
+            possible_matches_index = list(spatial_index.intersection(polygon.bounds))
+            possible_matches = permits.iloc[possible_matches_index]
+            permits.loc[possible_matches['geometry'].intersects(polygon), 'zipcode'] = zipcode
 
-    # Get everything else
-    def points_over_area(points, polygons, points_geometry_column = 'geometry', poly_geometry_column = 'geometry', newproj = 'epsg:2277', normalize_by_area = True):
-        """
-        :param points: GeoDataframe of points, should be in lat long
-        :param polygons: Geodataframe of polygons
-        :param newproj: Transform data into this new projection to calculate areas more effectively. Units must be in feet.
-        :param: normalize_by_area: If true, will divide the number of points by the area of the location (in square miles).
-        :return: GeoDataFrame of polygons
-        """
-
-        # Process points and polys to make them valid
-        polygons = sf.process_geometry(polygons)
-        polygons.reset_index(drop=True, inplace=True)
-        polygons.index = [str(ind) for ind in polygons.index]
-
-        points = points.loc[points[points_geometry_column].is_valid] #Ignore invalid points (i.e. with 'na's)
-        polygons.reset_index(drop=True, inplace=True)
-        polygons.index = [str(ind) for ind in polygons.index]
-
-        counter = 0
-
-        # Intersections (efficiently)
-        spatial_index = points.sindex
-        for poly in polygons[poly_geometry_column]:
-            possible_intersections_index = list(spatial_index.intersection(poly.bounds))
-            possible_intersections = points.iloc[possible_intersections_index]
-            precise_matches = possible_intersections[points_geometry_column].intersects(poly)
-            counter += sum(precise_matches.tolist())
-
-        # Return # of points divided by area
-        polygons = polygons.to_crs({'init':newproj})
-        total_area = sum(polygons[poly_geometry_column].area)*(3.58701*10**(-8)) # Square feet to square miles
-        if normalize_by_area:
-            return counter/total_area # Would be nice to get this area in miles. Oh well.
-        else:
-            return counter
-
-    # Label names
-    local_name = 'Conservation District or Local Historic Distrct'
-    nat_name = 'National Historic District'
-    all_name = 'Urban Core ({} Miles from City Center)'.format(radius)
-
-    # Initialize and fill results
-    result = pd.DataFrame(index = ['Dallas', 'Austin'], columns = [local_name, nat_name, all_name])
+    print(austin_permit_data)
 
 
-    # Get block data
-    block_data = sf.get_block_geodata(['X01_AGE_AND_SEX'], cities = ['Austin', 'Dallas'])
+    austin_sf = austin_permits.loc[austin_permits['PermitClass'].str.contains('101 single')]
+    austin_mf = austin_permits.loc[[not bool for bool in austin_permits['PermitClass'].str.contains('101 single')]]
 
-
-    print('Filling result for Austin')
-    for name, data in zip(result.columns, [austin_local_hds, austin_nat_hds, austin_core]):
-        # Get number of points per area and then also divide by population
-        result.at['Austin', name] = points_over_area(austin_points, data, normalize_by_area = False)/(sf.get_all_averages_by_area(block_data['Austin'], data, fillna = 0)['B01001e1'].sum())
-
-    print('Filling hd result for Dallas')
-    for name, data in zip(result.columns, [dallas_cds, dallas_nat_hds, dallas_core]):
-        result.at['Dallas', name] = points_over_area(dallas_points, data, normalize_by_area = False)/(sf.get_all_averages_by_area(block_data['Dallas'], data, fillna = 0)['B01001e1'].sum())
-
-    result = result.divide(result[all_name], axis = 0)
-
-    result.plot(kind = 'bar', legend = True)
-    plt.show()
-
-
-
-
+    dallas_sf = dallas_permits.loc[dallas_permits['Permit Type'].str.contains('Single')]
+    dallas_mf = dallas_permits.loc[dallas_permits['Permit Type'].str.contains('Multi')]
 
