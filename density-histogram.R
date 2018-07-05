@@ -169,13 +169,12 @@ process_block_shapes <- function(block_path,
                                  geo_layer, 
                                  feature = 'B00001e1'
                                  ) {
-  data <- st_read(block_path, data_layer, quietly = TRUE) %>% 
+  data <- st_read(block_path, data_layer) %>% 
     select(feature, 'GEOID') %>%
     rename_at(vars(feature), ~'population') 
   geo <- st_read(block_path, geo_layer)
   geodata <- st_as_sf(inner_join(data, geo, by = c('GEOID' = 'GEOID_Data')))
-  geodata <- st_transform(geodata, '+init=EPSG:4326') %>%
-    select(premerge_columns)
+  geodata <- st_transform(geodata, '+init=EPSG:4326')
   return(geodata)
 }
 
@@ -273,7 +272,12 @@ bin_sums <- as.data.frame(all_blocks) %>%
 
 # Get percents
 final_data <- inner_join(area_sums, bin_sums, by = c("NAME" = "NAME")) %>%
-  mutate(percent = 100*bin_sum/population) 
+  mutate(percent = 100*bin_sum/population) %>%
+  mutate(NAME = factor(NAME, 
+                       levels = c('Austin', 'Dallas', 'Houston', 
+                       'Travis County', 'Dallas County', 'Harris County',
+                       'Los Angeles', 'Los Angeles County', 'San Francisco',
+                       'Chicago', 'Boston', 'New York')))
 
 # Graph
 bar_width = 0.9
