@@ -107,7 +107,7 @@ def get_block_geodata(data_layers, cities=None):
             possible_intersections_index = list(spatial_index.intersection(shape.bounds))
             possible_intersections = geodata.iloc[possible_intersections_index]
             precise_intersections = possible_intersections['geometry'].intersects(shape)
-            return precise_intersections
+            return precise_intersections[precise_intersections.values] # only include shapes that actually intersect
 
         # Check if cities is a string, if so get a result
         if isinstance(cities, str):
@@ -126,7 +126,7 @@ def get_block_geodata(data_layers, cities=None):
         return geodata
 
 
-def point_intersect_polygon(points, polygon, spatial_index, points_geometry_column = 'geometry', factor = None, categorical = True, by = 'mean'):
+def points_intersect_polygon(points, polygon, spatial_index, points_geometry_column = 'geometry', factor = None, categorical = True, by = 'mean'):
     """
     Given many points and a polygon, finds one of three things. (1) If factor = None, the number of points inside the
     polygon, (2) if factor is not None and categorical = True, the number of points inside the polygon subsetted by a
@@ -147,8 +147,20 @@ def point_intersect_polygon(points, polygon, spatial_index, points_geometry_colu
 
     if factor is None:
         return sum(precise_matches_index)
-    elif categorical == True:
-        precise_matches = points.loc[precise_matches_index]
+    else:
+        precise_matches = points.loc[precise_matches_index[precise_matches_index.values].index.tolist()]
+        if categorical == True:
+            return precise_matches.groupby(factor)[points_geometry_column].count()
+        elif by == 'mean':
+            return precise_matches.groupby(factor)[points_geometry_column].mean()
+        elif by == 'median':
+            return precise_matches.groupby(factor)[points_geometry_column].median()
+        else:
+            print(
+            'In point_choropleth call, "by" argument must either equal "mean" or "median" - you put "{}"'.format(by))
+            return None
+
+
 
 
 
@@ -176,7 +188,7 @@ def get_average_by_area(data_source, spatial_index, polygon, density_feature = '
     possible_intersections_index = list(spatial_index.intersection(polygon.bounds))
     possible_intersections = data_source.iloc[possible_intersections_index]
     precise_intersections_index = possible_intersections[geometry_column].intersects(polygon)
-    precise_intersections = data_source.loc[precise_intersections_index.index.tolist()]
+    precise_intersections = data_source.loc[precise_intersections_index[precise_intersections_index.values].index.tolist()]
 
     # Now actually find the intersections. Possible buffer them to avoid absurdly high numbers (area can be super small).
 
@@ -298,6 +310,14 @@ def process_geometry(gdf, geometry_column = 'geometry', drop_multipolygons = Tru
     if drop_multipolygons:
         gdf = gdf.loc[gdf[geometry_column].apply(is_polygon)]
     return gdf
+
+# Drop invalid points
+def process_points(points, geometry_column = 'geometry'):
+    points = points.loc[points[geometry_column].is_valid]  # Ignore invalid points (i.e. with 'na's)
+    points.reset_index(drop=True, inplace=True)
+    points.index = [str(ind) for ind in points.index]
+    return points
+
 
 # Adapted from http://blog.thehumangeo.com/2014/05/12/drawing-boundaries-in-python/
 def alpha_shape(points, alpha = 0.001):

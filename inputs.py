@@ -336,6 +336,8 @@ dallas_renovation_types = ['Building (BU) Commercial  Renovation', 'Building (BU
 houston_spec_min_setbacks = "data/Zoning Shapefiles/Houston_Special_Minimum_Building_Lines/Special_Minimum_Building_Lines.shp"
 houston_spec_min_lots = "data/Zoning Shapefiles/Houston_Spec_Minimum_Lot/Minimum_Lot_Size.shp"
 
+houston_structural_permits_path = "data/Houston_Structural_Permits/Permits_wm_Structural.shp"
+
 # Misc -------------------------------------------------------------------------------------------------------------
 
 # See metadata at https://www2.census.gov/geo/tiger/TIGER_DP/2016ACS/Metadata/BG_METADATA_2016.txt

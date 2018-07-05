@@ -245,9 +245,7 @@ if plot_hds_locations or plot_hds_permits:
             polygons.reset_index(drop=True, inplace=True)
             polygons.index = [str(ind) for ind in polygons.index]
 
-            points = points.loc[points[points_geometry_column].is_valid] #Ignore invalid points (i.e. with 'na's)
-            points.reset_index(drop=True, inplace=True)
-            points.index = [str(ind) for ind in points.index]
+            points = sf.process_points(points, geometry_column = points_geometry_column)
 
             counter = 0
 
@@ -368,8 +366,13 @@ if broad_zone:
 
 if permit_scatter:
 
-    # Get permit data
+    # Get permit data - Dallas
     dallas_permits = get_corrected_dallas_permit_data(path = dpm_save_path)
+    dallas_permits = sf.process_points(dallas_permits)
+    dallas_sf = dallas_permits.loc[dallas_permits['Permit Type'].str.contains('Single')]
+    dallas_mf = dallas_permits.loc[dallas_permits['Permit Type'].str.contains('Multi')]
+
+    # Get permit data - Austin
     austin_permits = process_austin_permit_data(searchfor=['101 single family houses',
                                                            '103 two family bldgs',
                                                            '104 three & four family bldgs',
@@ -377,32 +380,51 @@ if permit_scatter:
                                                 earliest=2013,
                                                 permittypedesc='Building Permit',
                                                 workclass='New')
+    austin_permits = sf.process_points(austin_permits)
+    austin_sf = austin_permits.loc[austin_permits['PermitClass'].str.contains('101 single')]
+    austin_mf = austin_permits.loc[[not bool for bool in austin_permits['PermitClass'].str.contains('101 single')]]
 
     # Now get zip geodata - this is for the scatter of med housing price
     zip_geodata = get_zip_boundaries()
     austin_zip_geodata = zip_geodata.loc[[z for z in austin_zips if z in zip_geodata.index]]
     dallas_zip_geodata = zip_geodata.loc[[z for z in dallas_zips if z in zip_geodata.index]]
+
     # Loop through and add pricing data
-    for cityname, citydata in zip(['Autin, TX', 'Dallas, TX'], [austin_zip_geodata, dallas_zip_geodata]):
-        citydata = add_demand_data(zip_geodata=citydata, demand_input = realtor_avg_sf_price, city = cityname, feature_name = 'sf_avg_listing')
-        citydata = add_demand_data(zip_geodata=citydata, demand_input = realtor_avg_cth_price, city = cityname, feature_name = 'mf_avg_listing')
+    for cityname, citydata in zip(['Austin, TX', 'Dallas, TX'], [austin_zip_geodata, dallas_zip_geodata]):
+        citydata = add_demand_data(zip_geodata=citydata, demand_input = realtor_avg_sf_price, city = cityname, feature_name = 'sfprice')
+        citydata = add_demand_data(zip_geodata=citydata, demand_input = realtor_avg_cth_price, city = cityname, feature_name = 'mfprice')
 
     # Now find which points are in which zipcodes
-    for sfpermits, mfpermits, data in zip([austin_permits, dallas_permits], [austin_zip_geodata, dallas_zip_geodata]):
-        spatial_index = permits.sindex
-        # Initialize result column
-        permits['zipcode'] = None
-        for zipcode, polygon in tqdm(zip(data.index, data['geometry'])):
-            possible_matches_index = list(spatial_index.intersection(polygon.bounds))
-            possible_matches = permits.iloc[possible_matches_index]
-            permits.loc[possible_matches['geometry'].intersects(polygon), 'zipcode'] = zipcode
+    for sfpermits, mfpermits, data in zip([austin_sf, dallas_sf], [austin_mf, dallas_mf], [austin_zip_geodata, dallas_zip_geodata]):
 
-    print(austin_permit_data)
+        # Spatial indexes
+        sf_spatial_index = sfpermits.sindex
+        mf_spatial_index = mfpermits.sindex
+
+        # Run through
+        def get_sf_pts(poly):
+            return sf.points_intersect_polygon(sfpermits, poly, sf_spatial_index)
+        def get_mf_pts(poly):
+            return sf.points_intersect_polygon(mfpermits, poly, mf_spatial_index)
+
+        # I have reality checked this
+        data.loc[:, 'SF'] = data['geometry'].apply(get_sf_pts)
+        data.loc[:, 'MF'] = data['geometry'].apply(get_mf_pts)
 
 
-    austin_sf = austin_permits.loc[austin_permits['PermitClass'].str.contains('101 single')]
-    austin_mf = austin_permits.loc[[not bool for bool in austin_permits['PermitClass'].str.contains('101 single')]]
+    austin_zip_geodata['City'] = 'Austin'
+    dallas_zip_geodata['City'] = 'Dallas'
 
-    dallas_sf = dallas_permits.loc[dallas_permits['Permit Type'].str.contains('Single')]
-    dallas_mf = dallas_permits.loc[dallas_permits['Permit Type'].str.contains('Multi')]
+    all_zip_geodata = austin_zip_geodata.append(dallas_zip_geodata)
+    #all_zip_geodata = all_zip_geodata.melt(value_vars = ['SF', 'MF'], var_name = 'Housing Type', value_name = 'Number of Permits')
+    sfplot = (ggplot(all_zip_geodata, aes(x = 'sfprice', y = 'SF', color = 'City'))
+          + geom_point()
+          + stat_smooth(method = 'lowess', span = 0.8))
+    mfplot = (ggplot(all_zip_geodata, aes(x = 'mfprice', y = 'MF', color = 'City'))
+          + geom_point()
+          + stat_smooth(method = 'lowess', span = 0.8))
 
+    width = 8
+    height = 5
+    sfplot.save(filename='Figures/Bucket 2/construction_scatter_sf.svg', width=width, height=height, bbox_inches = 'tight')
+    mfplot.save(filename='Figures/Bucket 2/construction_scatter_mf.svg', width=width, height=height, bbox_inches = 'tight')
