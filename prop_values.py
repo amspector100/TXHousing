@@ -193,7 +193,7 @@ realtor_avg_cth_price = Demand_Input(path = "data/RDC_InventoryCoreMetrics_Zip_c
 
 def process_and_graph(input, graph = False, style = 'Line', date = dt.date(year = 2018, month = 4, day = 1)):
     """
-    Initially process and graph housing datasets.
+    Initially process and graph housing datasets. If it graphs, it will not be a choropleth.
     :param input: A Zillow_Inputs class.
     :return: data (a pd dataframe of just the time series and the index),
     metadata (a pd dataframe of metadata about the index)
@@ -328,4 +328,4 @@ def choropleth_processed_data(input, date = dt.date(year = 2018, month = 4, day 
             plt.show()
 
 #process_and_graph(sfhomes_nbhd, graph = True, style = 'bar')
-choropleth_processed_data(realtor_avg_cth_price, plot_folium=True)
+choropleth_processed_data(realtor_hotness_cbsa, plot_folium=True)

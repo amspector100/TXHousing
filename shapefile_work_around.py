@@ -1,16 +1,22 @@
+import os
+import sys
+import time
+import copy
+
+import datetime as dt
 import numpy as np
-import matplotlib.pyplot as plt
-import shapely
-import json
 import pandas as pd
 import geopandas as gpd
-import shapefile as shp
-import os
-import time
-import sys
+
+import matplotlib.pyplot as plt
 import folium
-from shapely.geometry.multilinestring import *
-import copy
+
+import helpers
+
+
+os.chdir("C:/Users/amspe/Documents/R/MI2018/TXHousing")
+import prop_values as pv
+
 
 # Helper color function - adapted from https://stackoverflow.com/questions/35516318/plot-colored-polygons-with-geodataframe-in-folium
 def convert_to_hex(rgba_color):
@@ -46,7 +52,7 @@ class zoning_inputs():
 
 # Globals
 # Downloaded from http://data-nctcoggis.opendata.arcgis.com/datasets/2015-land-use
-north_texas_inputs = zoning_inputs(path = '2015_North_Texas_Land_Use/2015_Land_Use.shp',
+north_texas_inputs = zoning_inputs(path = 'data/Zoning Shapefiles/2015_North_Texas_Land_Use/2015_Land_Use.shp',
                                    feature = 'CATEGORY',
                                    separator = 'no_separator',
                                    proj4string = 'EPSG:4326',
@@ -61,7 +67,7 @@ north_texas_inputs = zoning_inputs(path = '2015_North_Texas_Land_Use/2015_Land_U
                                    #xlims = [-97.3, -96.1],
                                    #ylims = [32.25, 33.25])
 # Downloaded from https://data-nctcoggis.opendata.arcgis.com/datasets/81916863ab394786ab5caaa731f5ac36_4?geometry=-104.084%2C30.991%2C-83.342%2C34.229
-nt_highways = zoning_inputs(path = "NT_Highways_2017\Highways_2017.shp",
+nt_highways = zoning_inputs(path = "data/Zoning Shapefiles/NT_Highways_2017/Highways_2017.shp",
                             feature = 'unsure',
                             separator = 'no_separator',
                             proj4string = 'EPSG:4326',
@@ -71,7 +77,7 @@ nt_highways = zoning_inputs(path = "NT_Highways_2017\Highways_2017.shp",
                             zoom = north_texas_inputs.zoom)
 
 # Downloaded from https://data-nctcoggis.opendata.arcgis.com/datasets/counties-
-nt_counties = zoning_inputs(path = "nt_counties\Counties_.shp",
+nt_counties = zoning_inputs(path = "data/Zoning Shapefiles/nt_counties/Counties_.shp",
                             feature = '',
                             separator = '',
                             proj4string = 'EPSG:4326',
@@ -83,7 +89,7 @@ nt_counties = zoning_inputs(path = "nt_counties\Counties_.shp",
 
 
 # Downloaded from https://data.austintexas.gov/Locations-and-Maps/Zoning/5rzy-nm5e
-austin_inputs = zoning_inputs(path = "austin_zoning/geo_export_571668ee-52f1-4ac9-a4e0-3b8bb348eae7.shp",
+austin_inputs = zoning_inputs(path = "data/Zoning Shapefiles/austin_zoning/geo_export_571668ee-52f1-4ac9-a4e0-3b8bb348eae7.shp",
                               feature = 'zoning_zty',
                               separator = '-',
                               proj4string = 'EPSG:4326',
@@ -94,19 +100,11 @@ austin_inputs = zoning_inputs(path = "austin_zoning/geo_export_571668ee-52f1-4ac
                               zoom = 9,
                               title = 'Base Zones in Austin, Texas')
 
-austin_parcel_path = "Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
-austin_parcel_feature = 'basezone'
+austin_parcel_path = "data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
 
-os.chdir("C:/Users/amspe/Documents/R/MI2018/TXHousing/data/Zoning Shapefiles")
-
-
-def simple_process_shapefile(input, plot = True,
-                             highway_inputs = nt_highways, plot_highways = True,
-                             boundary_inputs = nt_counties, plot_boundaries = True):
+def simple_process_shapefile(input):
     """"
-    Processes shapefile. Everything should be clear except conversions, which should be a dictionary
-    which maps base zone types (i.e. sf, mf) to a list of strings which count as that base zone type. See
-    austin_inputs['conversions'] for an example.
+    Processes shapefile. Inpout should be of class 'zoning_inputs.'
     """
 
     # Begin timing
@@ -131,82 +129,6 @@ def simple_process_shapefile(input, plot = True,
 
     raw_data['zone_code'] = raw_data[input.feature].apply(get_zone)
     print('Finished processing zones, took {}'.format(time.time() - time0))
-
-    # In the future, you could easily plot basemap shapefiles underneath this
-
-    # Plot
-    if plot:
-
-        # Make color dictionary
-        color_list = plt.cm.tab10(np.linspace(0, 1, len(input.base_zones)))
-        color_dic = {}
-        for color, key in zip(color_list, [key for key in input.base_zones]):
-            color_dic[key] = color
-
-        # Plot objects
-        fig, ax = plt.subplots()
-        legend_handlers = []
-
-        # Boundaries
-        # Zoning data
-        print('Beginning to graph zoning data')
-        for zone in [key for key in input.base_zones]:
-            filtered_data = raw_data.loc[raw_data['zone_code'] == zone]
-            gpd.plotting.plot_polygon_collection(ax, filtered_data['geometry'].copy(), color = color_dic[zone], alpha = 0.7, label = zone)
-            legend_handlers.append(plt.scatter([], [], color=color_dic[zone]))
-        print('Finished graphing zoning data, took {}'.format(time.time() - time0))
-
-        if plot_boundaries:
-            print('Reading and plotting boundary data')
-            boundary_data = gpd.read_file(boundary_inputs.path)
-            gpd.plotting.plot_linestring_collection(ax, boundary_data['geometry'].boundary, color = 'black', linewidths = (0.5,))
-            for point, countyname in zip(boundary_data['geometry'].centroid, boundary_data['COUNTY']):
-                ax.text(point.coords[:][0][0], point.coords[:][0][1], countyname, size = 6, ha = 'center')
-
-            print('Finished handling boundary data, time is {}'.format(time.time() - time0))
-
-
-        # Highways
-        if plot_highways:
-            print('Reading and plotting highway data')
-            highway_data = gpd.read_file(highway_inputs.path)
-
-            primary_highways = highway_data.loc[highway_data['CLASS'] == 'Primary Highway']
-            print(primary_highways)
-            gpd.plotting.plot_linestring_collection(ax, primary_highways['geometry'], alpha = 1,
-                                                    color = 'black', linewidths = (0.3, ))
-
-            # Plot highwaynames
-            counter = {}
-            for num in primary_highways['HWY_NUM'].unique():
-                counter[num] = 0
-
-            for point, highwayname in zip(primary_highways['geometry'].centroid, primary_highways['HWY_NUM']):
-                if counter[num] == 0:
-                    ax.text(point.coords[:][0][0], point.coords[:][0][1], highwayname, size = 7, ha = 'left')
-                    counter[num] += 1
-                elif counter[num] == 150:
-                    counter[num] = 0
-                else:
-                    counter[num] += 1
-                    continue
-
-            secondary_highways = highway_data.loc[highway_data['CLASS'] == 'Secondary Highway']
-            gpd.plotting.plot_linestring_collection(ax, secondary_highways['geometry'], alpha = 1,
-                                                    color = 'black', linewidths = (0.2, ))
-            print('Finished handling highway data, time is {}'.format(time.time() - time0))
-
-        # Labels and limits
-        ax.set_xlabel('Longitude')
-        ax.set_xlim(left = input.xlims[0], right = input.xlims[1])
-        ax.set_ylabel('Latitude')
-        ax.set_ylim(bottom = input.ylims[0], top = input.ylims[1])
-        ax.set_title(input.title)
-        ax.legend(tuple(legend_handlers), tuple([key for key in input.base_zones]))
-
-
-        print('Finished graphing, took {}. Beginning to show.'.format(time.time() - time0))
-        plt.show()
 
     return raw_data
 
@@ -249,8 +171,6 @@ def layered_graphing(input, **kwargs):
 
     processed_data = processed_data.to_crs({'init': 'epsg:4326'})
 
-
-
     # Plot choropleth
     time0 = time.time()
     if plot_polygons:
@@ -289,7 +209,7 @@ def plot_historic_districts(input, signature = '-H', savename = False, plot_nati
     :param signature: A string used to detect whether a zoning area is a historic district.
     :return: None, but it will save a graph
     """
-    
+
     from folium import FeatureGroup, LayerControl
 
     # Begin timing
@@ -310,8 +230,8 @@ def plot_historic_districts(input, signature = '-H', savename = False, plot_nati
             and it makes the polygons wacky. Don't say I didn't warn you""")
 
             # These are not inputs, they're constant
-            nat_hd_path = 'NRIS_CR_Standards_Public.gdb'
-            nris_cdist = 'NRIS_crdist_py.shp'
+            nat_hd_path = 'data/Zoning Shapefiles/NRIS_CR_Standards_Public.gdb'
+            nris_cdist = 'data/Zoning Shapefiles/NRIS_crdist_py.shp'
 
             data = gpd.read_file(nat_hd_path, layer='NRIS_MAIN')
             data = data.loc[data['CITY'].isin(['Austin', 'Houston', 'Dallas'])]
@@ -340,7 +260,7 @@ def plot_historic_districts(input, signature = '-H', savename = False, plot_nati
         else:
 
             # Use texas historical sites data
-            tx_hd_path = "NationalRegisterPY_shp/NationalRegisterPY.shp"
+            tx_hd_path = "data/Zoning Shapefiles/NationalRegisterPY_shp/NationalRegisterPY.shp"
             tx_hd_data = gpd.read_file(tx_hd_path)
 
             print('Plotting national districts')
@@ -436,7 +356,7 @@ def plot_historic_districts_parcel(input, cache = False, cached = True):
 
 
 if __name__ == '__main__':
-    landmarks_path = "Historical Landmarks/geo_export_ce453b58-d8ca-47d4-8934-76d636d24ca3.shp"
+    landmarks_path = "data/Zoning Shapefiles/Historical Landmarks/geo_export_ce453b58-d8ca-47d4-8934-76d636d24ca3.shp"
 
     plot_historic_districts(austin_inputs, landmarks_path = landmarks_path, use_nris_data=False, signature = '-HD', savename = 'Austin_All_Hist_Districts.html')
 
