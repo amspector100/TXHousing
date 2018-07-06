@@ -8,7 +8,10 @@ import shapely.geometry
 import matplotlib.pyplot as plt
 from inputs import *
 
-# To do: Need to simplify very complex shapefiles better than geopandas does it.
+# Purpose of this file is to do non-spatial data processing. It begins with a basic helper function for color processing.
+# Then, in this order, there are processing functions for (1) zip code boundaries for the entire US, (2) zoning data
+# for Austin, Dallas, and Central North Texas, (3) Demand Data from Realtor and Zillow, (4) Parcel data for Austin and
+# Dallas, (5) Permit data for Austin, Dallas, and Houston.
 
 # Very basic helper functions ---------------------------------------------------------------------------------------------- Helper functions
 
@@ -27,31 +30,8 @@ def convert_to_hex(rgba_color):
 
     return '#'+ red + green + blue
 
-# Convert to datetime
-def to_datetime(inputstring):
-    astring = str(inputstring)
-    year = int(astring.split('-')[0])
-    month = int(astring.split('-')[1])
-    return dt.date(year = year, month = month, day = 1)
 
-def quiet_to_datetime(inputstring):
-    try:
-        result = to_datetime(inputstring)
-        return result
-    except:
-        return inputstring
-
-# Check which row/column entries are datetimes,
-# and put the rest in the multiindex
-def in_multiindex(astring):
-    try:
-        to_datetime(astring)
-        return False
-    except:
-        return True
-
-
-# Get zip boundaries data
+# Get zip boundaries data for the entire United States ----------------------------------------------------------------------- Zip Data
 def get_zip_boundaries():
     zipdata = gpd.read_file(zip_boundaries_path)
     zipdata.index = zipdata['ZCTA5CE10']
@@ -164,6 +144,30 @@ def process_demand_data(input, graph = False, style = 'Line', date = dt.date(yea
         warning('Error, Input must be of class Demand_Input')
         return None
 
+    # Helper functions
+    # Convert to datetime
+    def to_datetime(inputstring):
+        astring = str(inputstring)
+        year = int(astring.split('-')[0])
+        month = int(astring.split('-')[1])
+        return dt.date(year=year, month=month, day=1)
+
+    def quiet_to_datetime(inputstring):
+        try:
+            result = to_datetime(inputstring)
+            return result
+        except:
+            return inputstring
+
+    # Check which row/column entries are datetimes,
+    # and put the rest in the multiindex
+    def in_multiindex(astring):
+        try:
+            to_datetime(astring)
+            return False
+        except:
+            return True
+
     path = input.path
     geo_filter = input.geo_filter
     geo_filter_values = input.geo_filter_values
@@ -269,8 +273,6 @@ def join_dallas_parcel_data():
     print(parcel_data.columns, parcel_data.index)
     return parcel_data
 
-# Permit data -------------------------------------------------------------------------------------------------------------- permit data
-
 def process_dallas_parcel_data():
 
     time0 = time.time()
@@ -296,6 +298,8 @@ def process_dallas_parcel_data():
     parcel_data['normalized_value_per_area'] = norm_pva
 
     return parcel_data
+
+# Permit data -------------------------------------------------------------------------------------------------------------- permit data
 
 def process_austin_permit_data(searchfor, permittypedesc = None, workclass = None,
                                earliest = None, latest = None):
@@ -438,6 +442,13 @@ def process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE',
         construction = construction.loc[construction['Year'] >= earliest]
     if latest is not None:
         construction = construction.loc[construction['Year'] <= latest]
+
+    # Process whether permit has been approved yet (using scraped data)
+    approvals = pd.read_csv('data/houston_permit_statuses.csv', index_col = 0)
+    approvals.index = [str(id) for id in approvals.index]
+
+    # Merge
+    construction['Approval'] = construction['PROJECT_NO'].map(approvals['Approval'])
         
     # Return
     return construction

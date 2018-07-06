@@ -367,6 +367,7 @@ if broad_zone:
 if permit_scatter:
 
     # Get permit data - Dallas
+    print('Processing Dallas permit data')
     dallas_permits = get_corrected_dallas_permit_data(path = dpm_save_path)
     dallas_permits = sf.process_points(dallas_permits)
     dallas_sf = dallas_permits.loc[dallas_permits['Permit Type'].str.contains('Single')]
@@ -384,15 +385,37 @@ if permit_scatter:
     austin_sf = austin_permits.loc[austin_permits['PermitClass'].str.contains('101 single')]
     austin_mf = austin_permits.loc[[not bool for bool in austin_permits['PermitClass'].str.contains('101 single')]]
 
+    # Get permit data - Houston
+    # Construction permit data
+    print('Processing Houston permit data')
+    houston_permit_data = process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE',
+                                                                   'NEW AP', 'NEW HI-'],
+                                                      searchin = ['PROJ_DESC'],
+                                                      earliest = 2013, latest = None)
+
+    # Subset to only include approved permits and nonempty geometries
+    houston_permit_data = houston_permit_data.loc[houston_permit_data['Approval'] == 1.0]
+    houston_permit_data = sf.process_points(houston_permit_data)
+    houston_sf = houston_permit_data.loc[houston_permit_data['PROJ_DESC'].str.contains('|'.join(['NEW S.F.',
+                                                                                                 'NEW SF',
+                                                                                                 'NEW TOWNHOUSE',
+                                                                                                 'NEW SINGLE']))]
+    houston_mf = houston_permit_data.loc[houston_permit_data['PROJ_DESC'].str.contains('|'.join(['NEW AP',
+                                                                                                 'NEW HI-']))]
+
+
+
     # Now get zip geodata - this is for the scatter of med housing price
     zip_geodata = get_zip_boundaries()
     austin_zip_geodata = zip_geodata.loc[[z for z in austin_zips if z in zip_geodata.index]]
     dallas_zip_geodata = zip_geodata.loc[[z for z in dallas_zips if z in zip_geodata.index]]
+    houston_zip_geodata = zip_geodata.loc[[z for z in houston_zips if z in zip_geodata.index]]
 
     # Loop through and add pricing data
-    for cityname, citydata in zip(['Austin, TX', 'Dallas, TX'], [austin_zip_geodata, dallas_zip_geodata]):
+    for cityname, citydata in zip(['Austin, TX', 'Dallas, TX', 'Houston, TX'], [austin_zip_geodata, dallas_zip_geodata, houston_zip_geodata]):
         citydata = add_demand_data(zip_geodata=citydata, demand_input = realtor_avg_sf_price, city = cityname, feature_name = 'sfprice')
         citydata = add_demand_data(zip_geodata=citydata, demand_input = realtor_avg_cth_price, city = cityname, feature_name = 'mfprice')
+        citydata = add_demand_data(zip_geodata=citydata, demand_input = realtor_hotness_cbsa, city = cityname, feature_name = 'vpp')
 
     # Now find which points are in which zipcodes
     for sfpermits, mfpermits, data in zip([austin_sf, dallas_sf], [austin_mf, dallas_mf], [austin_zip_geodata, dallas_zip_geodata]):
@@ -411,20 +434,107 @@ if permit_scatter:
         data.loc[:, 'SF'] = data['geometry'].apply(get_sf_pts)
         data.loc[:, 'MF'] = data['geometry'].apply(get_mf_pts)
 
+    # Houston already has zip code information listed so we'll just get it
+    def num_sf_permits_houston(zipcode):
+        return len(houston_sf.loc[houston_sf['Zipcode'] == zipcode])
+    def num_mf_permits_houston(zipcode):
+        return len(houston_mf.loc[houston_mf['Zipcode'] == zipcode])
 
+    houston_zip_geodata.loc[:, 'SF'] = houston_zip_geodata['ZCTA5CE10'].apply(num_sf_permits_houston)
+    houston_zip_geodata.loc[:, 'MF'] = houston_zip_geodata['ZCTA5CE10'].apply(num_mf_permits_houston)
+
+
+    # Add city information
+    houston_zip_geodata['City'] = 'Houston'
     austin_zip_geodata['City'] = 'Austin'
     dallas_zip_geodata['City'] = 'Dallas'
 
-    all_zip_geodata = austin_zip_geodata.append(dallas_zip_geodata)
+    all_zip_geodata = austin_zip_geodata.append(dallas_zip_geodata).append(houston_zip_geodata)
+    y_max = 1000
+
     #all_zip_geodata = all_zip_geodata.melt(value_vars = ['SF', 'MF'], var_name = 'Housing Type', value_name = 'Number of Permits')
-    sfplot = (ggplot(all_zip_geodata, aes(x = 'sfprice', y = 'SF', color = 'City'))
-          + geom_point()
-          + stat_smooth(method = 'lowess', span = 0.8))
+    sfplot = (ggplot(all_zip_geodata, aes(x = 'sfprice', y = 'SF', color = 'City')) #.loc[all_zip_geodata['SF'] <= outlier_threshhold]
+              + geom_point()
+              + stat_smooth(method = 'lowess', span = 0.5)
+              + facet_wrap('City', scales = 'fixed')
+              + scale_x_continuous(limits = (0, 2200000), breaks = (0, 1000000, 2000000))
+              + scale_y_continuous(limits = (0, y_max))
+              + labs(title = 'New Single Family Construction Permits against SF Housing Price',
+                     caption = 'Permit Data from the Cities of Austin, Dallas, and Houston /n, Pricing data from Realtor')
+              + xlab('Median Single Family Home Price (by Zip Code)')
+              + ylab('Number of SF Construction Permits Issued In Past 5 Years'))
+
+    sfplot_variant = (ggplot(all_zip_geodata, aes(x = 'vpp', y = 'SF', color = 'City'))
+                      + geom_point()
+                      + stat_smooth(method = 'lowess', span = 0.5)
+                      #+ scale_x_continuous(limits = (0, 2200000), breaks = (0, 1000000, 2000000))
+                      + labs(title = 'New Single Family Construction Permits against Realtor Hotness Index')
+                      + xlab('Realtor Hotness Index (by Zip Code)')
+                      + ylab('Number of SF Construction Permits Issued in Past 5 Years')
+                      + facet_wrap('City', scales='fixed'))
+
     mfplot = (ggplot(all_zip_geodata, aes(x = 'mfprice', y = 'MF', color = 'City'))
           + geom_point()
-          + stat_smooth(method = 'lowess', span = 0.8))
+          + stat_smooth(method = 'lowess', span = 0.7)
+          + facet_wrap('City', scales='free'))
 
-    width = 8
+    width = 10
     height = 5
     sfplot.save(filename='Figures/Bucket 2/construction_scatter_sf.svg', width=width, height=height, bbox_inches = 'tight')
     mfplot.save(filename='Figures/Bucket 2/construction_scatter_mf.svg', width=width, height=height, bbox_inches = 'tight')
+    sfplot_variant.save(filename='Figures/Bucket 2/construction_scatter_sf_variant.svg', width=width, height=height, bbox_inches='tight')
+
+    # Make a map of the outliers for Connor. Start by plotting the outlier zip codes. ---------------------------------------
+    print('Saved files, now working on folium map of permit outliers')
+    import folium
+    from folium import FeatureGroup
+    from BindColorMap import *
+
+    outlier_threshhold = 0.9 # Quantile
+    basemap = folium.Map([austin_inputs.lat, austin_inputs.long], zoom_start = 7)
+    for citydata, cityname in zip([austin_zip_geodata, dallas_zip_geodata, houston_zip_geodata], ['Austin', 'Dallas', 'Houston']):
+        for factor, mid_color, end_color in zip(['SF', 'MF'], ['blue', 'red'], ['navy', '#660000']):
+            min_value = citydata[factor].quantile(outlier_threshhold)
+            print(min_value)
+            filtered_data = citydata.loc[citydata[factor] >= min_value]
+            print(filtered_data)
+            layer_name = 'Zip Codes with Top {} % of {} Construction Permits in {}'.format(round(100*(1 - outlier_threshhold)), factor, cityname)
+            scale_name = 'Number of New {} Construction Permits in Top {} % of Zipcodes in {}'.format(factor, round(100*(1-outlier_threshhold)), cityname)
+            gjson, colormap = choropleth.continuous_choropleth(filtered_data, factor=factor, layer_name = layer_name,
+                                                                scale_name=scale_name, mid_color = mid_color, end_color = end_color,
+                                                                show=False)
+            colormap.add_to(basemap)
+            gjson.add_to(basemap)
+            BindColormap(gjson, colormap).add_to(basemap)
+
+    # Add SF/MF permits
+    sfpermits = pd.concat([austin_sf[['geometry']], dallas_sf[['geometry']], houston_sf[['geometry']]], axis = 0)
+    sf_feature_group = FeatureGroup('SF Construction Permits, All 3 Cities', show = True)
+    choropleth.make_marker_cluster(sfpermits, make_centroids = False, fast = True).add_to(sf_feature_group)
+    sf_feature_group.add_to(basemap)
+
+    mfpermits = pd.concat([austin_mf[['geometry']], dallas_mf[['geometry']], houston_mf[['geometry']]], axis = 0)
+    mf_feature_group = FeatureGroup('MF Construction Permits, All 3 Cities', show = False)
+    choropleth.make_marker_cluster(mfpermits, make_centroids = False, fast = True).add_to(mf_feature_group)
+    mf_feature_group.add_to(basemap)
+
+
+    # Put pricing data on the map, start with SF pricing data
+    gjson, colormap = choropleth.continuous_choropleth(all_zip_geodata, factor = 'sfprice', layer_name = 'SF Prices in All Three Cities',
+                                                       scale_name = 'Median SF Home Price ($)', show = False)
+    colormap.add_to(basemap)
+    gjson.add_to(basemap)
+    BindColormap(gjson, colormap).add_to(basemap)
+
+    # MF pricing data
+    gjson, colormap = choropleth.continuous_choropleth(all_zip_geodata, factor = 'mfprice', layer_name = 'MF Prices in All Three Cities',
+                                                       scale_name = 'Median MF Price (%)', mid_color = 'red', end_color = '#660000', show = False)
+    colormap.add_to(basemap)
+    gjson.add_to(basemap)
+    BindColormap(gjson, colormap).add_to(basemap)
+
+    folium.TileLayer('cartodbdark_matter').add_to(basemap)
+    folium.LayerControl().add_to(basemap)
+    basemap.save('Figures/Bucket 2/PermitOutliers.html')
+
+

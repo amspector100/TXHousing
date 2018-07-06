@@ -125,45 +125,6 @@ def get_block_geodata(data_layers, cities=None):
         print('Finished getting block geodata, time is {}'.format(time.time() - time0))
         return geodata
 
-
-def points_intersect_polygon(points, polygon, spatial_index, points_geometry_column = 'geometry', factor = None, categorical = True, by = 'mean'):
-    """
-    Given many points and a polygon, finds one of three things. (1) If factor = None, the number of points inside the
-    polygon, (2) if factor is not None and categorical = True, the number of points inside the polygon subsetted by a
-    categorical factor, (3) if factor is not None and categorical = False, the summarized value (mean/median)
-    of a factor associated with each point of each point inside the polygon.
-    :param points: A GDF with a geometry column
-    :param polygon: The polygon to see whether the points are inside.
-    :param spatial_index: The spatial index of the points
-    :param factor: The factor to average over or subset by (if categorical).
-    :param categorical: If True, then the factor should be treated as a categorical variable.
-    :param by: If categorical is False, can either summarize using by = 'mean' or by = 'median'
-    :return: float or pandas series
-    """
-    # Get intersections
-    possible_matches_index = list(spatial_index.intersection(polygon.bounds))
-    possible_matches = points.iloc[possible_matches_index]
-    precise_matches_index = possible_matches[points_geometry_column].intersects(polygon)
-
-    if factor is None:
-        return sum(precise_matches_index)
-    else:
-        precise_matches = points.loc[precise_matches_index[precise_matches_index.values].index.tolist()]
-        if categorical == True:
-            return precise_matches.groupby(factor)[points_geometry_column].count()
-        elif by == 'mean':
-            return precise_matches.groupby(factor)[points_geometry_column].mean()
-        elif by == 'median':
-            return precise_matches.groupby(factor)[points_geometry_column].median()
-        else:
-            print(
-            'In point_choropleth call, "by" argument must either equal "mean" or "median" - you put "{}"'.format(by))
-            return None
-
-
-
-
-
 def get_average_by_area(data_source, spatial_index, polygon, density_feature = 'B01001e1', geometry_column = 'geometry'):
     """
     Calculates the average 'feature' of a 'polygon' using a 'data_source' of different shapes which (in some combination)
@@ -857,6 +818,41 @@ def polygons_intersect_rings(gdf, zoning_input, factor = None, newproj = 'epsg:2
             result.loc[radius] = precise_matches['area'].dot(precise_matches[factor])/(total_area)
 
     return result
+
+def points_intersect_polygon(points, polygon, spatial_index, points_geometry_column = 'geometry', factor = None, categorical = True, by = 'mean'):
+    """
+    Given many points and a polygon, finds one of three things. (1) If factor = None, the number of points inside the
+    polygon, (2) if factor is not None and categorical = True, the number of points inside the polygon subsetted by a
+    categorical factor, (3) if factor is not None and categorical = False, the summarized value (mean/median)
+    of a factor associated with each point of each point inside the polygon.
+    :param points: A GDF with a geometry column
+    :param polygon: The polygon to see whether the points are inside.
+    :param spatial_index: The spatial index of the points
+    :param factor: The factor to average over or subset by (if categorical).
+    :param categorical: If True, then the factor should be treated as a categorical variable.
+    :param by: If categorical is False, can either summarize using by = 'mean' or by = 'median'
+    :return: float or pandas series
+    """
+    # Get intersections
+    possible_matches_index = list(spatial_index.intersection(polygon.bounds))
+    possible_matches = points.iloc[possible_matches_index]
+    precise_matches_index = possible_matches[points_geometry_column].intersects(polygon)
+
+    if factor is None:
+        return sum(precise_matches_index)
+    else:
+        precise_matches = points.loc[precise_matches_index[precise_matches_index.values].index.tolist()]
+        if categorical == True:
+            return precise_matches.groupby(factor)[points_geometry_column].count()
+        elif by == 'mean':
+            return precise_matches.groupby(factor)[points_geometry_column].mean()
+        elif by == 'median':
+            return precise_matches.groupby(factor)[points_geometry_column].median()
+        else:
+            print(
+            'In point_choropleth call, "by" argument must either equal "mean" or "median" - you put "{}"'.format(by))
+            return None
+
 
 
 

@@ -375,7 +375,7 @@ def final_austin_graph(zoning_input, zip_features_dic):
     basemap.save('Figures/Bucket 2/Austin_Mastermap.html')
 
  # Final graph for Dallas ---------------------------------------------------------------------------------------
-def dallas_final_graph(zoning_input, zip_features_dic, included_counties = ['Dallas']):
+def final_dallas_graph(zoning_input, zip_features_dic, included_counties = ['Dallas']):
     """
     Final graph for dallas.
     :param zoning_inputs:
@@ -562,12 +562,84 @@ def dallas_final_graph(zoning_input, zip_features_dic, included_counties = ['Dal
 
     # Add dark basemap
     folium.TileLayer('cartodbdark_matter').add_to(basemap)
-
-
     LayerControl().add_to(basemap)
 
     print("Saving basemap at {}".format(time.time() - time0))
     basemap.save('Figures/Bucket 2/Dallas_Mastermap.html')
+
+def final_houston_graph(zoning_input):
+
+
+    time0 = time.time()
+
+    print('Retreiving Houston basemap')
+    basemap = folium.Map([zoning_input.lat, zoning_input.long], zoom_start=zoning_input.zoom)
+
+    # Historic districts
+    national_hd_fg  = FeatureGroup('National Historic Districts', show = False)
+    tx_hd_path = "data/Zoning Shapefiles/NationalRegisterPY_shp/NationalRegisterPY.shp"
+    tx_hd_data = gpd.read_file(tx_hd_path)
+    tx_hd_data = tx_hd_data.loc[tx_hd_data['CITY'] == 'Houston']
+
+    folium.GeoJson(
+        tx_hd_data,
+        style_function=lambda feature: {
+            'fillColor': 'Green',
+            'color': 'Green',
+            'weight': global_weight,
+            'fillOpacity': global_alpha,
+        }
+    ).add_to(national_hd_fg)
+
+    national_hd_fg.add_to(basemap)
+
+    # Local historic districts
+
+    # Construction permit data
+    print('Processing Houston permit data')
+    houston_permit_data = process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE',
+                                                                   'NEW AP', 'NEW HI-'],
+                                                      searchin = ['PROJ_DESC'],
+                                                      earliest = 2013, latest = None)
+
+    # Subset to only include approved permits and nonempty geometries
+    houston_permit_data = houston_permit_data.loc[houston_permit_data['Approval'] == 1.0]
+    houston_permit_data = sf.process_points(houston_permit_data)
+
+    # SF construction
+    sfconstruction = houston_permit_data.loc[houston_permit_data['PROJ_DESC'].str.contains('|'.join(['NEW S.F.', 'NEW SF', 'NEW TOWNHOUSE', 'NEW SINGLE']))]
+    sf_cons_fg = FeatureGroup("Single Family Construction Permits (Marker)", show = True)
+    make_marker_cluster(sfconstruction, make_centroids = False, fast = True).add_to(sf_cons_fg)
+    sf_cons_fg.add_to(basemap)
+    sfconstruction_grid = sf.make_point_grid(sfconstruction)
+    gjson, colormap = continuous_choropleth(sfconstruction_grid, factor = 'value',
+                                              layer_name='Single Family Residential Construction (Choropleth)',
+                                              scale_name = 'Number of New Single Family Home Construction Permits in Area (2013-2018)',
+                                              show = True)
+    colormap.add_to(basemap)
+    gjson.add_to(basemap)
+    BindColormap(gjson, colormap).add_to(basemap)
+
+    # MF construction
+    mfconstruction = houston_permit_data.loc[houston_permit_data['PROJ_DESC'].str.contains('|'.join(['NEW AP', 'NEW HI-']))]
+    mf_cons_fg = FeatureGroup("Multifamily Construction Permits (Marker)", show = False)
+    make_marker_cluster(mfconstruction, make_centroids=False, fast=True).add_to(mf_cons_fg)
+    mf_cons_fg.add_to(basemap)
+    mfconstruction_grid = sf.make_point_grid(mfconstruction)
+    gjson, colormap = continuous_choropleth(mfconstruction_grid, factor='value',
+                                              layer_name='Multifamily Residential Construction (Choropleth)',
+                                              scale_name='Number of new Multifamily Construction Permits in Area (2013-2018)',
+                                            mid_color='red', end_color='#660000', show=False)
+    colormap.add_to(basemap)
+    gjson.add_to(basemap)
+    BindColormap(gjson, colormap).add_to(basemap)
+
+    # Add dark layer for visualization, layer control, then save
+    folium.TileLayer('cartodbdark_matter').add_to(basemap)
+    LayerControl().add_to(basemap)
+    basemap.save('Figures/Bucket 2/Houston_Mastermap.html')
+
+
 
 
 #nbhd_boundaries_path = "data\Zillow Data\ZillowNeighborhoods-TX\ZillowNeighborhoods-TX.shp"
@@ -585,7 +657,9 @@ def dallas_final_graph(zoning_input, zip_features_dic, included_counties = ['Dal
 
 if __name__ == '__main__':
 
-    dallas_final_graph(north_texas_inputs, dallas_zip_features_dic, included_counties = ['Dallas'])
+    final_houston_graph(houston_inputs)
+
+    #final_dallas_graph(north_texas_inputs, dallas_zip_features_dic, included_counties = ['Dallas'])
 
     #final_austin_graph(austin_inputs, austin_zip_features_dic)
 

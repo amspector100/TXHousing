@@ -82,7 +82,19 @@ dallas_inputs = zoning_inputs(path = "data/Zoning Shapefiles/DallasBaseZoning/Ba
                               lat = north_texas_inputs.lat,
                               long = north_texas_inputs.long,
                               zoom = 9,
-                              title = 'Base Zones in Dallas, Texas')
+                              title = 'Base Zones in Dallas, Texas',
+                              crs = {'init':'epsg:2276'})
+
+# Houston has no base zones but this is useful for making the graph
+houston_inputs = zoning_inputs(path = None,
+                               feature = None,
+                               separator = None,
+                               proj4string = None,
+                               base_zones = None,
+                               lat = 29.7604,
+                               long = -95.3698,
+                               zoom = 9,
+                               title = 'Houston Texas')
 
 
 
@@ -333,9 +345,20 @@ dallas_renovation_types = ['Building (BU) Commercial  Renovation', 'Building (BU
 
 # Houstin ---------------------------------------------------------------------------------------------------------------------- Houston
 
+houston_zips = [77002, 77003, 77004, 77005, 77006, 77007, 77008, 77009, 77010, 77011, 77012, 77013, 77014, 77015, 77016,
+                77017, 77018, 77019, 77020, 77021, 77022, 77023, 77024, 77025, 77026, 77027, 77028, 77029, 77030, 77031,
+                77032, 77033, 77034, 77035, 77036, 77037, 77038, 77039, 77040, 77041, 77042, 77043, 77044, 77045, 77046,
+                77047, 77048, 77049, 77050, 77051, 77053, 77054, 77055, 77056, 77057, 77058, 77059, 77060, 77061, 77062,
+                77063, 77064, 77065, 77066, 77067, 77068, 77069, 77070, 77071, 77072, 77073, 77074, 77075, 77076, 77077,
+                77078, 77079, 77080, 77081, 77082, 77083, 77084, 77085, 77086, 77087, 77088, 77089, 77090, 77091, 77092,
+                77093, 77094, 77095, 77096, 77098, 77099, 77201, 77336, 77338, 77339, 77345, 77346, 77357, 77365, 77373,
+                77375, 77377, 77379, 77386, 77388, 77396, 77401, 77406, 77407, 77429, 77433, 77447, 77449, 77450, 77477,
+                77478, 77484, 77489, 77493, 77494, 77498, 77503, 77504, 77506, 77520, 77530, 77532, 77536, 77546, 77547,
+                77571, 77587, 77598]
+houston_zips = [str(z) for z in houston_zips]
+
 houston_spec_min_setbacks = "data/Zoning Shapefiles/Houston_Special_Minimum_Building_Lines/Special_Minimum_Building_Lines.shp"
 houston_spec_min_lots = "data/Zoning Shapefiles/Houston_Spec_Minimum_Lot/Minimum_Lot_Size.shp"
-
 houston_structural_permits_path = "data/Houston_Structural_Permits/Permits_wm_Structural.shp"
 
 # Misc -------------------------------------------------------------------------------------------------------------
