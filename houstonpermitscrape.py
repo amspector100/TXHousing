@@ -23,7 +23,8 @@ def get_project_statuses(project_numbers):
 
     # Open webdriver and initialize
     options = webdriver.ChromeOptions()
-    options.add_argument('headless')
+    options.add_argument('--headless')
+    options.add_argument('--log-level=3')
     browser = webdriver.Chrome(chrome_options=options)
     url = 'https://www.pdinet.pd.houstontx.gov/cohilms/webs/Plan_LookUp.asp'
 
@@ -103,16 +104,15 @@ if __name__ == '__main__':
 
     # Step 2: Exclude any project numbers for which we already have data
     try:
-        existing_data = pd.read_csv(target_path)
-        all_project_numbers = [n for n in all_project_numbers if n not in existing_data.index]
+        existing_data = pd.read_csv(target_path, index_col = 0, header = None)
+        existing_data.index = [str(id) for id in existing_data.index]
+        all_project_numbers = [n for n in all_project_numbers if n not in existing_data.index.tolist()]
     except FileNotFoundError: # In case we don't already have data
+        print('Note that no pre-existing data exists')
         pass
-
-    all_project_numbers = all_project_numbers[0:300]
-
 
     # Step 3: Scrape new stuff
     print('Starting to scrape now')
-    number_processes = 5
-    #result = speedy_get_project_statuses(all_project_numbers, number_processes = number_processes)
-    #result.to_csv(backup_path, mode = 'a')
+    number_processes = 10
+    result = speedy_get_project_statuses(all_project_numbers, number_processes = number_processes)
+    result.to_csv(backup_path, mode = 'a')
