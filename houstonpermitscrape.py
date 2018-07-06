@@ -30,7 +30,7 @@ def get_project_statuses(project_numbers):
 
     for project_number in project_numbers:
 
-        if counter // 100 == 0:
+        if counter % 100 == 0:
             print('This process has finished {} ids'.format(counter))
 
         # Some very crude error handling
@@ -94,11 +94,20 @@ if __name__ == '__main__':
     from helpers import process_houston_permit_data
 
     # Step 1: Get all the unique project numbers
+    #searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE', 'NEW AP', 'NEW HI-']
+    searchfor = [''] # Almost everything is residential demolition, and anyway, commercial demos are included in Dallas
+    searchin = ['PROJ_DESC']
+    #kind = 'structural'
+    kind = 'demolition'
+    earliest = 2010
+    latest = None
+
     print('Processing permit data')
-    houston_permit_data = process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE',
-                                                                   'NEW AP', 'NEW HI-'],
-                                                      searchin = ['PROJ_DESC'],
-                                                      earliest = 2010, latest = None)
+    houston_permit_data = process_houston_permit_data(searchfor = searchfor,
+                                                      searchin = searchin,
+                                                      kind = kind,
+                                                      earliest = earliest,
+                                                      latest = latest)
 
     all_project_numbers = houston_permit_data['PROJECT_NO'].unique().tolist()
 

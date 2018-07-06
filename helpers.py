@@ -405,7 +405,10 @@ def process_dallas_permit_data(permit_types, earliest = None, latest = None):
     return construction
 
 
-def process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE'], searchin = ['PROJ_DESC'], earliest = None, latest = None):
+def process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE'], 
+                                searchin = ['PROJ_DESC'], 
+                                kind = 'structural',
+                                earliest = None, latest = None):
     """
     Process houston permit data. Note that houston permit data does not specify whether housing is new or not, so I have
     to parse the descriptions to figure out whether housing is new sf/new mf housing. Thankfully the descriptions
@@ -415,12 +418,22 @@ def process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE',
     return
     :param searchin: The columns to search in. Defualts to ['PROJ_DESC'], project description. Note that the function
     will return rows where ANY of the columns specified by 'searchin' contain ANY of the keywords in 'searchfor'.
+    :param kind: The kind of permit data to read in. Defaults to 'structural', can either by 'structural' 
+    or 'demolition'
     :param earliest: Earliest date to consider.
     :param latest: Latest date to consider.
     :return: GeoDataFrame of subsetted permit data.
     """
     # Load data
-    permit_data = gpd.read_file(houston_structural_permits_path)
+    if kind == 'structural':
+        path = houston_structural_permits_path
+    elif kind == 'demolition':
+        path = houston_demolition_permits_path
+    else:
+        print("""Error: in process_houston_permit_data call, "kind" arg must either 
+            equal "demolition" or "structural", not "{}""".format(kind))
+        return None
+    permit_data = gpd.read_file(path)
     permit_data = permit_data.rename(columns = {'SITUS_ZIP_':'Zipcode'}) # Already has 100% complete zipcode information.
 
     # Ignore repeated plans
@@ -430,14 +443,15 @@ def process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE',
     flags = pd.Series(False, index = permit_data.index)
     for col in searchin:
         flags = flags | permit_data[col].str.contains('|'.join(searchfor))
-    construction = permit_data.loc[flags]
+    subsetted_data = permit_data.loc[flags]
 
     # Process dates. Note that data runs from 1988 to 2018.
-    construction.loc[:, 'Year'] = construction['APPLN_DATE'].apply(lambda x: int(x[0:4]))
+    subsetted_data.loc[:, 'Year'] = subsetted_data['APPLN_DATE'].apply(lambda x: int(x[0:4]))
     if earliest is not None:
-        construction = construction.loc[construction['Year'] >= earliest]
+        subsetted_data = subsetted_data.loc[subsetted_data['Year'] >= earliest]
     if latest is not None:
-        construction = construction.loc[construction['Year'] <= latest]
+        subsetted_data = subsetted_data.loc[subsetted_data['Year'] <= latest]
         
     # Return
-    return construction
+    return subsetted_data
+
