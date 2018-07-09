@@ -14,7 +14,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import folium
 from folium import FeatureGroup, LayerControl
-from folium.plugins import MarkerCluster, FastMarkerCluster
+from folium.plugins import MarkerCluster, FastMarkerCluster, HeatMap, HeatMapWithTime
 import branca.colormap as cm
 
 from inputs import *
@@ -202,6 +202,32 @@ def create_regulatory_layers(zoning_input, zips, regulations_path, regulation_ty
 
     return zip_geodata
 
+def heatmap(gdf, geometry_column = 'geometry', with_time = False, time_column = 'Year', **kwargs):
+    """
+    :param gdf: Geodataframe with points as the geometry type.
+    :param geometry_column: The geometry column of the gdf. Defaults to 'geometry'
+    :param start_color: The start color, defaults to 'white'
+    :param end_color: The end color, defaults to the MI blue
+    :param with_time: If true, plot a heat map with time, not just a heat map.
+    :param time_column: The column used to specify the years of the data, defaults to 'Year'
+    :param **kwargs: kwargs to be passed onto the 'heatmap' or 'heatmapwithtime' folium constructors.
+    :return: HeatMap object
+    """
+
+    if with_time:
+        all_points = []
+        time_periods = sorted(gdf[time_column].unique().tolist())
+        for time_period in time_periods:
+            points = gdf.loc[gdf[time_column] == time_period, geometry_column]
+            points = [retrieve_coords(point) for point in points]
+            all_points.append(points)
+        result = HeatMapWithTime(all_points, index = time_periods, **kwargs)
+
+    else:
+        points = [retrieve_coords(point) for point in gdf[geometry_column]]
+        result = HeatMap(points, **kwargs)
+
+    return result
 
 # Actually getting the final objects -------------------------------AUSTIN----------------------------------------------
 
@@ -261,7 +287,7 @@ def final_austin_graph(zoning_input, zip_features_dic):
     make_marker_cluster(sfconstruction, make_centroids=False, fast=True).add_to(sf_cons_fg)
     sf_cons_fg.add_to(basemap)
 
-
+    # Choropleth
     sfconstruction_grid = sf.make_point_grid(sfconstruction)
     gjson, colormap = continuous_choropleth(sfconstruction_grid, factor = 'value',
                                               layer_name='Single Family Residential Construction (Choropleth)',
@@ -269,6 +295,15 @@ def final_austin_graph(zoning_input, zip_features_dic):
     colormap.add_to(basemap)
     gjson.add_to(basemap)
     BindColormap(gjson, colormap).add_to(basemap)
+
+    # Heatmap
+    heatmap(sfconstruction,
+                       name='Single Family Construction, 2013-2018 (Heatmap)',
+                       show=False,
+                       radius=13,
+                       min_opacity=0.5,
+                       max_val=1).add_to(basemap)
+
 
     # Multifamily construction - - - - - - - - - -
 
@@ -292,6 +327,13 @@ def final_austin_graph(zoning_input, zip_features_dic):
     colormap.add_to(basemap)
     gjson.add_to(basemap)
     BindColormap(gjson, colormap).add_to(basemap)
+
+    # Heatmap
+
+    heatmap(mfconstruction, name='Multifamily Construction, 2013-2018 (Heatmap)',
+                       show=False,
+                       radius=13,
+                       min_opacity=0.5).add_to(basemap)
 
     # ---------------------------------------------------See print statement---------------------------------------------
     print('Finished creating downzone and construction color markers, took {}. Now creating historic zones markers.'.format(time.time() - time0))
@@ -350,6 +392,12 @@ def final_austin_graph(zoning_input, zip_features_dic):
     zip_geodata = add_demand_data(zip_geodata=zip_geodata, demand_input = realtor_avg_sf_price, city = 'Austin, TX', feature_name = 'sf_avg_listing')
     zip_geodata = add_demand_data(zip_geodata=zip_geodata, demand_input = realtor_avg_cth_price, city = 'Austin, TX', feature_name = 'mf_avg_listing')
 
+    # Add areas with waived parking requirement - this is presently untested
+    low_parking_areas = raw_zoning_data.loc[raw_zoning_data['zoning_zty'].str.contains(('|').join(['CBD', 'DMU', 'PD']))]
+    low_parking_gjson = categorical_choropleth(low_parking_areas, factor = 'zoning_zty')
+    low_parking_fg = FeatureGroup('Areas with Waived Parking Requirements', show = False)
+    low_parking_gjson.add_to(low_parking_fg)
+
 
     print('Adding things to basemap')
     # Add regulatory and demand factors
@@ -366,6 +414,7 @@ def final_austin_graph(zoning_input, zip_features_dic):
     national_hd_fg.add_to(basemap)
     local_hd_fg.add_to(basemap)
     landmark_fg.add_to(basemap)
+    low_parking_fg.add_to(basemap)
 
     # Add dark layer for visualization and layer control
     folium.TileLayer('cartodbdark_matter').add_to(basemap)
@@ -525,6 +574,14 @@ def final_dallas_graph(zoning_input, zip_features_dic, included_counties = ['Dal
     gjson.add_to(basemap)
     BindColormap(gjson, colormap).add_to(basemap)
 
+    # Heatmap
+    heatmap(sfconstruction,
+                       name='Single Family Construction, 2011-2016 (Heatmap)',
+                       show=False,
+                       radius=13,
+                       min_opacity=0.5,
+                       max_val=1).add_to(basemap)
+
     # Construction -- Multifamily - - - - - -
     mfconstruction = all_construction.loc[all_construction['Permit Type'] == 'Building (BU) Multi Family  New Construction']
     mf_cons_fg = FeatureGroup('Multifamily Construction Permits (Marker)', show = False)
@@ -540,6 +597,10 @@ def final_dallas_graph(zoning_input, zip_features_dic, included_counties = ['Dal
     gjson.add_to(basemap)
     BindColormap(gjson, colormap).add_to(basemap)
 
+    heatmap(mfconstruction, name='Multifamily Construction, 2011-2016 (Heatmap)',
+                       show=False,
+                       radius=13,
+                       min_opacity=0.5).add_to(basemap)
 
     # Final list of featuregroups: base_zones, conservation_fg, historic_overlay_fg, historic_subdistricts_fg,
     # construction_fg, downdevelopment_fg
@@ -620,6 +681,14 @@ def final_houston_graph(zoning_input):
     gjson.add_to(basemap)
     BindColormap(gjson, colormap).add_to(basemap)
 
+    # Heatmap
+    heatmap(sfconstruction,
+                       name='Single Family Construction, 2011-2016 (Heatmap)',
+                       show=False,
+                       radius=13,
+                       min_opacity=0.5,
+                       max_val=1).add_to(basemap)
+
     # MF construction
     mfconstruction = houston_permit_data.loc[houston_permit_data['PROJ_DESC'].str.contains('|'.join(['NEW AP', 'NEW HI-']))]
     mf_cons_fg = FeatureGroup("Multifamily Construction Permits (Marker)", show = False)
@@ -633,6 +702,12 @@ def final_houston_graph(zoning_input):
     colormap.add_to(basemap)
     gjson.add_to(basemap)
     BindColormap(gjson, colormap).add_to(basemap)
+
+    # Heatmap
+    heatmap(mfconstruction, name='Multifamily Construction, 2011-2016 (Heatmap)',
+                       show=False,
+                       radius=13,
+                       min_opacity=0.5).add_to(basemap)
 
     # Add dark layer for visualization, layer control, then save
     folium.TileLayer('cartodbdark_matter').add_to(basemap)
@@ -657,11 +732,11 @@ def final_houston_graph(zoning_input):
 
 if __name__ == '__main__':
 
-    final_houston_graph(houston_inputs)
+    #final_houston_graph(houston_inputs)
 
     #final_dallas_graph(north_texas_inputs, dallas_zip_features_dic, included_counties = ['Dallas'])
 
-    #final_austin_graph(austin_inputs, austin_zip_features_dic)
+    final_austin_graph(austin_inputs, austin_zip_features_dic)
 
 
 

@@ -315,7 +315,7 @@ def process_austin_permit_data(searchfor, permittypedesc = None, workclass = Non
 
     time0 = time.time()
     print('Reading Austin permit data')
-    permit_data = pd.read_csv(austin_permit_path)
+    permit_data = pd.read_csv(austin_permit_path, low_memory = False)
     print('Finished reading Austin permit data, took {}. Now subsetting.'.format(time.time() - time0))
 
     # Initial subset
