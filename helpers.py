@@ -457,7 +457,7 @@ def process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE',
         subsetted_data = subsetted_data.loc[subsetted_data['Year'] <= latest]
 
     # Process whether permit has been approved yet (using scraped data)
-    approvals = pd.read_csv('data/houston_permit_statuses.csv', index_col = 0)
+    approvals = pd.read_csv('shared_data/houston_permit_statuses.csv', index_col = 0)
     approvals.index = [str(id) for id in approvals.index]
 
     # Merge
