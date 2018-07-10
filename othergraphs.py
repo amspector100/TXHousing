@@ -7,8 +7,13 @@ import choropleth
 import matplotlib.pyplot as plt
 import time
 from tqdm import tqdm
+import copy
 
 from plotnine import * # This won't pollute the namespace I don't think because it's exactly like ggplot2 commands
+
+import folium
+from folium import FeatureGroup
+from BindColorMap import *
 
 # These booleans determine which graphs to graph in this run of the script. If you want to regenerate every graph,
 # just set everything to 'True'.
@@ -24,8 +29,9 @@ plot_dallas_commercial_permits = False
 plot_hds_locations = False
 plot_hds_permits = False # This needs some updates/revisions
 broad_zone = False
-permit_scatter = True
-
+permit_scatter = False
+income_histogram = False
+construction_heatmap = True
 
 # Read data --------------------------------------------------
 dallas_zones = process_zoning_shapefile(dallas_inputs, broaden = True)
@@ -209,6 +215,9 @@ if plot_hds_locations or plot_hds_permits:
     # Now plot number of demolition permits in the areas ------------------ - -- - - - -
     if plot_hds_permits:
         # Get Renovation/Demolition (not construction) points/data.
+        # Update: it's pretty hard to get exterior renovation data for Houston so we're going to focus mostly on
+        # demolition permits. This is what we the paper is more interested in anyway.
+
         dallas_points = process_dallas_permit_data(permit_types = ['Demolition Permit Commercial', 'Demolition Permit SFD/Duplex']) #dallas_renovation_types
         austin_points = process_austin_permit_data(searchfor = ['demolition'], earliest = 2013)
         austin_points = austin_points.loc[[not bool for bool in austin_points['Description'].str.contains('interior')]] # Don't care about interior remodels
@@ -486,9 +495,6 @@ if permit_scatter:
 
     # Make a map of the outliers for Connor. Start by plotting the outlier zip codes. ---------------------------------------
     print('Saved files, now working on folium map of permit outliers')
-    import folium
-    from folium import FeatureGroup
-    from BindColorMap import *
 
     outlier_threshhold = 0.9 # Quantile
     basemap = folium.Map([austin_inputs.lat, austin_inputs.long], zoom_start = 7)
@@ -537,4 +543,137 @@ if permit_scatter:
     folium.LayerControl().add_to(basemap)
     basemap.save('Figures/Bucket 2/PermitOutliers.html')
 
+if income_histogram:
+
+    calculate = False
+
+    if calculate:
+
+        # Get block data with income brackets
+        block_data = sf.get_block_geodata(['X19_INCOME'], cities = ['Austin', 'Dallas'])
+        austin_block_data = block_data['Austin']
+        dallas_block_data = block_data['Dallas']
+        factor_dictionary =   {'B19001e2':0, # Start values, the next value is the end of the bracket
+                               'B19001e3':10000,
+                               'B19001e4':15000,
+                               'B19001e5':20000,
+                               'B19001e6':25000,
+                               'B19001e7':30000,
+                               'B19001e8':35000,
+                               'B19001e9':40000,
+                               'B19001e10':45000,
+                               'B19001e11':50000,
+                               'B19001e12':60000,
+                               'B19001e13':75000,
+                               'B19001e14':100000,
+                               'B19001e15':125000,
+                               'B19001e16':150000,
+                               'B19001e17':200000}
+
+        data_features = [factor_dictionary[key] for key in factor_dictionary]
+        austin_block_data = austin_block_data.rename(columns = factor_dictionary)
+        dallas_block_data = dallas_block_data.rename(columns = factor_dictionary)
+
+        # Now calculate averages by area
+        dallas_zones = dallas_zones.loc[dallas_zones['broad_zone'].isin(['Single Family', 'Multifamily'])].to_crs({'init':'epsg:4326'})
+        dallas_zones = sf.get_all_averages_by_area(dallas_block_data, dallas_zones, features = data_features,
+                                 fillna = None)
+
+        austin_zones = austin_zones.loc[austin_zones['broad_zone'].isin(['Single Family', 'Multifamily'])]
+        austin_zones = sf.get_all_averages_by_area(austin_block_data, austin_zones, features = data_features,
+                                 fillna = None)
+
+        # Plot
+        austin_zones['City'] = 'Austin'
+        dallas_zones['City'] = 'Dallas'
+        selected_columns = data_features
+        selected_columns.extend(['broad_zone', 'City']) # We don't need geometry anymore
+        all_zones = pd.concat([austin_zones[selected_columns], dallas_zones[selected_columns]], axis = 0)
+        final_data = all_zones.groupby(['City', 'broad_zone']).sum()
+        final_data.to_csv('Cached_Income_Data.csv')
+
+    # Read in data just to get it in a consistent format - this is very fast anyways, it's like a 1 kb file
+    final_data = pd.read_csv('Cached_Income_Data.csv')
+    final_data = final_data.melt(var_name = 'Household_Income', value_name = 'Count', id_vars = ['City', 'broad_zone'])
+
+
+    # Create categorical datatype for ordering
+    from pandas.api.types import CategoricalDtype
+    income_cat = CategoricalDtype(categories = final_data['Household_Income'].unique(), ordered = True)
+    final_data['Household Income'] = final_data['Household_Income'].astype(income_cat)
+
+    # Normalize by the total
+    conditional_sums = final_data.groupby(['Household Income', 'broad_zone', 'City']).agg({'Count': 'sum'})
+    final_data = conditional_sums.groupby(level = [1,2]).apply(lambda x: 100*x / x.sum()).reset_index()
+    incomeplot = (ggplot(final_data, aes(x = 'Household Income', y = "Count", group = 'broad_zone', fill = 'broad_zone'))
+               + geom_bar(stat="identity", position=position_dodge())
+               + facet_wrap('~ City')
+               + labs(title = 'Income by Base Residential Zone, Austin and Dallas',
+                y = 'Percent of Households living in Housing Type')
+               + theme(axis_text_x = element_text(rotation = 20, size = 8)))
+    incomeplot.save(filename='Figures/Bucket 2/income_housing_typology.svg', width=15, height=8, bbox_inches='tight')
+
+
+if construction_heatmap:
+
+    # Get permit data ----------------------------------------
+
+    # Get permit data - Dallas
+    print('Processing Dallas permit data')
+    dallas_permits = get_corrected_dallas_permit_data(path = dpm_save_path)
+    dallas_permits = sf.process_points(dallas_permits)
+    dallas_sf = dallas_permits.loc[dallas_permits['Permit Type'].str.contains('Single')]
+    dallas_mf = dallas_permits.loc[dallas_permits['Permit Type'].str.contains('Multi')]
+
+    # Get permit data - Austin
+    austin_permits = process_austin_permit_data(searchfor=['101 single family houses',
+                                                           '103 two family bldgs',
+                                                           '104 three & four family bldgs',
+                                                           '105 five or more family bldgs'],
+                                                earliest=2013,
+                                                permittypedesc='Building Permit',
+                                                workclass='New')
+    austin_permits = sf.process_points(austin_permits)
+    austin_sf = austin_permits.loc[austin_permits['PermitClass'].str.contains('101 single')]
+    austin_mf = austin_permits.loc[[not bool for bool in austin_permits['PermitClass'].str.contains('101 single')]]
+
+    # Get permit data - Houston
+    # Construction permit data
+    print('Processing Houston permit data')
+    houston_permit_data = process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE',
+                                                                   'NEW AP', 'NEW HI-'],
+                                                      searchin = ['PROJ_DESC'],
+                                                      earliest = 2013, latest = None)
+
+    # Subset to only include approved permits and nonempty geometries
+    houston_permit_data = houston_permit_data.loc[houston_permit_data['Approval'] == 1.0]
+    houston_permit_data = sf.process_points(houston_permit_data)
+    houston_sf = houston_permit_data.loc[houston_permit_data['PROJ_DESC'].str.contains('|'.join(['NEW S.F.',
+                                                                                                 'NEW SF',
+                                                                                                 'NEW TOWNHOUSE',
+                                                                                                 'NEW SINGLE']))]
+    houston_mf = houston_permit_data.loc[houston_permit_data['PROJ_DESC'].str.contains('|'.join(['NEW AP',
+                                                                                                 'NEW HI-']))]
+
+    # Create heatmaps
+    for city_name, city_input, sf_permits, mf_permits in zip(['Austin', 'Dallas', 'Houston'],
+                                                             [austin_inputs, dallas_inputs, houston_inputs],
+                                                             [austin_sf, dallas_sf, houston_sf],
+                                                             [austin_mf, dallas_mf, houston_mf]):
+
+        basemap = folium.Map([city_input.lat, city_input.long], zoom_start = 10)
+        choropleth.heatmap(sf_permits,
+                           name = 'Single Family Construction',
+                           show = False,
+                           radius = 13,
+                           min_opacity = 0.5,
+                           max_val = 1).add_to(basemap)
+        choropleth.heatmap(mf_permits, name = 'Multifamily Construction',
+                           show = False,
+                           radius = 13,
+                           min_opacity = 0.5).add_to(basemap)
+
+        folium.TileLayer('cartodbdark_matter').add_to(basemap)
+        folium.LayerControl().add_to(basemap)
+        basemap.save('Figures/Bucket 2/Heatmaps/{}PermitHeatMap.html'.format(city_name))
 

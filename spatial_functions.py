@@ -72,7 +72,7 @@ def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', 
 # Block data ------------------------------------------------------------------------------------------------------------------block data
 
 # See datadic at https://www2.census.gov/geo/tiger/TIGER_DP/2016ACS/Metadata/BG_METADATA_2016.txt
-def get_block_geodata(data_layers, cities=None):
+def get_block_geodata(data_layers, cities=None, get_percent_residential = True):
     """
     Get geodata by block group and subset to only include the municipality
     :param data_layers: Iterable of codes for the data layer of the geodatabase.
@@ -91,6 +91,14 @@ def get_block_geodata(data_layers, cities=None):
         data = gpd.read_file(texas_blocks_path, layer=data_layer)
         geodata = geodata.merge(data, how='inner', left_on='GEOID_Data', right_on='GEOID')
         geodata.rename({'GEOID_y': 'GEOID'}, axis='columns', inplace=True)
+
+    geodata.set_index('GEOID', inplace = True)
+
+    # Get the percent of land which is zoned residential inside the city limits
+    if get_percent_residential:
+        percent_residential = pd.read_csv('data/bg_percent_residential.csv', index_col = 0).fillna(1)
+        percent_residential.columns = ['percent_residential']
+        geodata = geodata.join(percent_residential)
 
     geodata = gpd.GeoDataFrame(data = geodata[[x for x in geodata.columns if x != 'geometry_x']], geometry = geodata['geometry_x'])
     geodata.rename({'geometry_x': 'geometry'}, axis = 'columns', inplace = True)
@@ -117,7 +125,6 @@ def get_block_geodata(data_layers, cities=None):
             for city in cities:
                 precise_intersections = fast_intersect(city)
                 result[city] = geodata.loc[precise_intersections.index.tolist()]
-
         print('Finished getting block geodata, time is {}'.format(time.time() - time0))
         return result
 
@@ -125,7 +132,7 @@ def get_block_geodata(data_layers, cities=None):
         print('Finished getting block geodata, time is {}'.format(time.time() - time0))
         return geodata
 
-def get_average_by_area(data_source, spatial_index, polygon, density_feature = 'B01001e1', geometry_column = 'geometry'):
+def get_average_by_area(data_source, spatial_index, polygon, density_features = 'B01001e1', geometry_column = 'geometry'):
     """
     Calculates the average 'feature' of a 'polygon' using a 'data_source' of different shapes which (in some combination)
     cover the polygon. If you want to do this for a list of polygons, use get_all_averages_by_area, which is listed below.
@@ -134,16 +141,17 @@ def get_average_by_area(data_source, spatial_index, polygon, density_feature = '
     before calling this function.
     :param polygon: A polygon to find the population density of. Note that this should be a polygon, not a geopandas
     object.
-    :param density_feature: the feature in the data_source of interest. Defaults to 'B01001e1' which is the total population est
-    in block data 'X01_AGE_AND_SEX' layer. Important: This feature MUST be of the form 'units/area' where the area units
-    (i.e. square feet) are the same as the units of the area in the geopandas .area attribute.
+    :param density_features: List of features (or just a single feature as a string) in the data_source of interest.
+     Defaults to 'B01001e1' which is the total population est in block data 'X01_AGE_AND_SEX' layer. Important: This
+    feature MUST be of the form 'units/area' where the area units (i.e. square feet) are the same as the units of the
+    area in the geopandas .area attribute.
     :param geometry_column: Geometry column of the block data, defaults to 'geometry'
     :return: float (the feature of the area, weighted by area)
     """
 
-    if density_feature not in data_source.columns:
-        print("For the get_pop_density function to work, a column specifying total population (usually B01001e1) needs "
-              "to be in the data_source argument")
+    # If the feature is a string, turn it to a list
+    if isinstance(density_features, str):
+        density_features = [density_features]
 
     # Find which blocks intersect
     possible_intersections_index = list(spatial_index.intersection(polygon.bounds))
@@ -152,35 +160,36 @@ def get_average_by_area(data_source, spatial_index, polygon, density_feature = '
     precise_intersections = data_source.loc[precise_intersections_index[precise_intersections_index.values].index.tolist()]
 
     # Now actually find the intersections. Possible buffer them to avoid absurdly high numbers (area can be super small).
-
     precise_intersections.loc[:, geometry_column] = precise_intersections[geometry_column].intersection(polygon)
     precise_intersections.loc[:, 'area'] = precise_intersections[geometry_column].area
     precise_intersections = precise_intersections.loc[precise_intersections['area'] != 0] # For some reason we get 0 area every now and then, so get rid of these columns.
 
     # Now find feature for the polygon
-    result = precise_intersections[density_feature].dot(precise_intersections['area'])
+    result = precise_intersections[density_features].transpose().dot(precise_intersections['area'])
     return result
 
-def get_all_averages_by_area(data_source, other_geometries, feature = 'B01001e1', data_source_geometry_column = 'geometry',
-                             other_geometries_column = 'geometry', drop_multipolygons = True, fillna = None, account_for_water = True):
+def get_all_averages_by_area(data_source, other_geometries, features = 'B01001e1', data_source_geometry_column = 'geometry',
+                             other_geometries_column = 'geometry', drop_multipolygons = True, fillna = None, account_method = 'percent_residential'):
     """
     Get averages of a 'feature' from 'data_source' by area. Note: data_source and other_geometries should have the
     same crs initially.
     :param data_source: The data source, usually block data. Geodataframe. Must have a column specifying total population.
     :param other_geometries: Geodataframe, where the geometry column is filled with polygons. Will calculate the feature
     for each of these polygons.
-    :param feature: The feature in question, defaults to 'B01001e1' which is the population estimate in the X01_SEX_AND_AGE
-    layer in block geodata.
+    :param features: The feature in question, defaults to 'B01001e1' which is the population estimate in the X01_SEX_AND_AGE
+    layer in block geodata. Can also be a list of features, i.e. ['B01001e1', 'B01001e2']
     :param density: Boolean. Default False. If True, will assume that the 'feature' is in units per area and will not
     divide the feature by the area of the data source polygons.
     :param data_source_geometry_column: geometry column for data_source
     :param other_geometries_column: geometry column for other_geometries
     :param fillna: if not None, fill na values with this value.
-    :param account_for_water: if true, will try to account for the % of an area which is covered by water. Only works for block data.
+    :param account_method: The method by which to account for the % of an area which is not residential (this prevents
+    population-related estimates from being too low). Can either be 'None', 'percent_residential', or 'percent_land'
     :return: other_geometries but with a new column, feature, which has the averages by area.
     """
     time0 = time.time()
-    print("Calculating average {} by area".format(feature))
+    if isinstance(features, str):
+        features = [features]
 
     if data_source.crs != other_geometries.crs:
         print("""Note: in get_all_averages_by_area, the crs for data_source ({})  and other_geometries ({}) is not the same. This
@@ -191,37 +200,44 @@ def get_all_averages_by_area(data_source, other_geometries, feature = 'B01001e1'
     data_source.reset_index(drop = True)
     data_source.index = [str(ind) for ind in data_source.index]
 
-    # Get the feature in terms of units per area
-    if account_for_water:
+    # Get the feature in terms of units per area (do a bit of renaming to make it clear these are densities)
+    old_columns_dictionary = {str(feature) + '_density':feature for feature in features}
+    new_columns_dictionary = {feature:str(feature) + '_density' for feature in features}
+    new_columns = [new_columns_dictionary[key] for key in new_columns_dictionary]
+    if account_method == 'water':
         data_source.loc[:, 'percent_land'] = data_source['ALAND'].divide(data_source["ALAND"] + data_source['AWATER'])
-        data_source.loc[:, 'density'] = data_source[feature].divide(data_source[data_source_geometry_column].area).multiply(data_source['percent_land'])
+        densities = data_source[features].multiply(data_source['percent_land'], axis = 0).divide(data_source[data_source_geometry_column].area, axis = 0)
+    elif account_method == 'percent_residential':
+        data_source = data_source.loc[data_source['percent_residential'] != 0]
+        densities = data_source[features].divide(data_source['percent_residential'], axis = 0).divide(data_source[data_source_geometry_column].area, axis = 0)
     else:
-        data_source.loc[:, 'density'] = data_source[feature].divide(data_source[data_source_geometry_column].area)
-    data_source = data_source[['density', data_source_geometry_column]] # Save a bit of memory
+        densities = data_source[features].divide(data_source[data_source_geometry_column].area)
+
+    # Rename and join to data
+    densities = densities.rename(columns = new_columns_dictionary)
+    data_source = data_source.join(densities)
 
     other_geometries = process_geometry(other_geometries, drop_multipolygons = drop_multipolygons)
     if len(other_geometries) == 0 and drop_multipolygons == True:
-
-        # Warn user in case'
+        # Warn user in case
         print('Warning in get_all_averages_by_area: it looks like dropping multipolygons in the'
               '"process geometry" call has eliminated all the data.')
-
 
     # Get spatial index
     spatial_index = data_source.sindex
 
     # Quick function to apply to geometry column for other_geometries
     def get_avg(polygon):
-        result = get_average_by_area(data_source, spatial_index, polygon, density_feature = 'density', geometry_column = data_source_geometry_column)
+        result = get_average_by_area(data_source, spatial_index, polygon, density_features = new_columns, geometry_column = data_source_geometry_column)
         if fillna is not None:
-            if result == float('inf') or result == float('nan'):
-                result = fillna
+            result.fillna(fillna, inplace = True)
         return result
 
     # Get averages by area - this takes a while.
-    other_geometries.loc[:, feature] = other_geometries[other_geometries_column].apply(get_avg)
-
-    print("Finished calculating average {} by area, took {}".format(feature, time.time() - time0))
+    final_values = other_geometries[other_geometries_column].apply(get_avg)
+    final_values = final_values.rename(columns = old_columns_dictionary)
+    other_geometries = other_geometries.join(final_values)
+    print("Finished calculating average {} by area, took {}".format(features, time.time() - time0))
 
     return other_geometries
 
@@ -859,15 +875,15 @@ def points_intersect_polygon(points, polygon, spatial_index, points_geometry_col
 
 if __name__ == '__main__':
 
-    from helpers import process_zoning_shapefile
+    #from helpers import process_zoning_shapefile
 
-    block_data = get_block_geodata(['X01_AGE_AND_SEX'], cities = 'Austin')
-    austin_zones = process_zoning_shapefile(austin_inputs)
+    #block_data = get_block_geodata(['X01_AGE_AND_SEX'], cities = 'Austin')
+    #austin_zones = process_zoning_shapefile(austin_inputs)
 
-    q = get_all_averages_by_area(block_data, austin_zones, fillna = 0)
-    q['dens'] = q['B01001e1'].divide(q['geometry'].area)
-    q.plot(column = 'B01001e1', legend = True)
-    plt.show()
+    #q = get_all_averages_by_area(block_data, austin_zones, fillna = 0)
+    #q['dens'] = q['B01001e1'].divide(q['geometry'].area)
+    #q.plot(column = 'B01001e1', legend = True)
+    #plt.show()
 
 
 
