@@ -65,7 +65,7 @@ def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', 
     """
     old_projection = gdf.crs
     gdf = gdf.to_crs({'init':newproj})
-    gdf['area'] = scale*gdf[geometry_column].area
+    gdf[name] = scale*gdf[geometry_column].area
     gdf = gdf.to_crs(old_projection)
     return gdf
 
@@ -204,14 +204,19 @@ def get_all_averages_by_area(data_source, other_geometries, features = 'B01001e1
     old_columns_dictionary = {str(feature) + '_density':feature for feature in features}
     new_columns_dictionary = {feature:str(feature) + '_density' for feature in features}
     new_columns = [new_columns_dictionary[key] for key in new_columns_dictionary]
-    if account_method == 'water':
+
+    # Defaults to percent residential
+    if account_method == 'percent_residential':
+        print('Using percent_residential accounting method')
+        data_source = data_source.loc[data_source['percent_residential'] >= 0.01] # Ignore blocks which are less than .5% residential
+        densities = data_source[features].divide(data_source['percent_residential'], axis = 0).divide(data_source[data_source_geometry_column].area, axis = 0)
+    elif account_method == 'water':
+        print('Using water accounting method')
         data_source.loc[:, 'percent_land'] = data_source['ALAND'].divide(data_source["ALAND"] + data_source['AWATER'])
         densities = data_source[features].multiply(data_source['percent_land'], axis = 0).divide(data_source[data_source_geometry_column].area, axis = 0)
-    elif account_method == 'percent_residential':
-        data_source = data_source.loc[data_source['percent_residential'] != 0]
-        densities = data_source[features].divide(data_source['percent_residential'], axis = 0).divide(data_source[data_source_geometry_column].area, axis = 0)
     else:
-        densities = data_source[features].divide(data_source[data_source_geometry_column].area)
+        print('Not using any accounting method')
+        densities = data_source[features].divide(data_source[data_source_geometry_column].area, axis = 0)
 
     # Rename and join to data
     densities = densities.rename(columns = new_columns_dictionary)
@@ -553,7 +558,7 @@ def zip_intersect(gdf, zips):
 # in each rectangle or the mean or median of a factor associated with the points for each rectangle. ---------------------------------------------------------------------
 
 # Helper function for spatial tree efficiency - fragment polygon into smaller sizes
-def fragment(polygon, horiz, vert):
+def fragment(polygon, horiz = 10, vert = 10):
     """
     :param polygon: Polygon to fragment
     :param horiz: # of horizontal fragments
@@ -636,6 +641,43 @@ def make_point_grid(gdf, horiz=20, vert=20, factor=None, by='mean', geometry_col
     result.crs = gdf.crs
     return result
 
+
+# Returns the number of points inside the polygons divided by the area of the polygons in square miles
+def points_over_area(points, polygons, points_geometry_column='geometry', poly_geometry_column='geometry',
+                     normalize_by_area=True):
+    """
+    :param points: GeoDataframe of points, should be in lat long
+    :param polygons: Geodataframe of polygons
+    :param: normalize_by_area: If true, will divide the number of points by the area of the location (in square miles).
+    :return: GeoDataFrame of polygons
+    """
+
+    # Process points and polys to make them valid
+    polygons = process_geometry(polygons, drop_multipolygons=False)
+    polygons.reset_index(drop=True, inplace=True)
+    polygons.index = [str(ind) for ind in polygons.index]
+
+    points = process_points(points, geometry_column=points_geometry_column)
+
+    counter = 0
+
+    # Intersections (efficiently)
+    spatial_index = points.sindex
+    for poly in polygons[poly_geometry_column]:
+        possible_intersections_index = list(spatial_index.intersection(poly.bounds))
+        possible_intersections = points.iloc[possible_intersections_index]
+        precise_matches = possible_intersections[points_geometry_column].intersects(poly)
+        number_matches = sum(precise_matches.tolist())
+        counter += number_matches
+
+    # Return # of points divided by area
+    area = get_area_in_units(polygons)['area'].sum()
+
+    if normalize_by_area:
+        return counter / area  # Would be nice to get this area in miles. Oh well.
+    else:
+        return counter
+
 # Create dist from city center graphs --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Calculates distance between two lat/long points using haversine formula.
@@ -661,9 +703,28 @@ def haversine(point1, point2):
     r = 3956  # Radius of earth in miles. Use 6371 for km
     return c * r
 
+def calculate_dist_to_center(gdf, zoning_input, drop_centroids = True):
+    """
+    :param gdf: A GeoDataFrame, in lat/long
+    :param zoning_input: Zoning input, used to find the center of the city
+    :param drop_centroids: Boolean, default true. If true, drop the centroids inplace after caclulation.
+    :return: Pandas Series of floats (distances from center).
+    """
+
+    center = shapely.geometry.point.Point(zoning_input.long, zoning_input.lat)
+
+    def dist_to_center(point):
+        dist = haversine(point, center)
+        return dist
+
+    gdf['centroids'] = gdf['geometry'].centroid
+    distances = gdf['centroids'].apply(dist_to_center)
+    if drop_centroids:
+        gdf.drop('centroids', inplace=True, axis=1)
+    return distances
 
 def points_intersect_rings(gdf, zoning_input, factor = None, step = 1, categorical = True, by = 'mean',
-                           geometry_column = 'geometry', per_square_mile = True):
+                           geometry_column = 'geometry', per_square_mile = True, maximum = None):
 
     """
     :param gdf: Geodataframe. Assumes this is already transformed to lat long coord system. Should be polygon geometry.
@@ -675,6 +736,8 @@ def points_intersect_rings(gdf, zoning_input, factor = None, step = 1, categoric
     :param by: Defaults to "mean". If categorical = False, use "by" to determine how to calculate averages over points.
     :param geometry_column: name of geometry column. Default geometry.
     :param psm: if true, divide by the area of the ring.
+    :param maximum: float, defualts to None. If not None, will group everything greater than this maximum into a single
+    category.
     :return: Dataframe
     """
 
@@ -687,6 +750,16 @@ def points_intersect_rings(gdf, zoning_input, factor = None, step = 1, categoric
         return rdist
 
     gdf['dist_to_center'] = gdf[geometry_column].apply(rounded_dist_to_center)
+
+    # Group ouotliers together if told
+    if maximum is not None:
+        def group_outliers(dist_to_center):
+            if dist_to_center > maximum:
+                return str(maximum) + '+'
+            else:
+                return dist_to_center
+        gdf['dist_to_center'] = gdf['dist_to_center'].apply(group_outliers)
+
 
     # Get counts in this case
     if factor is None:
@@ -728,7 +801,7 @@ def points_intersect_rings(gdf, zoning_input, factor = None, step = 1, categoric
 
 # Radius from city center for polygon data
 def polygons_intersect_rings(gdf, zoning_input, factor = None, newproj = 'epsg:2277', step = 1, maximum = 20,
-                    categorical = True, geometry_column = 'geometry', city = None):
+                    categorical = True, geometry_column = 'geometry', group_outliers = True, outlier_maximum = 35, city = None):
 
     """
     :param gdf: Geodataframe. Assumes this is already transformed to lat long coord system. Should be polygon geometry.
@@ -743,6 +816,10 @@ def polygons_intersect_rings(gdf, zoning_input, factor = None, newproj = 'epsg:2
     :param city: If not "none", if factor is "none", will read the shaepfile of the boundaries of the city to ensure
     more accurate calculations. (Otherwise, for a radius of size 12, the area of the circle might be greater than the area
     of the city).
+    :param group_outliers: Boolean, defaults to true. If true, group everything with a distance greater than the maximum
+     into one group (of maximum size).
+    :param outlier_maximum: Float, defaults to 35. For computational efficiency, this function will not consider outliers
+     higher than this distance from the cneter of the city.
     :return: Dataframe or Series
     """
 
@@ -833,6 +910,38 @@ def polygons_intersect_rings(gdf, zoning_input, factor = None, newproj = 'epsg:2
         else:
             result.loc[radius] = precise_matches['area'].dot(precise_matches[factor])/(total_area)
 
+    # If this optional arg is true, then lump everything else into one category
+    if group_outliers:
+        circle = center.buffer(feet_to_mile*outlier_maximum).difference(center.buffer(feet_to_mile*radius))
+        grid = fragment(circle, horiz=15, vert=15)
+        possible_matches_index = set()
+        for polygon in grid:
+            possible_matches_index = possible_matches_index.union(set(spatial_index.intersection(polygon.bounds)))
+        possible_matches = gdf.iloc[list(possible_matches_index)]
+        # Get precise matches and data
+        precise_matches_index = possible_matches.loc[:, geometry_column].intersects(circle)
+        precise_matches = possible_matches.loc[precise_matches_index]
+        precise_matches.loc[:, geometry_column] = precise_matches.loc[:, geometry_column].intersection(circle)  # And adjust geometry
+
+        # Compute areas
+        precise_matches.loc[:, 'area'] = precise_matches.loc[:, geometry_column].area
+        total_area = precise_matches['area'].sum()
+
+        # In this case, the denominator is the total area within the ring
+        label = str(radius) + '+'
+        if factor is None:
+            if city is not None:
+                area = circle.intersection(city_shape).area
+            else:
+                area = circle.area
+            result.loc[label] = total_area/area
+
+        # In all other cases, the denominator is the total area inside the 'factor' column
+        elif categorical:
+            result.loc[label] = precise_matches[['area', factor]].groupby(factor)['area'].sum().divide(total_area)
+        else:
+            result.loc[label] = precise_matches['area'].dot(precise_matches[factor])/(total_area)
+
     return result
 
 def points_intersect_polygon(points, polygon, spatial_index, points_geometry_column = 'geometry', factor = None, categorical = True, by = 'mean'):
@@ -869,9 +978,53 @@ def points_intersect_polygon(points, polygon, spatial_index, points_geometry_col
             'In point_choropleth call, "by" argument must either equal "mean" or "median" - you put "{}"'.format(by))
             return None
 
+def fast_polygon_intersection(gdf, large_polygon_list, geometry_column = 'geometry', names = None, **kwargs):
+    """
+    # A very simple function here - quickly determines which of a set of small polygons, which should be part of a gdf,
+    are inside a list of large polygons (this should be a list or a GeoSeries). Uses centroids to speed up computation.
+    :param large_polygon_list: List of large polygons (i.e. municipal boundaries)
+    :param names: A list of the names of the large polygons, in the same order as the large_polygon_list.
+    :param gdf: A geodataframe with polygon geometries.
+    :param geometry_column: The geometry column of the geodataframe.
+    :param **kwargs: kwargs to pass to the "fragment" call (fragmenting large polygons into grids speeds up computation
+    due to the nature of rtrees).
+    :return: If names = None, a list of the indexes of the gdf of the small polygons which lie inside at least one of
+    the large polygons. Otherwise, will return a dictionary which maps the indexes of the gdp of small polygons to
+    the names of the large polygons.
+    """
 
+    # Convert geoseries input to list
+    if isinstance(large_polygon_list, gpd.GeoSeries):
+        large_polygon_list = large_polygon_list.values.tolist()
 
+    # Get centroids
+    gdf['centroids'] = gdf[geometry_column].centroid
+    gdf = gdf.set_geometry('centroids')
+    spatial_index = gdf.sindex
 
+    # Initialize result
+    result = {}
+    if names is None:
+        names_list = [0]*len(large_polygon_list)
+    else:
+        names_list = names
+
+    # Loop through and find intersections
+    for name, polygon in zip(names_list, large_polygon_list):
+        grid = fragment(polygon, **kwargs)
+        for grid_piece in grid:
+            possible_intersections_index = list(spatial_index.intersection(grid_piece.bounds))
+            possible_intersections = gdf.iloc[possible_intersections_index]
+            precise_intersections_bools = possible_intersections['centroids'].intersects(grid_piece)
+            precise_intersections = possible_intersections[precise_intersections_bools].index.tolist()
+            for i in precise_intersections:
+                result[i] = name
+
+    # If the names are meaningless, just return the list of the result
+    if names is None:
+        result = [key for key in result]
+
+    return result
 
 if __name__ == '__main__':
 
@@ -929,8 +1082,5 @@ if __name__ == '__main__':
 
 
     plt.show()
-
-
-
 
 

@@ -110,8 +110,8 @@ def categorical_choropleth(gdf, factor, colors = None, quietly = False, weight =
     return gjson
 
 #  continuous colormap
-def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = global_weight, alpha = global_alpha,
-                          mid_color = '#00ccff', end_color = '#000066', show = False, geometry_column = 'geometry'):
+def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = global_weight, alpha = global_alpha, colors = None, start_color = 'white',
+                          mid_color = '#00ccff', end_color = '#000066', method = 'log', show = False, geometry_column = 'geometry', basemap = None):
     """
     :param gdf: Geodataframe
     :param factor: factor for analysis
@@ -119,10 +119,13 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = g
     :param scale_name: Name of scale
     :param weight: Weight
     :param alpha: Alpha of polygons
-    :param start_color: I.e. white, for min data
-    :param end_color: I.e. black, for max data
+    :param colors: A list of colors to use in the colormap, defaults to None.
+    :param start_color: I.e. white, for min data. Overridden by the "colors" parameter.
+    :param mid_color: I.e. gray, for middle of data. Overridden by the "colors" parameter.
+    :param end_color: I.e. black, for max data. Overridden by the "colors" parameter.
     :param show: Show by default on start
     :param geometry_column: 'geometry'
+    :param basemap: If not None, will add the colormap and a scale (bound together) to the baesmap as a layer.
     :return:
     """
 
@@ -133,7 +136,10 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = g
     min_data = gdf[factor].min()
     max_data = gdf[factor].max()
 
-    colormap =  cm.LinearColormap(colors = ['white', mid_color, end_color], vmin = min_data, vmax = max_data).to_step(12, method = 'log')
+    if colors is not None:
+        colormap =  cm.LinearColormap(colors = colors, vmin = min_data, vmax = max_data).to_step(12, method = method)
+    else:
+        colormap =  cm.LinearColormap(colors = [start_color, mid_color, end_color], vmin = min_data, vmax = max_data).to_step(12, method = method)
     if scale_name is None:
         colormap.caption = layer_name
     else:
@@ -152,6 +158,12 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = g
                 'alpha': alpha,
             }
         )
+
+    # This is for backwards compatability but always do this, it saves time
+    if basemap is not None:
+        colormap.add_to(basemap)
+        gjson.add_to(basemap)
+        BindColormap(gjson, colormap).add_to(basemap)
 
     return gjson, colormap
 
@@ -636,7 +648,9 @@ def final_houston_graph(zoning_input):
     print('Retreiving Houston basemap')
     basemap = folium.Map([zoning_input.lat, zoning_input.long], zoom_start=zoning_input.zoom)
 
-    # Historic districts
+    # Historic districts -------------------------------------------------------------------
+
+    # National
     national_hd_fg  = FeatureGroup('National Historic Districts', show = False)
     tx_hd_path = "data/Zoning Shapefiles/NationalRegisterPY_shp/NationalRegisterPY.shp"
     tx_hd_data = gpd.read_file(tx_hd_path)
@@ -655,8 +669,28 @@ def final_houston_graph(zoning_input):
     national_hd_fg.add_to(basemap)
 
     # Local historic districts
+    local_hd_fg = FeatureGroup('Local Historic Districts', show = False)
+    local_hd_data = gpd.read_file(houston_historic_districts_path).to_crs({'init':'epsg:4326'})
 
-    # Construction permit data
+    folium.GeoJson(
+        local_hd_data,
+        style_function=lambda feature: {
+            'fillColor': 'Blue',
+            'color': 'Blue',
+            'weight': global_weight,
+            'fillOpacity': global_alpha,
+        }
+    ).add_to(local_hd_fg)
+    local_hd_fg.add_to(basemap)
+
+    # Local historic landmarks
+    local_landmarks_fg = FeatureGroup('Local Historic Landmarks', show = False)
+    local_landmarks_data = gpd.read_file(houston_historic_landmarks_path).to_crs({'init':'epsg:4326'})
+
+    make_marker_cluster(local_landmarks_data, make_centroids = False, fast = True).add_to(local_landmarks_fg)
+    local_landmarks_fg.add_to(basemap)
+
+    # Construction permit data ----------------------------------------------------------------------
     print('Processing Houston permit data')
     houston_permit_data = process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE',
                                                                    'NEW AP', 'NEW HI-'],
@@ -714,6 +748,40 @@ def final_houston_graph(zoning_input):
     LayerControl().add_to(basemap)
     basemap.save('Figures/Bucket 2/Houston_Mastermap.html')
 
+# Plots percent of workers
+def texas_job_centers():
+
+
+    # Get block geodata for all of Texas
+    block_data = sf.get_block_geodata(['X08_COMMUTING', 'X01_AGE_AND_SEX'], cities = None)
+    block_data['local_workers'] = block_data['B08008e3'] + block_data['B08008e8'] # Female and male workers working in their place of residence
+    block_data['total_workers'] = block_data['B08008e2'] + block_data['B08008e7'] # Total number of male and female workers in the block group
+    block_data['local_workers_pct'] = 100*block_data['local_workers'].divide(block_data['total_workers']).fillna(0)
+    spatial_index = block_data.sindex
+
+    for name, zoning_input in zip(['Austin', 'Dallas', 'Houston'], [austin_inputs, dallas_inputs, houston_inputs]):
+
+        # Get basemap
+        basemap = folium.Map([zoning_input.lat, zoning_input.long], zoom_start=10)
+
+        # Query and find nearest neighbors, subset
+        nearest_index = list(spatial_index.nearest((zoning_input.long, zoning_input.lat), num_results = 4000))
+        city_data = block_data.iloc[nearest_index]
+
+        # Graph
+        gjson, colormap = continuous_choropleth(city_data, factor = 'local_workers_pct',
+                                                  layer_name='Percent of Workers Working in Place of Residence',
+                                                  mid_color = 'green', end_color = 'blue', show = False)
+        colormap.add_to(basemap)
+        gjson.add_to(basemap)
+        BindColormap(gjson, colormap).add_to(basemap)
+        folium.TileLayer('cartodbdark_matter').add_to(basemap)
+        LayerControl().add_to(basemap)
+        basemap.save('Figures/Testing/{}_job_choropleth.html'.format(name))
+        print('Graphed for {}'.format(name))
+
+    print('Finished')
+
 
 
 
@@ -732,11 +800,13 @@ def final_houston_graph(zoning_input):
 
 if __name__ == '__main__':
 
+    texas_job_centers()
+
     #final_houston_graph(houston_inputs)
 
     #final_dallas_graph(north_texas_inputs, dallas_zip_features_dic, included_counties = ['Dallas'])
 
-    final_austin_graph(austin_inputs, austin_zip_features_dic)
+    #final_austin_graph(austin_inputs, austin_zip_features_dic)
 
 
 

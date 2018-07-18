@@ -6,7 +6,7 @@ zip_boundaries_path = "data\cb_2017_us_zcta510_500k\cb_2017_us_zcta510_500k.shp"
 class zoning_inputs():
 
     def __init__(self, path, feature, separator, proj4string, base_zones, lat = 0, long = 0, zoom = 10,
-                 title = '', xlims = [None, None], ylims = [None, None], crs = None):
+                 title = '', xlims = [None, None], ylims = [None, None], crs = None, regulations_path = None):
         self.path = path
         self.feature = feature
         self.separator = separator
@@ -19,6 +19,7 @@ class zoning_inputs():
         self.xlims = xlims
         self.ylims = ylims
         self.crs = crs
+        self.regulations_path = regulations_path
 
 # Downloaded from http://data-nctcoggis.opendata.arcgis.com/datasets/2015-land-use
 north_texas_inputs = zoning_inputs(path = 'data/Zoning Shapefiles/2015_North_Texas_Land_Use/2015_Land_Use.shp',
@@ -58,6 +59,7 @@ nt_counties = zoning_inputs(path = "data/Zoning Shapefiles/nt_counties/Counties_
 
 
 # Downloaded from https://data.austintexas.gov/Locations-and-Maps/Zoning/5rzy-nm5e
+austin_regulations_path = "data/austin zoning standards.csv"
 austin_inputs = zoning_inputs(path = "data/Zoning Shapefiles/austin_zoning/geo_export_571668ee-52f1-4ac9-a4e0-3b8bb348eae7.shp",
                               feature = 'zoning_zty',
                               separator = '-',
@@ -68,9 +70,11 @@ austin_inputs = zoning_inputs(path = "data/Zoning Shapefiles/austin_zoning/geo_e
                               long = -97.743,
                               zoom = 9,
                               title = 'Base Zones in Austin, Texas',
-                              crs = {'init': 'epsg:4326'})
+                              crs = {'init': 'epsg:4326'},
+                              regulations_path=austin_regulations_path)
 
 # From dallas's open data site
+dallas_regulations_path = 'data/dallas zoning standards.csv'
 dallas_inputs = zoning_inputs(path = "data/Zoning Shapefiles/DallasBaseZoning/BaseZoning.shp",
                               feature = 'ZONE_DIST',
                               separator = '-',
@@ -83,7 +87,8 @@ dallas_inputs = zoning_inputs(path = "data/Zoning Shapefiles/DallasBaseZoning/Ba
                               long = north_texas_inputs.long,
                               zoom = 9,
                               title = 'Base Zones in Dallas, Texas',
-                              crs = {'init':'epsg:2276'})
+                              crs = {'init':'epsg:2276'},
+                              regulations_path=dallas_regulations_path)
 
 # Houston has no base zones but this is useful for making the graph
 houston_inputs = zoning_inputs(path = None,
@@ -276,8 +281,6 @@ austin_downzone_path = 'data/Zoning Shapefiles/Austin Downzoning/austin_downzoni
 austin_construction_path = 'data/Zoning Shapefiles/Austin Construction/austin_construction.shp'
 austin_permit_path = 'data/austin_construction_permits.csv'
 
-austin_regulations_path = "data/austin zoning standards.csv"
-
 # Dallas -------------------------------------------------------------------------------------------------------------
 
 dallas_zips = [75203, 75204, 75205, 75208, 75209, 75210, 75211, 75212, 75214, 75201, 75202, 75206, 75207, 75215, 75216,
@@ -300,6 +303,7 @@ dallas_zip_features_dic = {'Median DOM (vs CBSA)':['Median Days on Market', 'Med
                            'sf_avg_listing': ['Single Family Homes Price', 'Average Single Family Home Listing Price (Realtor)'],
                            'mf_avg_listing': ['Multifamily Homes Price', 'Average Multifamily Home Listing Price (Realtor)']}
 
+# This is a misnomer - it's not all the parcels in the county, just the ones in teh city.
 dallas_parcel_data_path_2013 = "data/Zoning Shapefiles/Dallas County Parcels 2013/geo_export_9b090abf-d5d9-4c74-a6be-4486e75ee147.shp"
 dallas_parcel_data_path_2016 = "data/Zoning Shapefiles/Dallas County Parcels 2016/geo_export_bd65f212-41ce-4166-804a-5dc5ef85ee84.shp"
 
@@ -310,7 +314,6 @@ dallas_permit_path = 'data/dallas_construction_permits.csv'
 
 dpm_save_path = "C:/Users/amspe/Documents/R/MI2018/TXHousing/data/Zoning Shapefiles/Dallas Corrected Permits/dallas_permits_corrected.shp"
 
-dallas_regulations_path = 'data/dallas zoning standards.csv'
 
 dallas_renovation_types = ['Building (BU) Commercial  Renovation', 'Building (BU) Single Family  Renovation',
                            'Building (BU) Multi Family  Renovation', 'Flammable Liquid (FL) Commercial  Renovation',
@@ -362,11 +365,51 @@ houston_spec_min_lots = "data/Zoning Shapefiles/Houston_Spec_Minimum_Lot/Minimum
 houston_structural_permits_path = "data/Houston_Structural_Permits/Permits_wm_Structural.shp"
 houston_demolition_permits_path = "data/Houston_Demolition_Permits/Demolition_ILMS_Code_SD.shp"
 
+harris_parcel_path_2018 = "data/Zoning Shapefiles/Harris_Parcels_2018/Parcels.shp"
+houston_parcel_path_2018 = 'data/Zoning Shapefiles/Houston_Parcels_2018/Parcels.shp'
+houston_historic_districts_path = "data/Houston_Historic_Protections/HISTORIC_DISTRICTS_CITY.shp"
+houston_historic_landmarks_path = "data/Houston_Historic_Protections/HISTORICAL_SITES.shp"
+
+# Columns for parcel features
+houston_land_columns = ["ACCOUNT", "LINE_NUMBER", "LAND_USE_CODE", "LAND_USE_DSCR", "SITE_CD", "SITE_CD_DSCR",
+                        "SITE_ADJ", "UNIT_TYPE", "UNITS", "SIZE_FACTOR", "SITE_FACT", "APPR_OVERRIDE_FACTOR",
+                        "APPR_OVERRIDE_REASON", "TOT_ADJ", "UNIT_PRICE", "ADJ_UNIT_PRICE", "VALUE", "OVERRIDE_VALUE"]
+
+
 # Misc -------------------------------------------------------------------------------------------------------------
 
 # See metadata at https://www2.census.gov/geo/tiger/TIGER_DP/2016ACS/Metadata/BG_METADATA_2016.txt
 texas_blocks_path = "data/ACS_2016_5YR_BG_48_TEXAS.gdb"
 texas_places_path = "data/cb_2017_48_place_500k/cb_2017_48_place_500k.shp"
+
+csa_path = "data/cb_2017_us_csa_500k/cb_2017_us_csa_500k.shp"
+cbsa_path =  "data/cb_2017_us_cbsa_500k/cb_2017_us_cbsa_500k.shp"
+ua_path = "data/cb_2017_us_ua10_500k/cb_2017_us_ua10_500k.shp"
+
+# Lots of parcel paths for various counties - dallas relevant ones
+dallas_county_parcel_path = "data/parcels/dalllas_county_2018/PARCEL/PARCEL.shp"# 2018
+dallas_county_land_path = "data/parcels/dallas_county_parcel_data/land.csv"
+collin_county_parcel_path = "data/parcels/collin_county_2018/parcels.shp" # 2018
+denton_county_parcel_path = "data/parcels/denton_county_parcels_2018/County_Parcels.shp" # 2018
+tarrant_county_parcel_path = "data/parcels/tarrant_county_parcels_2018/TADData.gdb" # 2018
+processed_tarrant_county_parcel_path = "data/parcels/processed_tarrant_county_parcels_2018/TADData.shp"
+
+
+# These are useless probably but why delete data...
+forth_worth_parcel_path = "data/parcels/fort_worth_parcels/CAD_CFWLAND.shp" # Unknown year
+fort_worth_zones = "data/parcels/fort_worth_zones/ADM_ZONING.shp"
+fort_worth_abstract = "data/parcels/fort_worth_abstracts/CAD_ABSTRACTS.shp"
+
+# Austin
+travis_county_parcel_path = "data/parcels/travis_county_parcels_2016/Parcels_Travis_2016.shp" # 2016
+travis_county_data_path = 'data/parcels/travis_county_parcel_data/land_det.csv'
+williamson_county_parcel_path = 'data/parcels/williamson_parcels_2016/Parcels_Williamson_2016.shp' # 2016
+williamson_county_real_improvement_path = "data/parcels/williamson_data_2016/Improvement-Real-Property.txt" # 2016
+
+# Houston
+fort_bend_parcel_path = 'data/parcels/fort_bend_parcels_2018/CAMASUMMARY.shp'
+montgomery_county_parcel_path = "data/parcels/montgomery_parcels_2018/Tax_Parcel_View.shp" # 2018
+
 
 # And colors - divide by 256 for consistency with matplotlib
 import numpy as np

@@ -4,7 +4,9 @@ import spatial_functions as sf
 from tqdm import tqdm
 
 special_setbacks_and_lots = False
-calc_percent_residential = True
+calc_percent_residential = False
+calc_landmarks_in_houston = True
+calc_parking_cost = False
 
 # Special setback and minimum lot zone calculations ----------------------------- (Houston) ----------------------------------------------------- Special setback and minimum lot zone calculations
 if special_setbacks_and_lots:
@@ -64,3 +66,30 @@ if calc_percent_residential:
 
     results = pd.concat([austin_block_data['percent_residential'], dallas_block_data['percent_residential']])
     results.to_csv('data/bg_percent_residential.csv')
+
+# Calculate population of nat hist districts in Houston as well as
+if calc_landmarks_in_houston:
+
+    # Get points and polygons
+    houston_landmarks = gpd.read_file(houston_historic_landmarks_path).to_crs({'init':'epsg:4326'})
+    tx_hd_path = "data/Zoning Shapefiles/NationalRegisterPY_shp/NationalRegisterPY.shp"
+    tx_hd_data = gpd.read_file(tx_hd_path)
+    houston_nat_districts = tx_hd_data.loc[tx_hd_data['CITY'] == 'Houston'].to_crs({'init':'epsg:4326'})
+    houston_block_data = sf.get_block_geodata(['X01_AGE_AND_SEX'], cities = 'Houston')
+    fig, ax = plt.subplots()
+    houston_block_data.plot(ax = ax, column = 'B01001e1', edgecolor = 'black', legend = True)
+    houston_nat_districts.plot(ax = ax, color = 'blue', alpha = 0.5)
+    plt.show()
+
+    # Calculate number of points in polygons
+    num_points = sf.points_over_area(houston_landmarks, houston_nat_districts, normalize_by_area = False)
+    population = sf.get_all_averages_by_area(houston_block_data, houston_nat_districts, fillna=0,
+                                             account_method='water')['B01001e1'].sum()
+
+    print('Number of Historic Landmarks in NRHDS is {}, Population of NRHDs is {}'.format(num_points, population))
+
+# Calculate parking cost
+if calc_parking_cost:
+
+    austin_data = gpd.read_file(austin_parcel_path)
+    austin_data
