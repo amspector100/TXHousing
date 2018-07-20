@@ -340,14 +340,14 @@ def process_dallas_parcel_data(quickly = False):
 
     return parcel_data
 
-def process_houston_parcel_data(feature_files = ["data/Zoning Shapefiles/Harris_Parcel_Land_Features/land.txt"],
-                                feature_columns_list = [houston_land_columns], county_level = False):
+def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path_2018],
+                                feature_columns_list = [houston_building_res_columns], county_level = False):
     """
     Merge subsetted houston parcel data with harris county data. By default uses a left join.
     :param feature_files: A list of paths of feature files to merge with the data. Defaults to
-    ["data/Zoning Shapefiles/Harris_Parcel_Land_Features/land.txt"]. Can also be a string of one file (doesn't have to be
-    a list). If you set this equal to None, it will just return the parcel shape data with no other data attached
-    (although the parcel shape data does have a couple of useful factors).
+    the building_res file path. Can also be a string of one file (doesn't have to be a list). If you set this equal to
+     None, it will just return the parcel shape data with no other data attached (although the parcel shape data does
+     have a couple of useful factors).
     :param feature_columns_list: A list of column headers for each file - you can find these in the
      Harris_Parcel_Feature_Columns microsoft database.
      :param county_level: Boolean, default False. If true, will read in parcel data from all of Harris county, not just
@@ -373,10 +373,11 @@ def process_houston_parcel_data(feature_files = ["data/Zoning Shapefiles/Harris_
     # Get data
     if feature_files is not None:
         for feature_path, feature_header in zip(feature_files, feature_columns_list):
-            data = pd.read_csv(feature_path, sep = '\t', header = None)
+            data = pd.read_csv(feature_path, sep = '\t', header = None, encoding='Latin-1')
             data.columns = feature_header
             data = data.rename(columns = {'ACCOUNT':'HCAD_NUM'})
             data = data.drop_duplicates(subset=['HCAD_NUM'], keep='first')
+            print('Starting to merge, geodata shape is {}, data shape is {}'.format(geodata.shape, data.shape))
             geodata = geodata.merge(data, how = "left", on = "HCAD_NUM")
 
     # Return

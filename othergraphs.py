@@ -764,7 +764,7 @@ if plot_parcels:
         print('Finished reading dallas parcel data, time is {}'.format(time.time() - time0))
         dallas_feature = 'sptbcode_2016'
         # Note A12 are townhouses, A13 are condominiums
-        dallas_dictionary = {'Single Family':['A11'], 'Multifamily':['B11', 'B12', 'A12', 'A13']}
+        dallas_dictionary = dallas_sptb_dictionary
         dallas_result = get_rings_of_parcels(dallas_parcels, dallas_feature, dallas_dictionary, dallas_inputs, 'Dallas')
 
         all_results = pd.concat([austin_result, dallas_result, houston_result], axis = 1)

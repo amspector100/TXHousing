@@ -345,6 +345,8 @@ dallas_renovation_types = ['Building (BU) Commercial  Renovation', 'Building (BU
                            'Medical Gas (MG) Commercial  Renovation', 'Backflow (BF) Commercial  Renovation',
                            'Paving (Sidewalk, Drive Approaches) (PV) Commercial  Renovation',
                            'Barricade (BA) Multi Family  Renovation', 'Tent (TE) Multi Family  Renovation']
+dallas_sptb_dictionary = {'Single Family':['A11'], 'Multifamily':['B11', 'B12', 'A12', 'A13']}
+
 
 # Houstin ---------------------------------------------------------------------------------------------------------------------- Houston
 
@@ -367,6 +369,10 @@ houston_demolition_permits_path = "data/Houston_Demolition_Permits/Demolition_IL
 
 harris_parcel_path_2018 = "data/Zoning Shapefiles/Harris_Parcels_2018/Parcels.shp"
 houston_parcel_path_2018 = 'data/Zoning Shapefiles/Houston_Parcels_2018/Parcels.shp'
+harris_parcel_land_path_2018 = "data/Zoning Shapefiles/Harris_Parcel_Land_Features/land.txt"
+harris_parcel_appraisal_path_2018 = "data/Zoning Shapefiles/Harris_Parcel_Land_Features/real_acct.txt"
+harris_parcel_building_res_path_2018 = 'data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_res.txt'
+
 houston_historic_districts_path = "data/Houston_Historic_Protections/HISTORIC_DISTRICTS_CITY.shp"
 houston_historic_landmarks_path = "data/Houston_Historic_Protections/HISTORICAL_SITES.shp"
 
@@ -374,6 +380,28 @@ houston_historic_landmarks_path = "data/Houston_Historic_Protections/HISTORICAL_
 houston_land_columns = ["ACCOUNT", "LINE_NUMBER", "LAND_USE_CODE", "LAND_USE_DSCR", "SITE_CD", "SITE_CD_DSCR",
                         "SITE_ADJ", "UNIT_TYPE", "UNITS", "SIZE_FACTOR", "SITE_FACT", "APPR_OVERRIDE_FACTOR",
                         "APPR_OVERRIDE_REASON", "TOT_ADJ", "UNIT_PRICE", "ADJ_UNIT_PRICE", "VALUE", "OVERRIDE_VALUE"]
+houston_appraisal_columns = ['ACCOUNT', 'TAX_YEAR', 'MAILTO', 'MAIL_ADDR_1', 'MAIL_ADDR_2',
+                            'MAIL_CITY', 'MAIL_STATE', 'MAIL_ZIP', 'MAIL_COUNTRY', 'UNDELIV', 'STR_PFX',
+                            'STR_NUM', 'STR_NUM_SFX', 'STR_NAME', 'STR_SFX', 'STR_SFX_DIR', 'STR_UNIT',
+                            'SITE_ADDR_1', 'SITE_ADDR_2', 'SITE_ADDR_3', 'STATE_CLASS', 'SCHOOL_DIST',
+                            'MAP_FACET', 'KEY_MAP', 'NEIGHBORHOOD_CODE', 'NEIGHBORHOOD_GROUP', 'MARKET_AREA_1',
+                            'MARKET_AREA_1_DSCR', 'MARKET_AREA_2', 'MARKET_AREA_2_DSCR', 'ECON_AREA',
+                            'ECON_BLD_CLASS', 'CENTER_CODE', 'YR_IMPR', 'YR_ANNEXED', 'SPLT_DT', 'DSC_CD',
+                            'NXT_BUILDING', 'TOTAL_BUILDING_AREA', 'TOTAL_LAND_AREA', 'ACREAGE', 'CAP_ACCOUNT',
+                            'SHARED_CAD_CODE', 'LAND_VALUE', 'IMPROVEMENT_VALUE', 'EXTRA_FEATURES_VALUE',
+                            'AG_VALUE', 'ASSESSED_VALUE', 'TOTAL_APPRAISED_VALUE', 'TOTAL_MARKET_VALUE', 'PRIOR_LND_VALUE',
+                             'PRIOR_IMPR_VALUE', 'PRIOR_X_FEATURES_VALUE', 'PRIOR_AG_VALUE', 'PRIOR_TOTAL_APPRAISED_VALLUE',
+                            'PRIOR_TOTAL_MARKET_VALUE', 'NEW_CONSTRUCTION_VALUE', 'TOTAL_RCN_VALUE', 'VALUE_STATUS',
+                            'NOTICED', 'NOTICE_DATE', 'PROTESTED', 'CERTIFIED_DATE', 'LAST_INSPECTED_DATE',
+                            'LAST_INSPECTED_BY', 'NEW_OWNER_DATE', 'LEGAL_DSCR_1', 'LEGAL_DSCR_2', 'LEGAL_DSCR_3',
+                            'LEGAL_DSCR_4', 'JURS']
+houston_building_res_columns = ['ACCOUNT', 'USE_CODE', 'BUILDING_NUMBER', 'IMPRV_TYPE', 'BUILDING_STYLE_CODE',
+                                'CLASS_STRUCTURE', 'CLASS_STRUC_DESCRIPTION', 'DEPRECIATION_VALUE',
+                                'CAMA_REPLACEMENT_COST', 'ACCRUED_DEPR_PCT', 'QUALITY', 'QUALITY_DESCRIPTION',
+                                'DATE_ERECTED', 'EFFECTIVE_DATE', 'YR_REMODEL', 'YR_ROLL', 'APPRAISED_BY',
+                                'APPRAISED_DATE', 'NOTE', 'IMPR_SQ_FT', 'ACTUAL_AREA', 'HEAT_AREA', 'GROSS_AREA',
+                                'EFFECTIVE_AREA', 'BASE_AREA', 'PERIMETER', 'PERCENT_COMPLETE', 'NBHD_FACTOR',
+                                'RCNLD', 'SIZE_INDEX', 'LUMP_SUM_ADJ']
 
 
 # Misc -------------------------------------------------------------------------------------------------------------
@@ -389,6 +417,9 @@ ua_path = "data/cb_2017_us_ua10_500k/cb_2017_us_ua10_500k.shp"
 # Lots of parcel paths for various counties - dallas relevant ones
 dallas_county_parcel_path = "data/parcels/dalllas_county_2018/PARCEL/PARCEL.shp"# 2018
 dallas_county_land_path = "data/parcels/dallas_county_parcel_data/land.csv"
+dallas_county_appraisal_path = 'data/parcels/dallas_county_parcel_data/ACCOUNT_APPRL_YEAR.csv'
+dallas_county_res_path = 'data/parcels/dallas_county_parcel_data/res_detail.csv'
+
 collin_county_parcel_path = "data/parcels/collin_county_2018/parcels.shp" # 2018
 denton_county_parcel_path = "data/parcels/denton_county_parcels_2018/County_Parcels.shp" # 2018
 tarrant_county_parcel_path = "data/parcels/tarrant_county_parcels_2018/TADData.gdb" # 2018
@@ -409,6 +440,10 @@ williamson_county_real_improvement_path = "data/parcels/williamson_data_2016/Imp
 # Houston
 fort_bend_parcel_path = 'data/parcels/fort_bend_parcels_2018/CAMASUMMARY.shp'
 montgomery_county_parcel_path = "data/parcels/montgomery_parcels_2018/Tax_Parcel_View.shp" # 2018
+
+# Caches ----------------------------------------------------------------------------------------------
+def get_parcel_feature_outfile(name):
+    return 'data/caches/{}_municipal_parcel_features.csv'.format(name)
 
 
 # And colors - divide by 256 for consistency with matplotlib

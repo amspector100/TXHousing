@@ -626,9 +626,16 @@ def calculate_municipalities(name, place_name, num_municipalities = 50, level = 
         print('Finished, time is {}'.format(time.time() - time0))
 
 # Commuting ------------------------------------------------------------------------------------------------------
-def analyze_transportation_networks(names, zoning_inputs, num_blocks = 4100, step = 5, maximum = 50):
+def analyze_transportation_networks(names, zoning_inputs, num_blocks = 5000, step = 2.5, maximum = 60):
 
     block_data = sf.get_block_geodata(['X08_COMMUTING', 'X01_AGE_AND_SEX'], cities = None)
+
+    # Get total/local workers
+    block_data['local_workers'] = block_data['B08008e3'] + block_data['B08008e8'] # Female and male workers working in their place of residence
+    block_data['total_workers'] = block_data['B08008e2'] + block_data['B08008e7'] # Total number of male and female workers in the block group
+
+
+    # Create spatial indexes and subset
     spatial_index = block_data.sindex
     all_data = gpd.GeoDataFrame()
     for name, zoning_input in zip(names, zoning_inputs):
@@ -641,12 +648,32 @@ def analyze_transportation_networks(names, zoning_inputs, num_blocks = 4100, ste
         all_data = pd.concat([all_data, city_data])
 
     # Average commute time
+
+    # Old way of calculating --- my way is better ---
+    #all_data = all_data.loc[all_data['B08135e1'] != 0]
+    # all_data['avg_commute_time'] = all_data['B08135e1'].divide(all_data['B08303e1'])
+
     all_data['smoothed_dist_to_center'] =  all_data['dist_to_center'].apply(lambda x: step*(np.round(x/step)))
-    all_data['avg_commute_time'] = all_data['B08135e1'].divide(all_data['B08303e1'])
+    commute_brackets = {'B08303e2':2.5,
+                        'B08303e3':7.5,
+                        'B08303e4':12.5,
+                        'B08303e5':17.5,
+                        'B08303e6':22.5,
+                        'B08303e7':27.5,
+                        'B08303e8':32.5,
+                        'B08303e9':37.5,
+                        'B08303e10':42.5,
+                        'B08303e11':52.5,
+                        'B08303e12':75,
+                        'B08303e13':90}
+    all_data['total_commute_time'] = 0
+    for key in commute_brackets:
+        all_data['total_commute_time'] += all_data[key]*commute_brackets[key]
+    print(all_data[['total_commute_time', 'B08135e1']])
 
     # Calculate averages in rings
     total_commuters = all_data.groupby(['smoothed_dist_to_center', 'City'])['B08303e1'].sum()
-    total_commute_time = all_data.groupby(['smoothed_dist_to_center', 'City'])['B08135e1'].sum()
+    total_commute_time = all_data.groupby(['smoothed_dist_to_center', 'City'])['total_commute_time'].sum()
     result = pd.DataFrame(total_commute_time.divide(total_commuters))
     result.reset_index(inplace = True)
     result = result.rename(columns = {0:'avg_commute_time'})
@@ -660,7 +687,20 @@ def analyze_transportation_networks(names, zoning_inputs, num_blocks = 4100, ste
                           x = 'Distance from City Center (Miles)', y = 'Average Commute Time (Minutes)'))
     plot.save('Figures/Suburbs/travel_times.svg', width = 12, height = 10)
 
+    total_workers = all_data.groupby(['smoothed_dist_to_center', 'City'])['total_workers'].sum()
+    total_local_workers = all_data.groupby(['smoothed_dist_to_center', 'City'])['local_workers'].sum()
+    workers_pct = 100*pd.DataFrame(total_local_workers.divide(total_workers))
+    workers_pct.reset_index(inplace = True)
+    workers_pct = workers_pct.rename(columns = {0:'local_workers_pct'})
+    workers_pct = workers_pct.loc[workers_pct['smoothed_dist_to_center'] <= maximum]
 
+    plot = (ggplot(workers_pct, aes(x = 'smoothed_dist_to_center', y = 'local_workers_pct', fill = 'City'))
+                   + geom_col(position = 'dodge')
+                   + facet_wrap('~City')
+                   + theme_bw()
+                   + labs(title = 'Percent of Workers Working in Place of Residence by Distance from City Center',
+                          x = 'Distance from City Center (Miles)', y = 'Percent of Workers Working in Place of Residence'))
+    plot.save('Figures/Suburbs/local_workers.svg', width = 12, height = 10)
 
 
     #city_data['avg_commute_time'] = city_data['B08135e1'].divide(city_data['B08303e1'])
@@ -706,7 +746,6 @@ def plot_municipality_choropleth(name, zoning_input, job_centers, to_exclude = N
                                         'Single Fam':'Single Family Average Lotsize (Square Feet)',
                                         'Single F_1':'Percent of Land Used as Single Family'})
     geodata.crs = {'init':'epsg:4326'}
-    print(geodata)
 
     # Get rid of places for which no parcels intersected
     for factor in ['Percent of Land Used as Single Family', 'Percent of Land Used as Multifamily', 'Percent of Land Developed as Nonresidential', 'Single Family Average Lotsize (Square Feet)']:
@@ -716,13 +755,14 @@ def plot_municipality_choropleth(name, zoning_input, job_centers, to_exclude = N
     for jc in job_centers:
         try:
             coords = choropleth.retrieve_coords(geodata.loc[geodata["NAME"] == jc, 'geometry'].values[0].centroid)
+            folium.Marker(
+                location=coords,
+                popup=jc,  # The name
+                icon=folium.Icon(color='gray')
+            ).add_to(basemap)
         except IndexError: # Occurs if the jobcenter is no longer in the place shape, presumably because we had no parcel data on it
             continue
-        folium.Marker(
-            location=coords,
-            popup=jc, # The name
-            icon=folium.Icon(color='gray')
-        ).add_to(basemap)
+
 
     folium.TileLayer('cartodbdark_matter').add_to(basemap)
     folium.TileLayer('CartoDB positron').add_to(basemap)
@@ -730,9 +770,37 @@ def plot_municipality_choropleth(name, zoning_input, job_centers, to_exclude = N
     LayerControl().add_to(basemap)
     basemap.save('Figures/Suburbs/{}_suburb_choropleth.html'.format(name))
 
+def analyze_land_use_by_metro(name):
+
+    # Read data
+    def land_use_by_municipality_path(name):
+        return 'data/caches/suburbs/{}_land_use_by_municipality.csv'.format(name)
+
+    path = get_cached_parcel_path_csv(name, 'all')
+    data = pd.read_csv(path)
+
+    # Drop duplicates by centroids - note that these centroids are strings and have not been parsed as points yet
+    data = data.drop_duplicates(subset = 'centroids', keep = 'first')
+
+    # Calculate percent of area zoned
+    zone_areas = data.groupby(['broad_zone', 'place'])['area_sqft'].sum()
+    municipality_areas = data.groupby(['place'])['area_sqft'].sum()
+    final_data = zone_areas.divide(municipality_areas)
+    final_data = final_data.reset_index()
+    final_data.columns = ['broad_zone', 'place', 'Percent of Land Used']
+    print(final_data)
+    final_data.to_csv(land_use_by_municipality_path(name))
+
+
 
 if __name__ == '__main__':
 
-    plot_municipality_choropleth('austin', austin_inputs, austin_job_centers)
-    plot_municipality_choropleth('dallas', dallas_inputs, dallas_job_centers, to_exclude = ['Combine'])
-    plot_municipality_choropleth('houston', houston_inputs, houston_job_centers)
+    #analyze_transportation_networks(['austin', 'dallas', 'houston'], [austin_inputs, dallas_inputs, houston_inputs])
+    #plot_municipality_choropleth('austin', austin_inputs, austin_job_centers)
+    #plot_municipality_choropleth('dallas', dallas_inputs, dallas_job_centers, to_exclude = ['Combine'])
+    #plot_municipality_choropleth('houston', houston_inputs, houston_job_centers)
+
+    analyze_land_use_by_metro('austin')
+    analyze_land_use_by_metro('dallas')
+    analyze_land_use_by_metro('houston')
+

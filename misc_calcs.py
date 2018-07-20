@@ -3,10 +3,24 @@ from helpers import *
 import spatial_functions as sf
 from tqdm import tqdm
 
+import time
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import folium
+from plotnine import *
+
+
 special_setbacks_and_lots = False
 calc_percent_residential = False
-calc_landmarks_in_houston = True
+calc_landmarks_in_houston = False
 calc_parking_cost = False
+calc_percent_used = True
+
+calculate = False
+
+time0 = time.time()
 
 # Special setback and minimum lot zone calculations ----------------------------- (Houston) ----------------------------------------------------- Special setback and minimum lot zone calculations
 if special_setbacks_and_lots:
@@ -91,5 +105,190 @@ if calc_landmarks_in_houston:
 # Calculate parking cost
 if calc_parking_cost:
 
-    austin_data = gpd.read_file(austin_parcel_path)
-    austin_data
+
+    if calculate:
+
+        def subset_to_core(name, path, zoning_input, value_feature, area_feature = None, merge_path = None, left_on = None, right_on = None, parcel_data = None, write_file = False):
+
+            if parcel_data is None:
+                # Read parcel data
+                print('Reading, time is {}'.format(time.time() - time0))
+                parcel_data = gpd.read_file(path)
+
+                # Merge
+                if merge_path is not None:
+                    if left_on is None or right_on is None:
+                        raise ValueError('When merge_path is not None, left_on and right_on must also not be None in subset_to_core function')
+                    extra_data = pd.read_csv(merge_path)
+                    parcel_data[left_on] = parcel_data[left_on].astype(str)
+                    extra_data[right_on] = extra_data[right_on].astype(str)
+                    extra_data = extra_data.drop_duplicates(subset = right_on, keep = 'first')
+                    parcel_data = parcel_data.merge(extra_data, left_on = left_on, right_on = right_on, how = 'left')
+
+            # Transform
+            if parcel_data.crs != {'init':'epsg:4326'} and parcel_data.crs is not None:
+                parcel_data = parcel_data.to_crs({'init':'epsg:4326'})
+            elif parcel_data.crs is None:
+                print('No CRS for parcel data, assuming it is in lat long coordinates.')
+
+            # Get dist to center
+            parcel_data['dist_to_center'] = sf.calculate_dist_to_center(parcel_data, zoning_input, drop_centroids=False)
+
+            # Subset
+            core_parcel_data = parcel_data.loc[(parcel_data[value_feature] != 0) & (parcel_data[value_feature].notnull())]
+
+            # Get area
+            if area_feature is None:
+                print('Getting area, time is {}'.format(time.time() - time0))
+                core_parcel_data = sf.get_area_in_units(core_parcel_data, name = 'area', scale = 1)
+            else:
+                core_parcel_data = core_parcel_data.rename(columns = {area_feature: 'area'})
+
+            # Get val per sqft
+            core_parcel_data['val_per_sqft'] = core_parcel_data[value_feature].divide(core_parcel_data['area'])
+
+            # Write to csv (cache)
+            if write_file:
+                core_parcel_data[[col for col in core_parcel_data.columns if col not in ['centroids', 'geometry']]].to_csv(get_parcel_feature_outfile(name))
+            else:
+                print('write_file is False, so not caching data')
+
+            return core_parcel_data
+
+        # Austin
+        core_austin_data = subset_to_core('austin', austin_parcel_path, austin_inputs, 'appraised') # Best data
+
+        # Checked, Dallas's 'area_feet' column matches with my own area calculations
+        core_dallas_data = subset_to_core('dallas', dallas_county_parcel_path, dallas_inputs, value_feature = 'TOT_VAL', # Mediocre data
+                                          merge_path = dallas_county_appraisal_path, left_on = 'Acct', right_on = 'ACCOUNT_NUM')
+
+        # Houston
+        houston_parcel_data = process_houston_parcel_data(feature_files=[harris_parcel_land_path_2018, harris_parcel_appraisal_path_2018], # Mediocre data
+                                    feature_columns_list=[houston_land_columns, houston_appraisal_columns], county_level=False)
+        core_houston_data = subset_to_core('houston', None, houston_inputs, 'TOTAL_APPRAISED_VALUE', parcel_data = houston_parcel_data)
+
+    # Core radius
+    core_radius = 1
+
+    # Now read csvs
+    austin_data = pd.read_csv(get_parcel_feature_outfile('austin'))[['val_per_sqft', 'dist_to_center', 'appraised', 'area']]
+    austin_data = austin_data.astype(float).rename(columns = {'appraised':'value'})
+    austin_data['City'] = 'Austin'
+    dallas_data = pd.read_csv(get_parcel_feature_outfile('dallas'))[['val_per_sqft', 'dist_to_center', 'TOT_VAL', 'area']]
+    dallas_data = dallas_data.astype(float).rename(columns = {'TOT_VAL':'value'})
+    dallas_data['City'] = 'Dallas'
+    houston_data = pd.read_csv(get_parcel_feature_outfile('houston'))[['val_per_sqft', 'dist_to_center', 'TOTAL_APPRAISED_VALUE', 'area']]
+    houston_data = houston_data.astype(float).rename(columns = {'TOTAL_APPRAISED_VALUE':'value'})
+    houston_data['City'] = 'Houston'
+
+    all_data = pd.concat([austin_data, dallas_data, houston_data])
+    all_data = all_data.loc[all_data['dist_to_center'] <= core_radius]
+    print('Median:')
+    print(all_data.groupby(['City'])['val_per_sqft'].median())
+    print('Simple mean:')
+    print(all_data.groupby(['City'])['val_per_sqft'].mean())
+    print('Weighted mean:')
+    print(all_data.groupby(['City'])['value'].sum().divide(all_data.groupby(['City'])['area'].sum()))
+
+    # Get rid of the outliers
+    maximum = all_data['val_per_sqft'].quantile(.95)
+    all_data.loc[all_data['val_per_sqft'] > maximum, 'val_per_sqft'] = maximum
+
+    print(ggplot(all_data, aes(x = 'val_per_sqft', fill = 'City', group = 'City'))
+          + geom_histogram()
+          + facet_wrap('~City'))
+
+if calc_percent_used:
+
+    from suburbs import state_sptbcode_dictionary, process_lot_descriptions
+
+    def get_cached_use_percenatges_path(method):
+        return 'data/caches/percent_undeveloped_{}.csv'.format(method)
+
+    warning_flag = True
+
+    if calculate and warning_flag:
+        raise Warning('You just tried to recalculate the percent of land that is undeveloped in each city. The problem is that'
+                      'redoing this will actually add extra columns on and mess up the CSVs. On this run, I threw an exception.'
+                      'If you are totally sure you want to do this, change "warning_flag" to True in line 2015 in misc_calcs.py.'
+                      'But make sure it is really what you want.')
+    elif calculate:
+
+        def fill_negatives_with_zeroes(a_series):
+            a_series[a_series < 0] = 0
+            return a_series
+
+        # The drill is: read in data, process broad_zone, then get percent undeveloped --
+
+        # Austin
+        austin_data = pd.read_csv(get_parcel_feature_outfile('austin'))#[['val_per_sqft', 'dist_to_center', 'appraised', 'area', 'far', 'lu_desc']]
+        austin_dictionary = {'Single Family':['Single Family', 'Duplexes', 'Large-lot Single Family'], 'Multifamily':['Apartment/Condo', 'Three/Fourplex', 'Group Quarters', 'Mixed Use']}
+        austin_data['lu_desc'] = austin_data['lu_desc'].astype(str)
+        austin_data['broad_zone'] = process_lot_descriptions(austin_data, 'lu_desc', austin_dictionary)
+        austin_data['percent_undeveloped'] = fill_negatives_with_zeroes(1 - austin_data['far'])
+        austin_data.drop('Unnamed: 0', axis = 1, inplace = True)
+        austin_data.to_csv(get_parcel_feature_outfile('austin'))
+
+        # Dallas
+        dallas_data = pd.read_csv(get_parcel_feature_outfile('dallas'))#[['Acct', 'val_per_sqft', 'dist_to_center', 'TOT_VAL', 'area', 'SPTD_CODE']]
+        dallas_data['broad_zone'] = process_lot_descriptions(dallas_data, 'SPTD_CODE', dallas_sptb_dictionary)
+        dallas_extra_data = pd.read_csv(dallas_county_res_path)
+        dallas_extra_data = dallas_extra_data.drop_duplicates(subset = 'ACCOUNT_NUM', keep = 'first')
+        dallas_data = dallas_data.merge(dallas_extra_data, left_on = 'Acct', right_on = 'ACCOUNT_NUM', how = 'left')
+        dallas_data['percent_undeveloped'] = fill_negatives_with_zeroes(1 - dallas_data['TOT_MAIN_SF'].divide(dallas_data['area']))
+        dallas_data.loc[dallas_data['broad_zone'] == "Other", 'percent_undeveloped'] = float("NaN")
+        dallas_data.drop('Unnamed: 0', axis = 1, inplace = True)
+        dallas_data.to_csv(get_parcel_feature_outfile('dallas'))
+
+        # Houston
+        houston_data = pd.read_csv(get_parcel_feature_outfile('houston'))#[['val_per_sqft', 'dist_to_center', 'TOTAL_APPRAISED_VALUE', 'area', 'STATE_CLASS']]
+        houston_data['broad_zone'] = process_lot_descriptions(houston_data, 'STATE_CLASS', state_sptbcode_dictionary)
+        houston_extra_data = pd.read_csv(harris_parcel_building_res_path_2018, sep='\t', header=None, encoding='Latin-1')
+        houston_extra_data.columns = houston_building_res_columns
+        houston_extra_data['ACCOUNT'] = houston_extra_data['ACCOUNT'].astype(float)
+        houston_extra_data = houston_extra_data.drop_duplicates(subset = 'ACCOUNT', keep = 'first')
+        houston_data = houston_data.merge(houston_extra_data, left_on = 'HCAD_NUM', right_on = 'ACCOUNT')
+        houston_data['percent_undeveloped'] = fill_negatives_with_zeroes(1 - houston_data['BASE_AREA'].divide(houston_data['area']))
+        houston_data.loc[houston_data['broad_zone'] == "Other", 'percent_undeveloped'] = float("NaN")
+        houston_data.drop('Unnamed: 0', axis = 1, inplace = True)
+        houston_data.to_csv(get_parcel_feature_outfile('houston'))
+
+    # Combine data, cache result, and graph
+    austin_data = pd.read_csv(get_parcel_feature_outfile('austin'))[['dist_to_center', 'broad_zone', 'percent_undeveloped', 'far', 'area']]
+    austin_data['developed_sqft'] = pd.concat([austin_data['area'].multiply(austin_data['far']), austin_data['area']], axis = 1).min(axis = 1)
+    austin_data['City'] = 'Austin'
+    dallas_data = pd.read_csv(get_parcel_feature_outfile('dallas'))[['dist_to_center', 'broad_zone', 'percent_undeveloped', 'TOT_MAIN_SF', 'area']]
+    dallas_data['City'] = 'Dallas'
+    dallas_data['developed_sqft'] = pd.concat([dallas_data['TOT_MAIN_SF'], dallas_data['area']], axis = 1).min(axis = 1)
+    houston_data = pd.read_csv(get_parcel_feature_outfile('houston'))[['dist_to_center', 'broad_zone', 'percent_undeveloped', 'BASE_AREA', 'area']]
+    houston_data['developed_sqft'] = pd.concat([houston_data['BASE_AREA'], houston_data['area']], axis = 1).min(axis = 1)
+    houston_data['City'] = 'Houston'
+
+    # Combined
+    all_data = pd.concat([austin_data, dallas_data, houston_data])
+    all_data['smoothed_dist_to_center'] = all_data['dist_to_center'].apply(np.ceil)
+
+    # Medians
+    medians = all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['percent_undeveloped'].median().reset_index()
+    medians.to_csv(get_cached_use_percenatges_path('median'))
+
+    # Simple means
+    simple_means = all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['percent_undeveloped'].mean().reset_index()
+    simple_means.to_csv(get_cached_use_percenatges_path('simple_mean'))
+
+    # Weighted means
+    total_areas = all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['area'].sum()
+    total_developed_area = all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['developed_sqft'].sum(skipna = True)
+    weighted_means = total_developed_area.divide(total_areas).rename(columns = {0:'percent_undeveloped'})
+
+    def replace_high_values(x):
+        if x > 1:
+            return 1
+        else:
+            return x
+
+    weighted_means = weighted_means.apply(replace_high_values).reset_index()
+    weighted_means.to_csv(get_cached_use_percenatges_path('weighted_means'))
+
+    def plot_h():
+        pass

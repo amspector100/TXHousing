@@ -990,7 +990,8 @@ def fast_polygon_intersection(gdf, large_polygon_list, geometry_column = 'geomet
     due to the nature of rtrees).
     :return: If names = None, a list of the indexes of the gdf of the small polygons which lie inside at least one of
     the large polygons. Otherwise, will return a dictionary which maps the indexes of the gdp of small polygons to
-    the names of the large polygons.
+    the names of the large polygons. Order matters here: if a point lies in multiply large polygons (which is not what
+    this function is intended for), the dictionary will map the index of the point to the name of the last 
     """
 
     # Convert geoseries input to list
