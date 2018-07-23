@@ -200,7 +200,7 @@ if calc_parking_cost:
 
 if calc_percent_used:
 
-    from suburbs import state_sptbcode_dictionary, process_lot_descriptions
+    from suburbs import process_lot_descriptions
 
     def get_cached_use_percenatges_path(method):
         return 'data/caches/percent_undeveloped_{}.csv'.format(method)

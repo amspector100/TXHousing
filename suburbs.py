@@ -16,7 +16,6 @@ import choropleth
 
 # Global
 time0 = time.time()
-state_sptbcode_dictionary = {'Single Family':['A1', 'A2'], 'Multifamily':['A3', 'A4', 'B1', 'B2', 'B3', 'B4']} # Used for a lot of different counties
 
 dallas_urban_areas = ['Dallas--Fort Worth--Arlington, TX', 'Denton--Lewisville, TX', 'McKinney, TX']
 dallas_job_centers = ['Plano', 'Irving', 'Fort Worth', 'Arlington', 'Lewisville', 'McKinney', 'Rockwall', 'Garland', 'Denton', 'Frisco']
@@ -76,39 +75,167 @@ def process_lot_descriptions(gdf, description_column, broad_zone_dictionary):
     broad_zones = gdf[description_column].apply(process_broad_zone)
     return broad_zones
 
-def process_parcel_shapefile(path, feature, broad_zone_dictionary, name = '', dropnas = False, gdf = None):
 
-    # Read data unless data is supplied
+def process_parcel_shapefile(path, zoning_input, county_name, broad_zone_dictionary, state_cd_feature, account_feature,
+                             zipcode_feature = None, urban_areas_list = None,  merge_paths = None, left_keys = None,
+                             right_keys = None, gdf = None, fields_to_preserve = None, **kwargs):
+    """
+    :param path: Path of the shapefile to read in.
+    :param zoning_input: The zoning input for the city of interest used to calculate distance from city center.
+    :param county_name: Name of the county.
+    :param broad_zone_dictionary: Dictionary mapping broad zones to keywords that we will use to convert the state_cd_feature
+    into broad zones.
+    :param state_cd_feature: The feature corresponding to state cd codes (or theoeretically could be another feature
+    used to interpret broad zone, but state cds are preferred for consistency).
+    :param account_feature: The feature corresponding to the tax account for each parcel.
+    :param merge_paths: If the geodata must be merged with another datasource, this should be an iterable containing the
+    paths of the data to merge it with.
+    :param left_keys: If the geodata must be merged with another datasource, this should be an iterable containing the
+    left keys used to merge the data, in the same order of as the 'merge_paths'. Defaults to None, in which case the merge
+    is performed using the account_feature as the merge key.
+    :param right_keys: If the geodata must be merged with another datasource, this should be an iterable containing the
+    right keys used to merge the data, in the same order of as the 'merge_paths'
+    :param gdf: Optionally, supply a preread geodataframe instead of a path. Defaults to None.
+    :param fields_to_preserve: A list of columns to preserve in the final data output.
+    :param **kwargs: kwargs to pass to the read_csv call, if merging with external data.
+    :return: A gdf, in lat long, with the following columns: geometry, area_sqft, broad_zone, county, place,
+    ua, zipcode, account, state_cd, and any extra columns listed in the fields_to_preserve optional arg.
+    """
+
+    # Read in data
     if gdf is None:
-        print('Reading {} parcel shapefile, time is {}'.format(name, time.time() - time0))
+        print('Reading {} parcel shapefile, time is {}'.format(county_name, time.time() - time0))
         gdf = gpd.read_file(path)
 
-    # Drop nas if necessary
-    if dropnas:
-        gdf[feature] = gdf[feature].replace([np.inf, -np.inf], np.nan)
-        gdf = gdf.dropna(subset=[feature], how='all')
-
-
-    # Get basezone
-    print('Processing {} parcel data, time is {}'.format(name, time.time() - time0))
-    gdf[feature] = gdf[feature].astype(str)
-    gdf['broad_zone'] = process_lot_descriptions(gdf, feature, broad_zone_dictionary)
-    gdf.drop([col for col in gdf.columns if col not in ['broad_zone', 'geometry']], axis = 1, inplace = True)
-
-    # Process to get rid of empty and invalid geometries
-    gdf = gdf.loc[[not bool for bool in gdf['geometry'].apply(lambda x: x is None)]]
+    # Transform to lat long, calculate area in square feet, and calculate distance to center
+    print('Transforming {} parcel shapefile, time is {}'.format(county_name, time.time() - time0))
+    gdf = gdf.loc[gdf['geometry'].apply(lambda x: x is not None)]
     gdf = gdf.loc[gdf['geometry'].is_valid]
+    gdf = sf.get_area_in_units(gdf, scale = 1, name = 'area_sqft', final_projection = {'init':'epsg:4326'})
+    gdf['dist_to_cent'] = sf.calculate_dist_to_center(gdf, zoning_input, drop_centroids = False)
+    gdf['centroids'] = gdf['geometry'].centroid
 
-    # Transform
-    print('Transforming {} parcel data, time is {}'.format(name, time.time() - time0))
-    try:
-        gdf = gdf.to_crs({'init':'epsg:4326'})
-    except Exception as e:
-        print(e)
-        print('Failed to transform to lat/long, here is the name, crs and geometry')
-        print(gdf['geometry'])
-        print(name, gdf.crs)
-    return gdf
+    # Drop duplicate geometries by centroid
+    gdf['centroids_string'] = gdf['centroids'].astype(str)
+    gdf = gdf.drop_duplicates(subset=['centroids_string'], keep='first')
+
+
+    # Merge with other data --
+    if merge_paths is not None:
+        print('Merging {} parcel shapefile, time is {}'.format(county_name, time.time() - time0))
+
+        #  Start by ensuring that the left_keys, right_keys, merge_paths are iterables
+        if isinstance(left_keys, str):
+            left_keys = [left_keys]
+        elif left_keys is None:
+            left_keys = [account_feature]*len(merge_paths)
+        if isinstance(right_keys, str):
+            right_keys = [right_keys]
+        if isinstance(merged_paths, str):
+            merged_paths = [merged_paths]
+        if len(merged_paths) != len(right_keys) or len(merged_paths) != len(left_keys):
+            raise ValueError('The lengths of left_keys {}, right_keys {}, and merged_paths {} must be equal'.format(len(left_keys),
+                                                                                                                    len(right_keys),
+                                                                                                                    len(merged_paths)))
+
+        # Read data and merge
+        for merge_path, left_key, right_key in zip(merged_paths, left_keys, right_keys):
+            extra_data = pd.read_csv(extra_data, **kwargs)
+            extra_data = extra_data.loc[(extra_data[right_key].notnull())]
+            extra_data.drop_duplicates(subset = right_key, keep = 'first')
+            gdf = gdf.merge(extra_data, left_on = left_key, right_on = right_key, how = 'left')
+
+    # Parse base zone
+    print('Processing nonspatial features in {} parcel shapefile, time is {}'.format(county_name, time.time() - time0))
+    gdf[state_cd_feature] = gdf[state_cd_feature].replace([np.inf, -np.inf, np.nan], 'NONE').astype(str)
+    broad_zone_dictionary['Unknown'] = ['NONE']
+    gdf['broad_zone'] = process_lot_descriptions(gdf, state_cd_feature, broad_zone_dictionary)
+
+    # Rename state_cd, account, and (potentially) zipcode fields
+    gdf['account'] = gdf[account_feature].astype(str)
+    gdf['state_cd'] = gdf[state_cd_feature].astype(str)
+    if zipcode_feature is not None:
+        gdf['zipcode'] = gdf[zipcode_feature].astype(str)
+
+    print(gdf)
+
+    # Now we start to do spatial calculations, using centroids for speed. Start by creating the spatial index and a
+    # helper function.
+    print('Processing spatial features in {} parcel shapefile, time is {}'.format(county_name, time.time() - time0))
+    gdf['county'] = county_name
+    gdf = gdf.set_geometry('centroids')
+    spatial_index = gdf.sindex
+    def Fast_Intersection(polygon, name, rowname, fragment_polygon = True):
+        """
+        Checks which parcels intersect a polygon. This polygon presumably has a name (i.e. "Houston").
+        Given a rowname (i.e. "place"), this function sets all of the parcels which intersect the polygon's rowname to
+        the name of the polygon.
+        :param polygon: The polygon of interest
+        :param name: Name of hte polygon
+        :param rowname: Rowname, i.e. place, to change in the gdf
+        :param fragment_polygon: If true, fragment the polygon to speed up intersection.
+        :return: None, but modifies the gdf. This function is capitalized because it has nonlocal (and therefore global)
+        side effects intentionally.
+        """
+        nonlocal gdf
+        print('For {} data, for {} geography, starting intersection for {}; time is {}'.format(county_name, rowname, name, time.time() - time0))
+        if fragment_polygon:  # more than 15 square miles --> fragment
+            polygon_list = sf.fragment(polygon)
+        else:
+            polygon_list = [polygon]
+
+        all_precise_intersections = set()
+        for grid_piece in polygon_list:
+            possible_intersections_index = list(spatial_index.intersection(grid_piece.bounds))
+            possible_intersections = gdf.iloc[possible_intersections_index]
+            precise_intersections = set(possible_intersections.loc[possible_intersections.intersects(grid_piece)].index.tolist())
+            all_precise_intersections = all_precise_intersections.union(precise_intersections)
+            print(len(all_precise_intersections))
+
+        # Assign gdf the precise intersections indexes
+        gdf.loc[all_precise_intersections, rowname] = name
+
+    # Start by getting county polygon
+    counties = gpd.read_file(county_boundaries_path)
+    county_polygon = counties.loc[(counties['NAME'] == county_name) & (counties['STATEFP'] == '48'), 'geometry'].simplify(tolerance = 0.005).values[0]
+
+    # Work through zip codes - begin by subsetting to the zip codes in the county
+    if zipcode_feature is None:
+        gdf['zipcode'] = "None"
+        zipdata = get_zip_boundaries()
+        zip_spatial_index = zipdata.sindex
+        possible_intersections = zipdata.iloc[list(zip_spatial_index.intersection(county_polygon.bounds))]
+        zipdata = possible_intersections.loc[possible_intersections.intersects(county_polygon).index.tolist()]
+        print(zipdata)
+
+        # Now run the Fast_Intersection function
+        for zipcode, zippolygon in zip(zipdata.index, zipdata['geometry']):
+            Fast_Intersection(zippolygon, zipcode, 'zipcode')
+
+    # Work thorough municipalities
+    gdf['place'] = 'Unincorporated'
+    places = gpd.read_file(texas_places_path)
+    places_spatial_index = places.sindex
+    possible_intersections = places.iloc[list(places_spatial_index.intersection(county_polygon.bounds))]
+    places = places.loc[possible_intersections.intersects(county_polygon).index.tolist()]
+
+    # Now run the Fast_Intersection function
+    for placename, placepolygon in zip(places['NAME'], places['geometry']):
+        Fast_Intersection(placepolygon, placename, 'place')
+
+    gdf['ua'] = 'Other'
+    if urban_areas_list is not None:
+        uas = gpd.read_file(ua_path)
+        uas = uas.loc[uas['NAME10'].isin(urban_areas_list)]
+        for uaname, uapolygon in zip(uas['NAME10'], uas['geometry']):
+            Fast_Intersection(uapolygon, uaname, 'ua')
+
+    # Subset and return
+    final_column_list = ['geometry', 'area_sqft', 'broad_zone', 'county', 'place', 'ua', 'zipcode', 'account', 'state_cd']
+    if fields_to_preserve is not None:
+        final_column_list.extend(fields_to_preserve)
+
+    return gdf[final_column_list]
 
 # Take a big dataset (i.e. parcels, gdf) and subset to job centers
 def subset_to_job_centers(gdf, job_centers, horiz = 3, vert = 3):
@@ -299,41 +426,57 @@ def get_all_houston_parcel_data(combine_parcel_data = False, subset_parcel_data 
     if combine_parcel_data:
 
         # Montgomery county
-        montgomery_dictionary = state_sptbcode_dictionary
-        montgomery_parcels = process_parcel_shapefile(montgomery_county_parcel_path, 'fStateCode', montgomery_dictionary, name = 'Montgomery')
-        print(montgomery_parcels)
+        montgomery_parcels= process_parcel_shapefile(path = montgomery_county_parcel_path,
+                                 zoning_input = houston_inputs,
+                                 county_name = 'Montgomery',
+                                 broad_zone_dictionary = state_sptbcode_dictionary,
+                                 state_cd_feature = 'fStateCode',
+                                 account_feature = 'PropertyNu',
+                                 urban_areas_list = houston_urban_areas,
+                                 zipcode_feature=None,
+                                 merge_paths=None,
+                                 left_keys=None,
+                                 right_keys=None,
+                                 fields_to_preserve=None)
+
+
+        # Harris County -- here, 1006 refers to condominiums, 1007 refers to townhomes
+        harris_dictionary = {'Single Family': ['1001'], 'Multifamily': ['1002', '1003', '1004', '1005', '1006', '1007', '4209', '4211', '4212', '4214', '4299']}
+        harris_parcels = process_houston_parcel_data(county_level = True)
+        harris_parcels = harris_parcels.loc[harris_parcels['IMPRV_TYPE'].notnull()]
+        harris_parcels['IMPRV_TYPE'] = harris_parcels['IMPRV_TYPE'].apply(lambda x: str(int(x)))
+        harris_parcels = process_parcel_shapefile(path = None,
+                                 zoning_input = houston_inputs,
+                                 county_name = 'Harris',
+                                 broad_zone_dictionary = harris_dictionary,
+                                 state_cd_feature = 'IMPRV_TYPE',
+                                 account_feature = 'HCAD_NUM',
+                                 urban_areas_list=houston_urban_areas,
+                                 zipcode_feature=None,
+                                 merge_paths=None,
+                                 left_keys=None,
+                                 right_keys=None,
+                                 fields_to_preserve=None)
+
+
+
+
+
+        harris_parcels = process_parcel_shapefile(None, 'LAND_USE_CODE', harris_dictionary, name = 'Harris', dropnas = True, gdf = harris_parcels)
+        print(harris_parcels)
+
+
 
         # Fort Bend county
         fort_bend_dictionary = state_sptbcode_dictionary
         fort_bend_parcels = process_parcel_shapefile(fort_bend_parcel_path, 'LMainSegSP', fort_bend_dictionary, name = 'Fort Bend')
         print(fort_bend_parcels)
 
-        # Harris County -- here, 1006 refers to condominiums, 1007 refers to townhomes
-        harris_dictionary = {'Single Family': ['1001'], 'Multifamily': ['1002', '1003', '1004', '1005', '1006', '1007', '4209', '4211', '4212', '4214', '4299']}
-        harris_parcels = process_houston_parcel_data(county_level = True)
-        harris_parcels = harris_parcels.loc[harris_parcels['LAND_USE_CODE'].notnull()]
-        harris_parcels['LAND_USE_CODE'] = harris_parcels['LAND_USE_CODE'].apply(lambda x: str(int(x)))
-        harris_parcels = process_parcel_shapefile(None, 'LAND_USE_CODE', harris_dictionary, name = 'Harris', dropnas = True, gdf = harris_parcels)
-        print(harris_parcels)
-
         all_houston_parcels = pd.concat([harris_parcels, fort_bend_parcels, montgomery_parcels], axis=0, ignore_index=True)
         print(all_houston_parcels)
         all_houston_parcels.to_file(all_houston_parcel_path)
 
     if subset_parcel_data:
-
-        all_houston_parcels = gpd.read_file(all_houston_parcel_path)
-        print(all_houston_parcels)
-
-        print('Subsetting to metro, time is {}'.format(time.time() - time0))
-        houston_metro_parcels, metro_shapes, texas_uas = subset_to_metro(all_houston_parcels, houston_urban_areas, geography = 'ua', places_to_ignore = ['Houston'])
-        houston_metro_parcels.drop('centroids', inplace = True, axis = 1)
-        houston_metro_parcels.to_file(houston_metro_parcel_path)
-
-        print('Subsetting to jobcenters, time is {}'.format(time.time() - time0))
-        jobcenter_houston_parcels, jobcenter_shapes, texas_places = subset_to_job_centers(all_houston_parcels, houston_job_centers)
-        jobcenter_houston_parcels.drop('centroids', inplace = True, axis = 1)
-        jobcenter_houston_parcels.to_file(houston_jobcenter_parcel_path)
 
         print('Finished with Houston parcels, time is {}'.format(time.time() - time0))
 
@@ -800,7 +943,9 @@ if __name__ == '__main__':
     #plot_municipality_choropleth('dallas', dallas_inputs, dallas_job_centers, to_exclude = ['Combine'])
     #plot_municipality_choropleth('houston', houston_inputs, houston_job_centers)
 
-    analyze_land_use_by_metro('austin')
-    analyze_land_use_by_metro('dallas')
-    analyze_land_use_by_metro('houston')
+    get_all_houston_parcel_data(combine_parcel_data = True)
+
+    #analyze_land_use_by_metro('austin')
+    #analyze_land_use_by_metro('dallas')
+    #analyze_land_use_by_metro('houston')
 

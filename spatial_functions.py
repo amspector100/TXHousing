@@ -52,7 +52,7 @@ def get_urban_core(zoning_input, radius, scale = 5280, newproj = 'epsg:2277'):
     return core
 
 # Get area in miles. GDF must initially be in lat long
-def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', scale = 3.58701*10**(-8), name = 'area'):
+def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', scale = 3.58701*10**(-8), name = 'area', final_projection = None):
     """
     Get area of polygons of a geodataframe in units. By default, gets it in miles.
     :param gdf: Geodataframe with polygons in the geometry column.
@@ -61,12 +61,14 @@ def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', 
     Austin/Dallas/Houston and is in feet.
     :param scale: A scale to multiply by. Defaults to 3.58701*10**(-8) which is the number of square miles in a square foot.
     :param name: the name of the new column that will be created to store the area information. Defaults to 'area'.
+    :param final_projection: The final projection that the returned gdf should be in. Defaults to the gdf's current crs.
     :return: The geodataframe with a column named name (defualts to 'area') which has the area of each polygon in the desired units.
     """
-    old_projection = gdf.crs
+    if final_projection is None:
+        final_projection = gdf.crs
     gdf = gdf.to_crs({'init':newproj})
     gdf[name] = scale*gdf[geometry_column].area
-    gdf = gdf.to_crs(old_projection)
+    gdf = gdf.to_crs(final_projection)
     return gdf
 
 # Block data ------------------------------------------------------------------------------------------------------------------block data
@@ -717,8 +719,11 @@ def calculate_dist_to_center(gdf, zoning_input, drop_centroids = True):
         dist = haversine(point, center)
         return dist
 
-    gdf['centroids'] = gdf['geometry'].centroid
+    if 'centroids' not in gdf.columns:
+        gdf['centroids'] = gdf['geometry'].centroid
+
     distances = gdf['centroids'].apply(dist_to_center)
+
     if drop_centroids:
         gdf.drop('centroids', inplace=True, axis=1)
     return distances
@@ -991,7 +996,7 @@ def fast_polygon_intersection(gdf, large_polygon_list, geometry_column = 'geomet
     :return: If names = None, a list of the indexes of the gdf of the small polygons which lie inside at least one of
     the large polygons. Otherwise, will return a dictionary which maps the indexes of the gdp of small polygons to
     the names of the large polygons. Order matters here: if a point lies in multiply large polygons (which is not what
-    this function is intended for), the dictionary will map the index of the point to the name of the last 
+    this function is intended for), the dictionary will map the index of the point to the name of the last
     """
 
     # Convert geoseries input to list

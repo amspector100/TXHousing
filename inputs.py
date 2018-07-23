@@ -1,6 +1,7 @@
 # Some global paths ---------------------------------------------------------------------------------------------------
 nbhd_boundaries_path = "data\Zillow Data\ZillowNeighborhoods-TX\ZillowNeighborhoods-TX.shp"
 zip_boundaries_path = "data\cb_2017_us_zcta510_500k\cb_2017_us_zcta510_500k.shp"
+county_boundaries_path = "data/cb_2017_us_county_500k/cb_2017_us_county_500k.shp"
 
 # Class for base zoning inputs ----------------------------------------------------------------------------------------
 class zoning_inputs():
@@ -440,6 +441,9 @@ williamson_county_real_improvement_path = "data/parcels/williamson_data_2016/Imp
 # Houston
 fort_bend_parcel_path = 'data/parcels/fort_bend_parcels_2018/CAMASUMMARY.shp'
 montgomery_county_parcel_path = "data/parcels/montgomery_parcels_2018/Tax_Parcel_View.shp" # 2018
+
+state_sptbcode_dictionary = {'Single Family':['A1', 'A2'], 'Multifamily':['A3', 'A4', 'B1', 'B2', 'B3', 'B4']} # Used for a lot of different counties
+
 
 # Caches ----------------------------------------------------------------------------------------------
 def get_parcel_feature_outfile(name):
