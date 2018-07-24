@@ -96,7 +96,6 @@ def process_zoning_shapefile(input, overlay = {'-MU':'Multifamily'}, broaden = T
         if 'class' in reg_data.columns:
             reg_data = reg_data.loc[reg_data['class'] == 'base']
 
-        reg_data = reg_data[regulation_feature]
         reg_data.index = [str(ind) for ind in reg_data.index]
 
         # Process the zoning data - this function is well defined, I checked

@@ -68,8 +68,8 @@ def categorical_choropleth(gdf, factor, colors = None, quietly = False, weight =
     Creates categorical choropleth using Blues spectrum
     :param gdf: A geopandas geodataframe.
     :param factor: The feature you want to plot (should be categorical).
-    :param colors: Colors to use in the categorical plot. Will generate colors using the tab10 colormap.
-    :param quietly: If true, will not print anything.
+    :param colors: Colors to use in the categorical plot. If None, will generate colors using the tab10 colormap.
+    :param quietly: If true, will not print anything. Defaults to True.
     :param weight: The weight in the style function.
     :param alpha: The alpha in the style function.
     :param geometry_column: The geometry column of the gdf. Defaults to 'geometry'.
@@ -777,7 +777,7 @@ def texas_job_centers():
         BindColormap(gjson, colormap).add_to(basemap)
         folium.TileLayer('cartodbdark_matter').add_to(basemap)
         LayerControl().add_to(basemap)
-        basemap.save('Figures/Testing/{}_job_choropleth.html'.format(name))
+        basemap.save('Figures/Suburbs/{}_job_choropleth.html'.format(name))
         print('Graphed for {}'.format(name))
 
     print('Finished')

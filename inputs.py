@@ -373,6 +373,7 @@ houston_parcel_path_2018 = 'data/Zoning Shapefiles/Houston_Parcels_2018/Parcels.
 harris_parcel_land_path_2018 = "data/Zoning Shapefiles/Harris_Parcel_Land_Features/land.txt"
 harris_parcel_appraisal_path_2018 = "data/Zoning Shapefiles/Harris_Parcel_Land_Features/real_acct.txt"
 harris_parcel_building_res_path_2018 = 'data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_res.txt'
+harris_parcel_building_other_path_2018 = 'data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_other.txt'
 
 houston_historic_districts_path = "data/Houston_Historic_Protections/HISTORIC_DISTRICTS_CITY.shp"
 houston_historic_landmarks_path = "data/Houston_Historic_Protections/HISTORICAL_SITES.shp"
@@ -393,7 +394,7 @@ houston_appraisal_columns = ['ACCOUNT', 'TAX_YEAR', 'MAILTO', 'MAIL_ADDR_1', 'MA
                             'AG_VALUE', 'ASSESSED_VALUE', 'TOTAL_APPRAISED_VALUE', 'TOTAL_MARKET_VALUE', 'PRIOR_LND_VALUE',
                              'PRIOR_IMPR_VALUE', 'PRIOR_X_FEATURES_VALUE', 'PRIOR_AG_VALUE', 'PRIOR_TOTAL_APPRAISED_VALLUE',
                             'PRIOR_TOTAL_MARKET_VALUE', 'NEW_CONSTRUCTION_VALUE', 'TOTAL_RCN_VALUE', 'VALUE_STATUS',
-                            'NOTICED', 'NOTICE_DATE', 'PROTESTED', 'CERTIFIED_DATE', 'LAST_INSPECTED_DATE',
+                            'NOTICED', 'NOTICE_DATE', 'PROTESTD', 'CERTIFIED_DATE', 'LAST_INSPECTED_DATE',
                             'LAST_INSPECTED_BY', 'NEW_OWNER_DATE', 'LEGAL_DSCR_1', 'LEGAL_DSCR_2', 'LEGAL_DSCR_3',
                             'LEGAL_DSCR_4', 'JURS']
 houston_building_res_columns = ['ACCOUNT', 'USE_CODE', 'BUILDING_NUMBER', 'IMPRV_TYPE', 'BUILDING_STYLE_CODE',
@@ -403,6 +404,14 @@ houston_building_res_columns = ['ACCOUNT', 'USE_CODE', 'BUILDING_NUMBER', 'IMPRV
                                 'APPRAISED_DATE', 'NOTE', 'IMPR_SQ_FT', 'ACTUAL_AREA', 'HEAT_AREA', 'GROSS_AREA',
                                 'EFFECTIVE_AREA', 'BASE_AREA', 'PERIMETER', 'PERCENT_COMPLETE', 'NBHD_FACTOR',
                                 'RCNLD', 'SIZE_INDEX', 'LUMP_SUM_ADJ']
+houston_building_other_columns = ["ACCOUNT", "USE_CODE", "BLD_NUM", "IMPRV_TYPE", "BUILDING_STYLE_CODE", "CLASS_STRUCTURE",
+                                "CLASS_STRUC_DESCRIPTION", "NOTICED_DEPR_VALUE", "DEPRECIATION_VALUE", "MS_REPLACEMENT_COST",
+                                "CAMA_REPLACEMENT_COST", "ACCRUED_DEPR_PCT", "QUALITY", "QUALITY_DESCRIPTION",
+                                "DATE_ERECTED", "EFFECTIVE_DATE", "YR_REMODEL", "YR_ROLL", "APPRAISED_BY",
+                                "APPRAISED_DATE", "NOTE", "IMPR_SQ_FT", "ACTUAL_AREA", "HEAT_AREA", "GROSS_AREA",
+                                "EFFECTIVE_AREA", "BASE_AREA", "PERIMETER", "PERCENT_COMPLETE", "CATEGORY",
+                                "CATEGORY_DSCR", "PROPERTY_NAME", "UNITS", "NET_RENT_AREA", "LEASE_RATE",
+                                "OCCUPANCY_RATE", "TOTAL_INCOME"]
 
 
 # Misc -------------------------------------------------------------------------------------------------------------
@@ -435,8 +444,8 @@ fort_worth_abstract = "data/parcels/fort_worth_abstracts/CAD_ABSTRACTS.shp"
 # Austin
 travis_county_parcel_path = "data/parcels/travis_county_parcels_2016/Parcels_Travis_2016.shp" # 2016
 travis_county_data_path = 'data/parcels/travis_county_parcel_data/land_det.csv'
-williamson_county_parcel_path = 'data/parcels/williamson_parcels_2016/Parcels_Williamson_2016.shp' # 2016
-williamson_county_real_improvement_path = "data/parcels/williamson_data_2016/Improvement-Real-Property.txt" # 2016
+williamson_county_parcel_path = "data/parcels/williamson_parcels_2016/Parcel_Poly.shp" # 2017
+williamson_county_real_improvement_path = "data/parcels/williamson_data_2016b/Improvement.txt" # 2018
 
 # Houston
 fort_bend_parcel_path = 'data/parcels/fort_bend_parcels_2018/CAMASUMMARY.shp'
