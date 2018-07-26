@@ -7,8 +7,8 @@ from multiprocessing import Pool
 import sys
 
 # The file to save everything to
-target_path = 'data/houston_permit_statuses.csv'
-backup_path = 'data/houston_permit_statuses_backup.csv'
+target_path = 'shared_data/houston_permit_statuses.csv'
+backup_path = 'shared_data/houston_permit_statuses_backup.csv'
 
 
 def get_project_statuses(project_numbers):

@@ -81,7 +81,7 @@ label_data <- function(df) {
     mutate(PercentChange=100*(Units-lag(Units))/lag(Units),
            Label=ifelse(Year == '2000 (Decennial Census)',
                         sprintf("%.0f", Units),
-                        sprintf("(%.1f%%)\n%.0f", PercentChange, Units))) %>%
+                        sprintf("%.0f (%.1f%%)", Units, PercentChange))) %>%
     select(-PercentChange) %>%
     ungroup()
 }
@@ -145,11 +145,12 @@ combined_data <-
 
 
 # ggplot theme elements
-bar_width <- 0.9
+bar_width <- 0.95
 plot_common <-
   list(aes(x=HousingType, y=Units, fill=Year, group=Year, label=Label),
        geom_col(position=position_dodge(bar_width)),
-       geom_text(position=position_dodge(bar_width), vjust=-0.2),
+       geom_text(position=position_dodge(bar_width),
+                 size = 3, angle = 90, hjust=-0.055, vjust = -0.2),
        scale_fill_manual(values=c('#45505f', '#4ab1e4', '#000000')),
        theme_bw(),
        labs(x='Units per building', y='Total units (thousands)'),
@@ -169,6 +170,6 @@ plot_common <-
        )
 
 gg <- ggplot(combined_data) + plot_common
-svg('texas-housing-typology.svg', height=20, width=20)
+svg('Figures/texas-housing-typology.svg', height=10, width=10)
 print(gg)
 dev.off()
