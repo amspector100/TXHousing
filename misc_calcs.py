@@ -16,7 +16,8 @@ special_setbacks_and_lots = False
 calc_percent_residential = False
 calc_landmarks_in_houston = False
 calc_parking_cost = False
-calc_percent_used = True
+calc_percent_used = False
+validate_parcel_results = True
 
 calculate = False
 
@@ -292,3 +293,16 @@ if calc_percent_used:
 
     def plot_h():
         pass
+
+if validate_parcel_results:
+
+    from suburbs import all_dallas_zoning_path_csv
+
+    zdata = pd.read_csv('data/caches/suburbs/dallas_zoning_use_by_municipality.csv', index_col = 0)
+    pdata = pd.read_csv('data/caches/suburbs/{}_land_use_by_municipality.csv'.format('dallas'), index_col = 0)
+    alldata = pdata.merge(zdata, on = ['broad_zone', 'place'], how = 'inner')
+    alldata = alldata.loc[alldata['broad_zone'] == 'Single Family']
+    difference = alldata['Percent of Land Used'] - alldata['Percent of Land Zoned As']
+    print(difference.mean())
+    print(difference.apply(abs).mean())
+

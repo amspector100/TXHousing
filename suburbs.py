@@ -34,18 +34,15 @@ def get_cached_parcel_path_csv(name, level):
 
 # Cache paths for Dallas
 all_dallas_parcel_path = 'data/parcels/cached/dallas_all_parcels/parcels.shp'
-dallas_metro_parcel_path = 'data/parcels/cached/dallas_metro_parcels/parcels.shp'
-dallas_jobcenter_parcel_path = 'data/parcels/cached/dallas_jobcenter_parcels/parcels.shp'
+all_dallas_zoning_path = 'data/Zoning Shapefiles/processed_north_texas_data/zones.shp'
+all_dallas_zoning_path_csv = 'data/Zoning Shapefiles/processed_north_texas_data/zones.csv'
 
 # Cache paths for Houston
 all_houston_parcel_path = 'data/parcels/cached/houston_all_parcels/parcels.shp'
-houston_metro_parcel_path = 'data/parcels/cached/houston_metro_parcels/parcels.shp'
-houston_jobcenter_parcel_path = 'data/parcels/cached/houston_jobcenter_parcels/parcels.shp'
 
 # Cache paths for Austin
 all_austin_parcel_path = 'data/parcels/cached/austin_all_parcels/parcels.shp'
-austin_metro_parcel_path = 'data/parcels/cached/austin_metro_parcels/parcels.shp'
-austin_jobcenter_parcel_path = 'data/parcels/cached/austin_jobcenter_parcels/parcels.shp'
+
 
 # For analysis
 step = 5
@@ -75,10 +72,10 @@ def process_lot_descriptions(gdf, description_column, broad_zone_dictionary):
     broad_zones = gdf[description_column].apply(process_broad_zone)
     return broad_zones
 
-
 def process_parcel_shapefile(path, zoning_input, county_name, broad_zone_dictionary, state_cd_feature, account_feature,
                              zipcode_feature = None, urban_areas_list = None, merge_paths = None,
-                             left_keys = None, right_keys = None, gdf = None, fields_to_preserve = None, **kwargs):
+                             left_keys = None, right_keys = None, gdf = None, fields_to_preserve = None,
+                             overlapping_counties = None, **kwargs):
     """
     :param path: Path of the shapefile to read in.
     :param zoning_input: The zoning input for the city of interest used to calculate distance from city center.
@@ -99,6 +96,7 @@ def process_parcel_shapefile(path, zoning_input, county_name, broad_zone_diction
     right keys used to merge the data, in the same order of as the 'merge_paths'
     :param gdf: Optionally, supply a preread geodataframe instead of a path. Defaults to None.
     :param fields_to_preserve: A list of columns to preserve in the final data output.
+    :param overlapping_counties: A list of other counties to use to find relevant municipalities and zipcodes.
     :param **kwargs: kwargs to pass to the read_csv call, if merging with external data.
     :return: A gdf, in lat long, with the following columns: geometry, area_sqft, broad_zone, county, place,
     ua, zipcode, account, state_cd, and any extra columns listed in the fields_to_preserve optional arg.
@@ -202,7 +200,10 @@ def process_parcel_shapefile(path, zoning_input, county_name, broad_zone_diction
 
     # Start by getting county polygon
     counties = gpd.read_file(county_boundaries_path)
-    county_polygon = counties.loc[(counties['NAME'] == county_name) & (counties['STATEFP'] == '48'), 'geometry'].simplify(tolerance = 0.005).values[0]
+    if overlapping_counties is None:
+        county_polygon = counties.loc[(counties['NAME'] == county_name) & (counties['STATEFP'] == '48'), 'geometry'].simplify(tolerance = 0.005).values[0]
+    elif overlapping_counties is not None:
+        county_polygon = counties.loc[(counties['NAME'].isin(overlapping_counties)) & (counties['STATEFP'] == '48'), 'geometry'].simplify(tolerance = 0.005).unary_union
 
     # Work through zip codes - begin by subsetting to the zip codes in the county
     if zipcode_feature is None:
@@ -235,7 +236,7 @@ def process_parcel_shapefile(path, zoning_input, county_name, broad_zone_diction
             Fast_Intersection(uapolygon, uaname, 'ua', horiz = 20, vert = 20)
 
     # Subset and return
-    final_column_list = ['area_sqft', 'broad_zone', 'county', 'place', 'ua', 'zipcode', 'account', 'state_cd', 'lat', 'long']
+    final_column_list = ['area_sqft', 'broad_zone', 'county', 'place', 'ua', 'zipcode', 'account', 'state_cd', 'lat', 'long', 'dist_to_cent']
     if fields_to_preserve is not None:
         final_column_list.extend(fields_to_preserve)
     gdf = gpd.GeoDataFrame(gdf[final_column_list], geometry = gdf['geometry'])
@@ -243,62 +244,31 @@ def process_parcel_shapefile(path, zoning_input, county_name, broad_zone_diction
 
     return gdf
 
-# Take a big dataset (i.e. parcels, gdf) and subset to job centers
-def subset_to_job_centers(gdf, job_centers, horiz = 3, vert = 3):
-    """
-    :param gdf: Some geodataframe
-    :param job_centers: A list of names of job centers
-    :return: The subset of the geodataframe which lies in the job centers, the job centers shapes,
-    and the shapefile of places in texas.
-    """
+def process_dallas_zoning_data():
 
-    # Get place shapes
-    texas_places = gpd.read_file(texas_places_path)
-    job_centers_shapes = texas_places.loc[texas_places['NAME'].isin(job_centers)]
+    north_texas_data = process_zoning_shapefile(north_texas_inputs)
+    north_texas_data = process_parcel_shapefile(path = None,
+                                                zoning_input = north_texas_inputs,
+                                                county_name = 'Unparsed',
+                                                broad_zone_dictionary = north_texas_inputs.base_zones,
+                                                state_cd_feature = 'CATEGORY',
+                                                account_feature = 'OBJECTID',
+                                                urban_areas_list = dallas_urban_areas,
+                                                zipcode_feature=None,
+                                                merge_paths=None,
+                                                left_keys=None,
+                                                right_keys=None,
+                                                fields_to_preserve = ['COUNTY', 'CNTYCODE'],
+                                                overlapping_counties = ['Erath', 'Johnson', 'Navarro', 'Hood', 'Palo Pinto',
+                                                                        'Parker', 'Tarrant', 'Kaufman', 'Somervell', 'Wise',
+                                                                        'Collin', 'Hunt', 'Rockwall', 'Dallas', 'Denton',
+                                                                        'Ellis'],
+                                                gdf = north_texas_data)
+    north_texas_data = north_texas_data.drop('county', axis = 1)
+    north_texas_data[[col for col in north_texas_data.columns if col not in ['centroids', 'geometry']]].to_csv(all_dallas_zoning_path_csv)
+    north_texas_data.to_file(all_dallas_zoning_path)
 
-    # Subset
-    job_centers_dictionary = sf.fast_polygon_intersection(gdf, job_centers_shapes['geometry'], names = job_centers_shapes['NAME'], horiz = horiz, vert = vert)
-    gdf['job_center'] = gdf.index.to_series().map(job_centers_dictionary)
-    subsetted_data = gdf.loc[gdf['job_center'].notnull()]
-    return subsetted_data, job_centers_shapes, texas_places
 
-def subset_to_metro(gdf, names, geography = 'ua', places_to_ignore = None):
-    """
-    :param gdf: Some geodataframe.
-    :param names: List of names to use to subset to a metro area
-    :param geography: string, default 'ua'. Specifies the geography used to describe the metro - can either be 'ua',
-    'csa', or 'cbsa'.
-    :param places_to_ignore: List of places (places, not core based statistical areas) to ignore, i.e. ['Dallas']
-    :return: The subset of the geodataframe lying in the 'names' csa/cbsa but not in the places_to_ignore.
-    """
-
-    # Get CSA/CBSA/UA areas
-    if geography == 'csa':
-        metro_shapes = gpd.read_file(csa_path)
-    elif geography == 'cbsa':
-        metro_shapes = gpd.read_file(cbsa_path)
-    elif geography == 'ua':
-        metro_shapes = gpd.read_file(ua_path)
-        metro_shapes = metro_shapes.rename(columns = {'NAME10':'NAME'})
-    else:
-        raise ValueError("geography arg must be one of 'csa', 'cbsa', or 'ua', not {}".format(geography))
-
-    boundaries = metro_shapes.loc[metro_shapes['NAME'].isin(names)]
-
-    # Subset
-    metro_dic = sf.fast_polygon_intersection(gdf, boundaries['geometry'], names = boundaries['NAME'], horiz =  25, vert = 25)
-    gdf['metro'] = gdf.index.to_series().map(metro_dic)
-    subsetted_data = gdf.loc[gdf['metro'].notnull()]
-
-    # Get rid of core city to just analyze suburbs
-    if places_to_ignore is not None:
-        texas_places = gpd.read_file(texas_places_path)
-        place_shapes = texas_places.loc[texas_places['NAME'].isin(places_to_ignore)]
-        place_dic = sf.fast_polygon_intersection(subsetted_data, place_shapes['geometry'], names = place_shapes['NAME'], horiz = 10, vert = 10)
-        subsetted_data['place'] = subsetted_data.index.to_series().map(place_dic).fillna(False)
-        subsetted_data = subsetted_data.loc[subsetted_data['place'] == False]
-
-    return subsetted_data, boundaries, metro_shapes
 
 def get_all_dallas_parcel_data():
 
@@ -554,29 +524,6 @@ def analyze_transportation_networks(names, zoning_inputs, num_blocks = 5000, ste
     plot.save('Figures/Suburbs/local_workers.svg', width = 12, height = 10)
 
 
-    #city_data['avg_commute_time'] = city_data['B08135e1'].divide(city_data['B08303e1'])
-
-
-
-def analyze_dallas_suburbs(job_centers = dallas_job_centers):
-    time0 = time.time()
-
-    # Analyze the big north texas zoning shapefile --------------------------------------
-
-    # Basic analysis of percent zoned SF in the suburbs
-    north_texas_data = process_zoning_shapefile(north_texas_inputs)
-    ua_zones, boundaries, ua_shapes = subset_to_metro(north_texas_data, dallas_urban_areas, geography = 'ua', places_to_ignore = ['Dallas'])
-
-    print('Starting to do the polygons_intersect_rings')
-    ua_result = sf.polygons_intersect_rings(ua_zones, dallas_inputs, factor = 'broad_zone', step = step, maximum = maximum, outlier_maximum = outlier_maximum, categorical = True)
-    ua_result.to_csv('data/caches/suburbs/dallas_ua_zone_rings.csv')
-    print('Time is {}'.format(time.time() - time0))
-
-    job_center_zones, job_centers_shapes, texas_places = subset_to_job_centers(north_texas_data, job_centers)
-    job_result = sf.polygons_intersect_rings(job_center_zones, dallas_inputs, factor = 'broad_zone', step = step, maximum = maximum, outlier_maximum = outlier_maximum, categorical = True)
-    job_result.to_csv('data/caches/suburbs/dallas_jobcenter_zone_rings.csv')
-    print('Time is {}'.format(time.time() - time0))
-
 def plot_municipality_choropleth(name, zoning_input, job_centers, to_exclude = None):
 
     path = get_municipality_choropleth_path(name)
@@ -621,12 +568,28 @@ def plot_municipality_choropleth(name, zoning_input, job_centers, to_exclude = N
     LayerControl().add_to(basemap)
     basemap.save('Figures/Suburbs/{}_suburb_choropleth.html'.format(name))
 
+def analyze_zoning_data():
+
+    data = pd.read_csv(all_dallas_zoning_path_csv, engine = 'python')
+    data = data.loc[data['COUNTY'].isin(['Denton', 'Collin', 'Dallas', 'Tarrant'])]
+    data = data.drop_duplicates(subset = ['lat', 'long'], keep = 'first')
+    zone_areas = data.groupby(['broad_zone', 'place'])['area_sqft'].sum()
+    municipality_areas = data.groupby(['place'])['area_sqft'].sum()
+    final_data = zone_areas.divide(municipality_areas)
+    final_data = final_data.reset_index()
+    final_data.columns = ['broad_zone', 'place', 'Percent of Land Zoned As']
+    final_data.to_csv('data/caches/suburbs/dallas_zoning_use_by_municipality.csv')
+
+
+
 def analyze_land_use_by_metro(name):
-    print(name)
 
     # Read data
     def land_use_by_municipality_path(name):
         return 'data/caches/suburbs/{}_land_use_by_municipality.csv'.format(name)
+
+    def lot_size_by_municipality_path(name):
+        return 'data/caches/suburbs/{}_lot_size_by_municipality.csv'.format(name)
 
     path = get_cached_parcel_path_csv(name, 'all')
     data = pd.read_csv(path, engine = 'python')
@@ -639,6 +602,17 @@ def analyze_land_use_by_metro(name):
     final_data = final_data.reset_index()
     final_data.columns = ['broad_zone', 'place', 'Percent of Land Used']
     final_data.to_csv(land_use_by_municipality_path(name))
+
+    # Calculate lot sizes (average and mean)
+    counts = data.groupby(['broad_zone', 'place'])['area_sqft'].count()
+    lotsize_means = zone_areas.divide(counts).reset_index()
+    lotsize_means.columns = ['broad_zone', 'place', 'mean_lot_size']
+    lotsize_medians = data.groupby(['broad_zone', 'place'])['area_sqft'].median().reset_index()
+    lotsize_medians.columns = ['broad_zone', 'place', 'median_lot_size']
+    lotsize_calculations = lotsize_means.merge(lotsize_medians, on = ['broad_zone', 'place'], how = 'outer')
+    lotsize_calculations.to_csv(lot_size_by_municipality_path(name))
+
+
 
 def plot_choropleth_close_to_point(lat, long, zoning_input, gdf, spatial_index, save_path, column = None, num_polygons = 2500):
 
@@ -656,15 +630,20 @@ def plot_choropleth_close_to_point(lat, long, zoning_input, gdf, spatial_index, 
     basemap.save(save_path)
 
 
-
-
 if __name__ == '__main__':
-    #get_all_houston_parcel_data()
+    #process_dallas_zoning_data()
+    path = 'Figures/Testing/Craig_Ranch_Zoning.html'
+    data = gpd.read_file(all_dallas_zoning_path)
+    plot_choropleth_close_to_point(33.1320136, -96.7185934, dallas_inputs, data, data.sindex, path, column = 'broad_zone')
 
-    #analyze_transportation_networks(['austin', 'dallas', 'houston'], [austin_inputs, dallas_inputs, houston_inputs])
-    #plot_municipality_choropleth('austin', austin_inputs, austin_job_centers)
-    #plot_municipality_choropleth('dallas', dallas_inputs, dallas_job_centers, to_exclude = ['Combine'])
-    #plot_municipality_choropleth('houston', houston_inputs, houston_job_centers)
+
+
+    #analyze_land_use_by_metro('austin')
+    #analyze_land_use_by_metro('dallas')
+    #analyze_land_use_by_metro('houston')
+
+    import sys
+    sys.exit()
 
     for cityname, cityinput, universitylats, universitylongs, universitynames in zip(['austin', 'dallas', 'houston'],
                                                                                      [austin_inputs, dallas_inputs, houston_inputs],
