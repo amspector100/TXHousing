@@ -38,9 +38,17 @@ def get_zip_boundaries():
     zipdata.index = [str(ind) for ind in zipdata.index]
     return zipdata
 
+# Checks whether a string can be converted to a float
+def will_it_float(text):
+    try:
+        text = float(text)
+        return True
+    except ValueError:
+        return False
+
 # Zoning data processing functions-------------------------------------------------------------------------------------------- Zoning Data
 
-def process_zoning_shapefile(input, broaden = True, overlay = {'-MU':'Multifamily'}):
+def process_zoning_shapefile(input, overlay = {'-MU':'Multifamily'}, broaden = True, parse_base_zones = True):
     """"
     Processes shapefile.
     :param input: An input, of class 'zoning_inputs.'
@@ -79,12 +87,34 @@ def process_zoning_shapefile(input, broaden = True, overlay = {'-MU':'Multifamil
             for key in [key for key in overlay]:
                 raw_data.loc[raw_data[input.feature].str.contains(key), 'broad_zone'] = overlay[key]
 
+    if parse_base_zones and input.regulations_path is not None:
+
+        # Get regulations data - we only read this in because we need the list of base zones.
+        reg_data = pd.read_csv(input.regulations_path, index_col=0, encoding='Latin-1')
+
+        # If the data includes non-base zones, only include base zones in this particular search
+        if 'class' in reg_data.columns:
+            reg_data = reg_data.loc[reg_data['class'] == 'base']
+
+        reg_data.index = [str(ind) for ind in reg_data.index]
+
+        # Process the zoning data - this function is well defined, I checked
+        base_zones = reg_data.index.unique().tolist()
+
+        def process_zone(text):
+            for i in base_zones:
+                if i in text:
+                    return i
+            return 'Unknown'
+
+        # Apply
+        raw_data['base_zone'] = raw_data[input.feature].apply(process_zone)
+
     # Manually set CRS if necessary
     if input.crs is not None:
         raw_data.crs = input.crs
 
     print('Finished processing zones, mixed use overlay, and crs, took {}'.format(time.time() - time0))
-
 
     return raw_data
 
@@ -273,7 +303,17 @@ def join_dallas_parcel_data():
     print(parcel_data.columns, parcel_data.index)
     return parcel_data
 
-def process_dallas_parcel_data():
+def process_dallas_parcel_data(quickly = False):
+    """
+    :param quickly: Boolean, if true, will read just the 2016 parcel data without processing it or joining it to other
+    data. Otherwise will join data to 2013 parcel data.
+    :return: Parcel data
+    """
+
+    if quickly:
+        p2016 = gpd.read_file(dallas_parcel_data_path_2016)
+        p2016 = p2016.rename(columns = {'sptbcode':'sptbcode_2016'})
+        return p2016
 
     time0 = time.time()
 
@@ -299,6 +339,50 @@ def process_dallas_parcel_data():
 
     return parcel_data
 
+def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path_2018],
+                                feature_columns_list = [houston_building_res_columns], county_level = False):
+    """
+    Merge subsetted houston parcel data with harris county data. By default uses a left join.
+    :param feature_files: A list of paths of feature files to merge with the data. Defaults to
+    the building_res file path. Can also be a string of one file (doesn't have to be a list). If you set this equal to
+     None, it will just return the parcel shape data with no other data attached (although the parcel shape data does
+     have a couple of useful factors).
+    :param feature_columns_list: A list of column headers for each file - you can find these in the
+     Harris_Parcel_Feature_Columns microsoft database.
+     :param county_level: Boolean, default False. If true, will read in parcel data from all of Harris county, not just
+     Houston.
+    :return: GeoDataFrame with the parcel shapes and the merged data.
+    """
+
+    # Get parcel data
+    if county_level:
+        geodata = gpd.read_file(harris_parcel_path_2018)
+    else:
+        geodata = gpd.read_file(houston_parcel_path_2018)
+
+    geodata = geodata.loc[geodata['geometry'].is_valid]
+    geodata.reset_index(inplace = True)
+    geodata = geodata.loc[geodata['HCAD_NUM'].apply(will_it_float)]
+    geodata['HCAD_NUM'] = geodata['HCAD_NUM'].astype(float)
+
+    # Make sure feature_files is a list not a string
+    if isinstance(feature_files, str):
+        feature_files = [feature_files]
+
+    # Get data
+    if feature_files is not None:
+        for feature_path, feature_header in zip(feature_files, feature_columns_list):
+            data = pd.read_csv(feature_path, sep = '\t', header = None, encoding='Latin-1')
+            data.columns = feature_header
+            data = data.rename(columns = {'ACCOUNT':'HCAD_NUM'})
+            data = data.drop_duplicates(subset=['HCAD_NUM'], keep='first')
+            print('Starting to merge, geodata shape is {}, data shape is {}'.format(geodata.shape, data.shape))
+            geodata = geodata.merge(data, how = "left", on = "HCAD_NUM")
+
+    # Return
+    return geodata
+
+
 # Permit data -------------------------------------------------------------------------------------------------------------- permit data
 
 def process_austin_permit_data(searchfor, permittypedesc = None, workclass = None,
@@ -315,7 +399,7 @@ def process_austin_permit_data(searchfor, permittypedesc = None, workclass = Non
 
     time0 = time.time()
     print('Reading Austin permit data')
-    permit_data = pd.read_csv(austin_permit_path, low_memory = False)
+    permit_data = pd.read_csv(austin_permit_path)
     print('Finished reading Austin permit data, took {}. Now subsetting.'.format(time.time() - time0))
 
     # Initial subset
