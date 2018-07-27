@@ -26,17 +26,14 @@ save = True
 min_lot_size = False # Min lot size residential areas city
 far = False
 coverage = False
-plot_austin_permits = False
-plot_dallas_permits = False
-plot_austin_commercial_permits = False
-plot_dallas_commercial_permits = False
+plot_permits = True
 plot_hds_locations = False
 plot_hds_permits = False
 broad_zone = False
 permit_scatter = False
 income_histogram = False
 construction_heatmap = False
-plot_parcels = True
+plot_parcels = False
 
 # Read data --------------------------------------------------
 #dallas_zones = process_zoning_shapefile(dallas_inputs, broaden = True)
@@ -124,22 +121,8 @@ if coverage:
     if plot:
         plt.show()
 
-# Permits for single/multifamily building
-if plot_dallas_permits:
 
-    dallas_permit_data = get_corrected_dallas_permit_data() #Get dallas permit data from the saved file with CORRECTED geocodes and the original columns.
-
-    dallas_permit_rings = sf.points_intersect_rings(dallas_permit_data, dallas_inputs, factor = 'Permit Type', step = 1, categorical = True, by = 'median', per_square_mile = False)
-    dallas_permit_rings.plot(kind = 'bar', legend = True)
-    plt.title('Residential Permits Issued, Dallas, TX')
-    plt.xlabel('Distance from the city center (Miles)')
-    plt.ylabel('New Construction Permits Issued, 2011-2016')
-    if save:
-        plt.savefig('Figures/Bucket 2/DallasResPermits.png', bbox_inches = 'tight')
-    if plot:
-        plt.show()
-
-if plot_austin_permits:
+if plot_permits:
 
     austin_permit_data = process_austin_permit_data(searchfor=['101 single family houses',
                                           '103 two family bldgs',
@@ -156,19 +139,61 @@ if plot_austin_permits:
 
     austin_permit_data['PermitClass'] = austin_permit_data['PermitClass'].apply(map_permitclass)
 
-    austin_permit_rings = sf.points_intersect_rings(austin_permit_data, austin_inputs, factor = 'PermitClass', step = 1, categorical = True, by = 'median')
-    austin_permit_rings.plot(kind = 'bar', legend = True)
-    plt.title('Residential Permits Issued per Square Mile, Austin, TX')
-    plt.xlabel('Distance from the city center (Miles)')
-    plt.ylabel('New Construction Permits Issued Per Square Mile, 2013-2018')
-    if save:
-        plt.savefig('Figures/Bucket 2/AustinResPermitsPSM.png', bbox_inches = 'tight')
-    if plot:
-        plt.show()
+    austin_permit_rings = sf.points_intersect_rings(austin_permit_data, austin_inputs, factor = 'PermitClass', step = 1, categorical = True, maximum = 10)
+    austin_permit_rings['city'] = 'Austin'
+    print(austin_permit_rings)
+    print('Finished with Austin, time is {}'.format(time.time() - time0))
 
-if plot_austin_commercial_permits:
+    dallas_permit_data = get_corrected_dallas_permit_data()  # Get dallas permit data from the saved file with CORRECTED geocodes and the original columns.
 
-    pass
+    dallas_permit_rings = sf.points_intersect_rings(dallas_permit_data, dallas_inputs, factor='Permit Type', step=1, categorical=True,  maximum = 10)
+    dallas_permit_rings['city'] = 'Dallas'
+    dallas_permit_rings = dallas_permit_rings.rename(columns = {'Building (BU) Multi Family  New Construction':'Multifamily Permit',
+                                                                'Building (BU) Single Family  New Construction':'Single Family Permit'})
+
+    print('Finished with Dallas, time is {}'.format(time.time() - time0))
+
+    houston_permit_data = process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE',
+                                                                   'NEW AP', 'NEW HI-'],
+                                                      searchin = ['PROJ_DESC'],
+                                                      earliest = 2013, latest = None)
+    houston_permit_data['Permit Type'] = 'Multifamily Permit'
+    houston_permit_data.loc[houston_permit_data['PROJ_DESC'].str.contains('|'.join(['NEW S.F.', 'NEW SF', 'NEW TOWNHOUSE', 'NEW SINGLE'])), 'Permit Type'] = 'Single Family Permit'
+    houston_permit_rings = sf.points_intersect_rings(houston_permit_data, houston_inputs, factor='Permit Type', step=1, categorical=True,  maximum = 10)
+    houston_permit_rings['city'] = 'Houston'
+    print(houston_permit_rings)
+    print('Finished with Houston, time is {}'.format(time.time() - time0))
+
+    all_permit_data = pd.concat([austin_permit_rings, dallas_permit_rings, houston_permit_rings], axis = 1)
+    all_permit_data['dist_to_center'] = all_permit_data.index
+    all_permit_data.reset_index()
+    print(all_permit_data)
+
+    # Format distances properly
+    def format_distance(text):
+        try:
+            text = str(int(float(text)))
+            return text
+        except:
+            return text
+    all_permit_data['dist_to_center'] = all_permit_data['dist_to_center'].apply(format_distance)
+
+    # Order the distances properly
+    from pandas.api.types import CategoricalDtype
+    distances_cat = CategoricalDtype(categories = all_permit_data['dist_to_center'].unique(), ordered = True)
+    all_permit_data['dist_to_center'] = all_permit_data['dist_to_center'].astype('category')
+    all_permit_data['dist_to_center'] = all_permit_data['dist_to_center'].cat.reorder_categories(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '10+'])
+    print(all_permit_data)
+    all_permit_data = all_permit_data.melt(var_name = 'permit_type', value_name = 'num_permits', id_vars = ['city', 'dist_to_center'])
+
+
+    permit_plot = (ggplot(all_permit_data, aes(x = 'dist_to_center', y = 'num_permits', color = 'city'))
+                   + geom_col(position = 'dodge')
+                   + facet_wrap('~Permit Type'))
+    print(permit_plot)
+
+
+
 
 if plot_hds_locations or plot_hds_permits:
 
@@ -740,11 +765,11 @@ if plot_parcels:
         houston_parcels = process_houston_parcel_data()
         print('Finished reading Houston parcel data, time is {}'.format(time.time() - time0))
         houston_parcels = houston_parcels.replace([np.inf, -np.inf], np.nan)
-        houston_parcels = houston_parcels.dropna(subset = ['LAND_USE_CODE'], how = 'all')
-        houston_parcels['LAND_USE_CODE'] = houston_parcels['LAND_USE_CODE'].astype(int)
-        houston_feature = 'LAND_USE_CODE'
+        houston_parcels = houston_parcels.dropna(subset = ['USE_CODE'], how = 'all')
+        houston_parcels['USE_CODE'] = houston_parcels['USE_CODE'].astype(str)
+        houston_feature = 'USE_CODE'
         # Here, 1006 refers to condominiums, 1007 refers to townhomes
-        houston_dictionary = {'Single Family':[1001], 'Multifamily':[1002, 1003, 1004, 1005, 1006, 1007, 4209, 4211, 4212, 4214, 4299]}
+        houston_dictionary = state_sptbcode_dictionary
         houston_result = get_rings_of_parcels(houston_parcels, houston_feature, houston_dictionary, houston_inputs, 'Houston')
 
         # Work on Austin data ---------------------------------------------------
@@ -775,7 +800,16 @@ if plot_parcels:
     all_results['City'] = all_results['Zone'].apply(lambda x: x.split('-')[0])
     all_results['Zone'] = all_results['Zone'].apply(lambda x: x.split('-')[1])
 
-    # Order the zones properly
+    # Format distances properly
+    def format_distance(text):
+        try:
+            text = str(int(float(text)))
+            return text
+        except:
+            return text
+    all_results['dist_to_center'] = all_results['dist_to_center'].apply(format_distance)
+
+    # Order the distances properly
     from pandas.api.types import CategoricalDtype
     distances_cat = CategoricalDtype(categories = all_results['dist_to_center'].unique(), ordered = True)
     all_results['dist_to_center'] = all_results['dist_to_center'].astype('category')

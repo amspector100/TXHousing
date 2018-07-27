@@ -523,9 +523,10 @@ def process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE',
         return None
     permit_data = gpd.read_file(path)
     permit_data = permit_data.rename(columns = {'SITUS_ZIP_':'Zipcode'}) # Already has 100% complete zipcode information.
+    permit_data = permit_data.loc[~permit_data['geometry'].apply(lambda x: x is None)]
 
     # Ignore repeated plans
-    permit_data = permit_data.loc[[not bool for bool in permit_data['PROJ_DESC'].str.contains('REPEAT PLAN')]]
+    permit_data = permit_data.loc[~permit_data['PROJ_DESC'].str.contains('REPEAT PLAN')]
 
     # Search for kwargs in the specified columns, almost always will be in project description
     flags = pd.Series(False, index = permit_data.index)

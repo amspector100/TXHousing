@@ -363,6 +363,8 @@ houston_zips = [77002, 77003, 77004, 77005, 77006, 77007, 77008, 77009, 77010, 7
                 77571, 77587, 77598]
 houston_zips = [str(z) for z in houston_zips]
 
+houston_civic_clubs = "data/Houston_Civic_Clubs/cohgis.PD.shp"
+
 houston_spec_min_setbacks = "data/Zoning Shapefiles/Houston_Special_Minimum_Building_Lines/Special_Minimum_Building_Lines.shp"
 houston_spec_min_lots = "data/Zoning Shapefiles/Houston_Spec_Minimum_Lot/Minimum_Lot_Size.shp"
 houston_structural_permits_path = "data/Houston_Structural_Permits/Permits_wm_Structural.shp"

@@ -17,7 +17,8 @@ calc_percent_residential = False
 calc_landmarks_in_houston = False
 calc_parking_cost = False
 calc_percent_used = False
-validate_parcel_results = True
+validate_parcel_results = False
+calc_overlays = True
 
 calculate = False
 
@@ -291,9 +292,6 @@ if calc_percent_used:
     weighted_means = weighted_means.apply(replace_high_values).reset_index()
     weighted_means.to_csv(get_cached_use_percenatges_path('weighted_means'))
 
-    def plot_h():
-        pass
-
 if validate_parcel_results:
 
     from suburbs import all_dallas_zoning_path_csv
@@ -306,3 +304,20 @@ if validate_parcel_results:
     print(difference.mean())
     print(difference.apply(abs).mean())
 
+if calc_overlays:
+
+    austin_zones = process_zoning_shapefile(austin_inputs)
+    def get_overlay(row):
+        row['overlay'] = str(row['zoning_zty']).replace(str(row['base_zone']), '')
+        return row
+    austin_zones = austin_zones.apply(get_overlay, axis = 1)
+    austin_zones.crs = {'init':'epsg:4326'}
+    austin_zones = sf.get_area_in_units(austin_zones)
+    austin_zones['dist_to_center'] = sf.calculate_dist_to_center(austin_zones, austin_inputs)
+    austin_zones['dist_to_center'] = austin_zones['dist_to_center'].apply(lambda x: 2*np.ceil(x/2))
+    austin_zones['num_overlays'] = austin_zones['overlay'].apply(lambda x: str(x).count('-'))
+    result = austin_zones.groupby(['dist_to_center', 'num_overlays'])['area'].count()
+    divisor = austin_zones.groupby(['dist_to_center'])['area'].count()
+    print(result, divisor)
+    result = result.divide(divisor)
+    print(result)

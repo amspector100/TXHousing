@@ -433,7 +433,7 @@ def final_austin_graph(zoning_input, zip_features_dic):
     LayerControl().add_to(basemap)
 
     print("Saving basemap, time is {}".format(time.time() - time0))
-    basemap.save('Figures/Bucket 2/Austin_Mastermap.html')
+    basemap.save('Figures/Mastermaps/Austin_Mastermap.html')
 
  # Final graph for Dallas ---------------------------------------------------------------------------------------
 def final_dallas_graph(zoning_input, zip_features_dic, included_counties = ['Dallas']):
@@ -638,7 +638,7 @@ def final_dallas_graph(zoning_input, zip_features_dic, included_counties = ['Dal
     LayerControl().add_to(basemap)
 
     print("Saving basemap at {}".format(time.time() - time0))
-    basemap.save('Figures/Bucket 2/Dallas_Mastermap.html')
+    basemap.save('Figures/Mastermaps/Dallas_Mastermap.html')
 
 def final_houston_graph(zoning_input):
 
@@ -746,7 +746,7 @@ def final_houston_graph(zoning_input):
     # Add dark layer for visualization, layer control, then save
     folium.TileLayer('cartodbdark_matter').add_to(basemap)
     LayerControl().add_to(basemap)
-    basemap.save('Figures/Bucket 2/Houston_Mastermap.html')
+    basemap.save('Figures/Mastermaps/Houston_Mastermap.html')
 
 # Plots percent of workers
 def texas_job_centers():

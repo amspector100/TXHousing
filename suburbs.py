@@ -427,12 +427,6 @@ def get_all_houston_parcel_data():
 
     print('Finished saving, time is {}'.format(time.time() - time0))
 
-# Helper functions which generate outfile paths for lotsize/zoning data
-def get_lotsize_path(name, level):
-    return 'data/caches/suburbs/{}_{}_lotsizes.csv'.format(name, level)
-
-def get_percent_zoned_path(name, level):
-    return 'data/caches/suburbs/{}_{}_parcel_zone_rings.csv'.format(name, level)
 
 def get_municipality_choropleth_path(name):
     return 'data/caches/suburbs/{}_municipality_calculations/municipality_calculations.shp'.format(name)
@@ -526,15 +520,18 @@ def analyze_zoning_data():
     final_data.columns = ['broad_zone', 'place', 'Percent of Land Zoned As']
     final_data.to_csv('data/caches/suburbs/dallas_zoning_use_by_municipality.csv')
 
+
+# Paths for final processed data
+def land_use_by_municipality_path(name):
+    return 'data/caches/suburbs/{}_land_use_by_municipality.csv'.format(name)
+
+def lot_size_by_municipality_path(name):
+    return 'data/caches/suburbs/{}_lot_size_by_municipality.csv'.format(name)
+
+
 def analyze_land_use_by_metro(name):
 
     # Read data
-    def land_use_by_municipality_path(name):
-        return 'data/caches/suburbs/{}_land_use_by_municipality.csv'.format(name)
-
-    def lot_size_by_municipality_path(name):
-        return 'data/caches/suburbs/{}_lot_size_by_municipality.csv'.format(name)
-
     path = get_cached_parcel_path_csv(name, 'all')
     data = pd.read_csv(path, engine = 'python')
     data = data.drop_duplicates(subset = ['lat', 'long'], keep = 'first')
@@ -555,6 +552,23 @@ def analyze_land_use_by_metro(name):
     lotsize_medians.columns = ['broad_zone', 'place', 'median_lot_size']
     lotsize_calculations = lotsize_means.merge(lotsize_medians, on = ['broad_zone', 'place'], how = 'outer')
     lotsize_calculations.to_csv(lot_size_by_municipality_path(name))
+
+def plot_land_use(name, subset_by = None, subset_values = None):
+
+    # Read lotsize, zoning data and subset
+    lotsize_data = pd.read_csv(lot_size_by_municipality_path(name), index_col = 0)
+    landuse_data = pd.read_csv(land_use_by_municipality_path(name), index_col = 0)
+
+    # Subset
+    if subset_by is not None:
+        lotsize_data = lotsize_data.loc[lotsize_data[subset_by].isin(subset_values)]
+        landuse_data = landuse_data.loc[landuse_data[subset_by].isin(subset_values)]
+
+    # Plot land use
+    land_use_plot = ggplot(landuse_data, aes())
+
+
+
 
 def plot_choropleth_close_to_point(lat, long, zoning_input, gdf, spatial_index, save_path, column = None, num_polygons = 2500):
 
@@ -601,4 +615,4 @@ def plot_many_choropleths_close_to_points():
 
 if __name__ == '__main__':
 
-    pass
+    plot_land_use('austin', subset_by = 'place', subset_values = austin_job_centers)

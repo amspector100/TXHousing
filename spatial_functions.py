@@ -392,7 +392,7 @@ def get_all_averages_by_area(data_source, other_geometries, features = 'B01001e1
 # Part 5: Create dist from city center graphs, for points and polygons ------------------------------------------------
 
 def points_intersect_rings(gdf, zoning_input, factor = None, step = 1, categorical = True, by = 'mean',
-                           geometry_column = 'geometry', per_square_mile = True, maximum = None):
+                           geometry_column = 'geometry', per_square_mile = False, maximum = None):
 
     """
     :param gdf: Geodataframe. Assumes this is already transformed to lat long coord system. Should be polygon geometry.
