@@ -43,12 +43,6 @@ all_houston_parcel_path = 'data/parcels/cached/houston_all_parcels/parcels.shp'
 # Cache paths for Austin
 all_austin_parcel_path = 'data/parcels/cached/austin_all_parcels/parcels.shp'
 
-
-# For analysis
-step = 5
-maximum = 45
-outlier_maximum = 55
-
 # Functions =------------------------------------------------------------------------------------------------
 
 # Parse descriptions of lots and turn them into SF/MF/Other/Other Residential classifications
@@ -338,9 +332,6 @@ def get_all_dallas_parcel_data():
     all_dallas_parcels[[col for col in all_dallas_parcels.columns if col != 'geometry']].to_csv(get_cached_parcel_path_csv('dallas', 'all'))
     print('Finished with Dallas, time is {}'.format(time.time() - time0))
 
-
-
-
 def get_all_austin_parcel_data():
 
     # See https://tax-office.traviscountytx.gov/pages/SPTC.php - A4/A5 refer to condos.
@@ -523,51 +514,6 @@ def analyze_transportation_networks(names, zoning_inputs, num_blocks = 5000, ste
                           x = 'Distance from City Center (Miles)', y = 'Percent of Workers Working in Place of Residence'))
     plot.save('Figures/Suburbs/local_workers.svg', width = 12, height = 10)
 
-
-def plot_municipality_choropleth(name, zoning_input, job_centers, to_exclude = None):
-
-    path = get_municipality_choropleth_path(name)
-    basemap = folium.Map([zoning_input.lat, zoning_input.long], zoom_start = 9)
-
-    # Read and format data
-    geodata = gpd.read_file(path)
-    geodata = geodata.set_index('NAME')
-    geodata["NAME"] = geodata.index
-    geodata = geodata.loc[(geodata['Single F_1'] != 0) & (geodata['Other-zone'] != 0)]
-    if to_exclude is not None:
-        geodata = geodata.loc[[not bool for bool in geodata['NAME'].isin(to_exclude)]]
-
-    geodata = geodata.rename(columns = {'Other-zone':'Percent of Land Developed as Nonresidential',
-                                        'Other-lots':'Other-lotsize',
-                                        'Multifamil':'Multifamily-lotsize',
-                                        'Multifam_1':'Percent of Land Used as Multifamily',
-                                        'Single Fam':'Single Family Average Lotsize (Square Feet)',
-                                        'Single F_1':'Percent of Land Used as Single Family'})
-    geodata.crs = {'init':'epsg:4326'}
-
-    # Get rid of places for which no parcels intersected
-    for factor in ['Percent of Land Used as Single Family', 'Percent of Land Used as Multifamily', 'Percent of Land Developed as Nonresidential', 'Single Family Average Lotsize (Square Feet)']:
-        geojson, colormap = choropleth.continuous_choropleth(geodata, factor, factor, scale_name = None, colors = ['lightgreen', 'navy', 'black'],
-                                                             show = False, geometry_column = 'geometry', basemap = basemap)
-
-    for jc in job_centers:
-        try:
-            coords = choropleth.retrieve_coords(geodata.loc[geodata["NAME"] == jc, 'geometry'].values[0].centroid)
-            folium.Marker(
-                location=coords,
-                popup=jc,  # The name
-                icon=folium.Icon(color='gray')
-            ).add_to(basemap)
-        except IndexError: # Occurs if the jobcenter is no longer in the place shape, presumably because we had no parcel data on it
-            continue
-
-
-    folium.TileLayer('cartodbdark_matter').add_to(basemap)
-    folium.TileLayer('CartoDB positron').add_to(basemap)
-    folium.TileLayer('Stamen Toner').add_to(basemap)
-    LayerControl().add_to(basemap)
-    basemap.save('Figures/Suburbs/{}_suburb_choropleth.html'.format(name))
-
 def analyze_zoning_data():
 
     data = pd.read_csv(all_dallas_zoning_path_csv, engine = 'python')
@@ -579,8 +525,6 @@ def analyze_zoning_data():
     final_data = final_data.reset_index()
     final_data.columns = ['broad_zone', 'place', 'Percent of Land Zoned As']
     final_data.to_csv('data/caches/suburbs/dallas_zoning_use_by_municipality.csv')
-
-
 
 def analyze_land_use_by_metro(name):
 
@@ -612,8 +556,6 @@ def analyze_land_use_by_metro(name):
     lotsize_calculations = lotsize_means.merge(lotsize_medians, on = ['broad_zone', 'place'], how = 'outer')
     lotsize_calculations.to_csv(lot_size_by_municipality_path(name))
 
-
-
 def plot_choropleth_close_to_point(lat, long, zoning_input, gdf, spatial_index, save_path, column = None, num_polygons = 2500):
 
     basemap = folium.Map([zoning_input.lat, zoning_input.long], zoom_start = 9)
@@ -629,21 +571,7 @@ def plot_choropleth_close_to_point(lat, long, zoning_input, gdf, spatial_index, 
     folium.TileLayer('CartoDB positron').add_to(basemap)
     basemap.save(save_path)
 
-
-if __name__ == '__main__':
-    #process_dallas_zoning_data()
-    path = 'Figures/Testing/Craig_Ranch_Zoning.html'
-    data = gpd.read_file(all_dallas_zoning_path)
-    plot_choropleth_close_to_point(33.1320136, -96.7185934, dallas_inputs, data, data.sindex, path, column = 'broad_zone')
-
-
-
-    #analyze_land_use_by_metro('austin')
-    #analyze_land_use_by_metro('dallas')
-    #analyze_land_use_by_metro('houston')
-
-    import sys
-    sys.exit()
+def plot_many_choropleths_close_to_points():
 
     for cityname, cityinput, universitylats, universitylongs, universitynames in zip(['austin', 'dallas', 'houston'],
                                                                                      [austin_inputs, dallas_inputs, houston_inputs],
@@ -666,3 +594,11 @@ if __name__ == '__main__':
             uni_save_path = 'Figures/Testing/{}_surrounding_parcels.html'.format(uname)
             plot_choropleth_close_to_point(lat, long, cityinput, data, spatind, save_path = uni_save_path, column = 'broad_zone', num_polygons = 2500)
 
+
+    path = 'Figures/Testing/Craig_Ranch_Zoning.html'
+    data = gpd.read_file(all_dallas_zoning_path)
+    plot_choropleth_close_to_point(33.1320136, -96.7185934, dallas_inputs, data, data.sindex, path, column = 'broad_zone')
+
+if __name__ == '__main__':
+
+    pass
