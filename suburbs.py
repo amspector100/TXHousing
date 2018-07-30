@@ -552,7 +552,7 @@ def analyze_land_use_by_metro(name):
     lotsize_calculations = lotsize_means.merge(lotsize_medians, on = ['broad_zone', 'place'], how = 'outer')
     lotsize_calculations.to_csv(lot_size_by_municipality_path(name))
 
-def plot_land_use(name, zoning_input, colors = ['purple', 'red', 'orange', 'yellow', 'white'], method = 'linear'):
+def suburbs_choropleth(name, zoning_input, colors = ['purple', 'red', 'orange', 'yellow', 'white'], method = 'linear'):
 
     # Read lotsize, landuse data
     lotsize_data = pd.read_csv(lot_size_by_municipality_path(name), index_col = 0)
@@ -562,7 +562,7 @@ def plot_land_use(name, zoning_input, colors = ['purple', 'red', 'orange', 'yell
     texas_place_shapes = gpd.read_file(texas_places_path)
     texas_place_shapes['dist_to_center'] = sf.calculate_dist_to_center(texas_place_shapes, zoning_input)
     texas_place_shapes = texas_place_shapes.sort_values('dist_to_center')
-    texas_place_shapes.drop_duplicates(subset = ['NAME'], keep = 'first')
+    texas_place_shapes = texas_place_shapes.drop_duplicates(subset = ['NAME'], keep = 'first')
     landuse_data = texas_place_shapes.merge(landuse_data, left_on = 'NAME', right_on = 'place', how = 'right')
     lotsize_data = texas_place_shapes.merge(lotsize_data, left_on = 'NAME', right_on = 'place', how = 'right')
 
@@ -599,6 +599,93 @@ def plot_land_use(name, zoning_input, colors = ['purple', 'red', 'orange', 'yell
     folium.TileLayer('CartoDB positron').add_to(basemap)
     folium.LayerControl().add_to(basemap)
     basemap.save(get_municipality_choropleth_path(name))
+
+def suburbs_scatterplot():
+
+    # Get place shapes
+    texas_place_shapes = gpd.read_file(texas_places_path)
+    texas_place_shapes = sf.get_area_in_units(texas_place_shapes)
+
+
+    # Iterate through and get some geospatial features and data
+    names = ['austin', 'dallas', 'houston']
+    inputs = [austin_inputs, dallas_inputs, houston_inputs]
+    jobcenter_lists = [austin_job_centers, dallas_job_centers, houston_job_centers]
+    lotsize_data = pd.DataFrame()
+    landuse_data = pd.DataFrame()
+    parcel_level_data = pd.DataFrame()
+    for name, zoning_input, jobcenters in zip(names, inputs, jobcenter_lists):
+
+        # Geodata
+        new_shapes = texas_place_shapes.copy()
+        new_shapes['dist_to_center'] = sf.calculate_dist_to_center(new_shapes, zoning_input)
+        new_shapes = new_shapes.sort_values('NAME')
+        new_shapes = new_shapes.drop_duplicates(subset = 'NAME', keep = 'first')
+        new_shapes = new_shapes[['NAME', 'area', 'dist_to_center']]
+
+        # Landuse by municipality
+        new_landuse_data = pd.read_csv(land_use_by_municipality_path(name), index_col = 0)
+        new_landuse_data['city'] = name
+        new_landuse_data['jobcenter'] = new_landuse_data['place'].apply(lambda x: x in jobcenters)
+        new_landuse_data = new_shapes.merge(new_landuse_data, left_on = 'NAME', right_on = 'place', how = 'right')
+        landuse_data = landuse_data.append(new_landuse_data)
+
+        # Lotsize by municipality
+        new_lotsize_data = pd.read_csv(lot_size_by_municipality_path(name), index_col = 0)
+        new_lotsize_data['city'] = name
+        new_lotsize_data['jobcenter'] = new_lotsize_data['place'].apply(lambda x: x in jobcenters)
+        new_lotsize_data = new_shapes.merge(new_lotsize_data, left_on = 'NAME', right_on = 'place', how = 'right')
+        lotsize_data = lotsize_data.append(new_lotsize_data)
+
+        # Parcel level landuse and lotsize data
+        continue
+        parcel_path = get_cached_parcel_path_csv(name, 'all')
+        print('Reading')
+        parcel_data = pd.read_csv(parcel_path, engine='python', index_col = 0)
+        parcel_data['city'] = name
+        parcel_data['jobcenter'] = parcel_data['place'].apply(lambda x: x in jobcenters)
+        print('Calculating distances')
+        lat1 = zoning_input.lat * np.ones((parcel_data.shape[0]))
+        lon1 = zoning_input.long * np.ones((parcel_data.shape[0]))
+        lat2 = parcel_data['lat']
+        lon2 = parcel_data['long']
+        parcel_data['dist_to_center'] = sf.haversine(point1 = None, point2 = None,
+                                                     lat1 = lat1, lon1 = lon1,
+                                                     lat2 = lat2, lon2 = lon2)
+        parcel_level_data = parcel_level_data.append(parcel_data)
+        print('Finished with {}'.format(name))
+
+    # This data is by city
+    landuse_data = landuse_data.loc[landuse_data['dist_to_center'] < 50]
+    lotsize_data = lotsize_data.loc[(lotsize_data['dist_to_center'] < 50) & (lotsize_data['mean_lot_size'] < 150000)]  # Gets rid of one outlier
+
+    # This is unaggregated parcel data.
+
+    sfplot = (ggplot(landuse_data.loc[landuse_data['broad_zone'] == 'Single Family'],
+                    aes(x = 'dist_to_center', y = 'Percent of Land Used', size = 'area', shape = 'jobcenter', fill = 'city', label = 'place'))
+             + geom_point()
+             + geom_text(nudge_y = 0.025)
+             + facet_wrap('~city')
+             + labs(title = 'Percent of Land Developed as Single Family in Various Municipalities in the Texas Triangle',
+                    x = 'Distance from City Center (Miles)',
+                    y = 'Percent of Land Used as Single Family'))
+    sfplot.save('Figures/Suburbs/sf_landuse_scatterplot.svg', width = 8.5, height = 11)
+
+    mfplot = (ggplot(landuse_data.loc[landuse_data['broad_zone'] == 'Multifamily'],
+                    aes(x = 'dist_to_center', y = 'Percent of Land Used', size = 'area', shape = 'jobcenter', fill = 'city'))
+             + geom_point()
+             + facet_wrap('~city'))
+
+    lplot = (ggplot(lotsize_data.loc[lotsize_data['broad_zone'] == 'Single Family'],
+                    aes(x = 'dist_to_center', y = 'mean_lot_size', size = 'area', shape = 'jobcenter', fill = 'city', label = 'place'))
+             + geom_point()
+             + scale_y_log10()
+             + geom_text(nudge_y=0.025)
+             + facet_wrap('~city')
+             + labs(title='Average Single Family Lotsize in Various Municipalities in the Texas Triangle',
+                    x='Distance from City Center (Miles)',
+                    y='Average Single Family Lotsize'))
+    lplot.save('Figures/Suburbs/sf_lotsize_scatterplot.svg', width = 8.5, height = 11)
 
 def plot_choropleth_close_to_point(lat, long, zoning_input, gdf, spatial_index, save_path, column = None, num_polygons = 2500):
 
@@ -644,7 +731,4 @@ def plot_many_choropleths_close_to_points():
     plot_choropleth_close_to_point(33.1320136, -96.7185934, dallas_inputs, data, data.sindex, path, column = 'broad_zone')
 
 if __name__ == '__main__':
-
-    plot_land_use('austin', austin_inputs)
-    plot_land_use('dallas', dallas_inputs)
-    plot_land_use('houston', houston_inputs)
+    suburbs_scatterplot()
