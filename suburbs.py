@@ -32,6 +32,10 @@ def get_cached_parcel_path(name, level):
 def get_cached_parcel_path_csv(name, level):
     return 'data/parcels/cached/{}_{}_parcels/parcels.csv'.format(name, level)
 
+
+def get_municipality_choropleth_path(name):
+    return 'Figures/Suburbs/{}_suburb_choropleth.html'.format(name)
+
 # Cache paths for Dallas
 all_dallas_parcel_path = 'data/parcels/cached/dallas_all_parcels/parcels.shp'
 all_dallas_zoning_path = 'data/Zoning Shapefiles/processed_north_texas_data/zones.shp'
@@ -427,9 +431,6 @@ def get_all_houston_parcel_data():
 
     print('Finished saving, time is {}'.format(time.time() - time0))
 
-def get_municipality_choropleth_path(name):
-    return 'data/caches/suburbs/{}_municipality_calculations/municipality_calculations.shp'.format(name)
-
 # Commuting ------------------------------------------------------------------------------------------------------
 def analyze_transportation_networks(names, zoning_inputs, num_blocks = 5000, step = 2.5, maximum = 60):
 
@@ -551,22 +552,53 @@ def analyze_land_use_by_metro(name):
     lotsize_calculations = lotsize_means.merge(lotsize_medians, on = ['broad_zone', 'place'], how = 'outer')
     lotsize_calculations.to_csv(lot_size_by_municipality_path(name))
 
-def plot_land_use(name, subset_by = None, subset_values = None):
+def plot_land_use(name, zoning_input, colors = ['purple', 'red', 'orange', 'yellow', 'white'], method = 'linear'):
 
-    # Read lotsize, zoning data and subset
+    # Read lotsize, landuse data
     lotsize_data = pd.read_csv(lot_size_by_municipality_path(name), index_col = 0)
     landuse_data = pd.read_csv(land_use_by_municipality_path(name), index_col = 0)
 
-    # Subset
-    if subset_by is not None:
-        lotsize_data = lotsize_data.loc[lotsize_data[subset_by].isin(subset_values)]
-        landuse_data = landuse_data.loc[landuse_data[subset_by].isin(subset_values)]
+    # Join to polygon data
+    texas_place_shapes = gpd.read_file(texas_places_path)
+    texas_place_shapes['dist_to_center'] = sf.calculate_dist_to_center(texas_place_shapes, zoning_input)
+    texas_place_shapes = texas_place_shapes.sort_values('dist_to_center')
+    texas_place_shapes.drop_duplicates(subset = ['NAME'], keep = 'first')
+    landuse_data = texas_place_shapes.merge(landuse_data, left_on = 'NAME', right_on = 'place', how = 'right')
+    lotsize_data = texas_place_shapes.merge(lotsize_data, left_on = 'NAME', right_on = 'place', how = 'right')
 
-    # Plot land use
-    land_use_plot = ggplot(landuse_data, aes())
+    # Plot
+    basemap = folium.Map([zoning_input.lat, zoning_input.long], zoom_start = 9)
+    lotsize_data['mean_lot_size'] = 100*lotsize_data['mean_lot_size'].astype(float)
+    landuse_data['Percent of Land Used'] = 100*landuse_data['Percent of Land Used'].astype(float)
 
+    # Lot size for single family only
+    choropleth.continuous_choropleth(lotsize_data.loc[lotsize_data['broad_zone'] == 'Single Family'],
+                                     'mean_lot_size',
+                                     layer_name = 'Mean Single Family Lot Size',
+                                     scale_name = 'Mean Single Family Lot Size (Sqft)',
+                                     colors=colors, method=method, round_method = 'log10', show=False,
+                                     basemap=basemap)
 
+    # Percent of land used for single family
+    choropleth.continuous_choropleth(landuse_data.loc[landuse_data['broad_zone'] == 'Single Family'],
+                                     'Percent of Land Used',
+                                     layer_name = 'Percent of Land Developed as Single Family',
+                                     scale_name = 'Percent of Land Developed as Single Family',
+                                     colors=colors, method=method, round_method = 'int', show=False,
+                                     basemap=basemap)
 
+    # Percent of land used for Multifamily
+    choropleth.continuous_choropleth(landuse_data.loc[landuse_data['broad_zone'] == 'Multifamily'],
+                                     'Percent of Land Used',
+                                     layer_name = 'Percent of Land Developed as Multifamily',
+                                     scale_name = 'Percent of Land Developed as Multifamily',
+                                     colors=colors, method=method, round_method = 'int', show=False,
+                                     basemap=basemap)
+
+    folium.TileLayer('cartodbdark_matter').add_to(basemap)
+    folium.TileLayer('CartoDB positron').add_to(basemap)
+    folium.LayerControl().add_to(basemap)
+    basemap.save(get_municipality_choropleth_path(name))
 
 def plot_choropleth_close_to_point(lat, long, zoning_input, gdf, spatial_index, save_path, column = None, num_polygons = 2500):
 
@@ -613,4 +645,6 @@ def plot_many_choropleths_close_to_points():
 
 if __name__ == '__main__':
 
-    plot_land_use('austin', subset_by = 'place', subset_values = austin_job_centers)
+    plot_land_use('austin', austin_inputs)
+    plot_land_use('dallas', dallas_inputs)
+    plot_land_use('houston', houston_inputs)

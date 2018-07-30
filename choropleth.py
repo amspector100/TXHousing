@@ -29,7 +29,6 @@ from BindColorMap import *
 # 1. Add legend functionality for categorical choropleth, somehow.
 
 # Globals
-os.chdir("C:/Users/amspe/Documents/R/MI2018/TXHousing")
 global_weight = 1
 global_alpha = 0.6
 
@@ -110,8 +109,9 @@ def categorical_choropleth(gdf, factor, colors = None, quietly = False, weight =
     return gjson
 
 #  continuous colormap
-def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = global_weight, alpha = global_alpha, colors = None, start_color = 'white',
-                          mid_color = '#00ccff', end_color = '#000066', method = 'log', show = False, geometry_column = 'geometry', basemap = None):
+def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = global_weight, alpha = global_alpha, colors = None,
+                          start_color = 'white', mid_color = '#00ccff', end_color = '#000066', method = 'log', round_method = None,
+                          show = False, geometry_column = 'geometry', basemap = None):
     """
     :param gdf: Geodataframe
     :param factor: factor for analysis
@@ -123,6 +123,8 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = g
     :param start_color: I.e. white, for min data. Overridden by the "colors" parameter.
     :param mid_color: I.e. gray, for middle of data. Overridden by the "colors" parameter.
     :param end_color: I.e. black, for max data. Overridden by the "colors" parameter.
+    :param method: The method by which the color scale is generated. Defaults to 'log', can also be 'quant' or 'linear'
+    :param round_method: If you want to round the color scale to integer values, supply round_method = 'int'
     :param show: Show by default on start
     :param geometry_column: 'geometry'
     :param basemap: If not None, will add the colormap and a scale (bound together) to the baesmap as a layer.
@@ -130,16 +132,16 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = g
     """
 
     # Get rid of nas
-    gdf = gdf.loc[gdf[factor].notnull()]
+    gdf = gdf.loc[(gdf[factor].notnull()) & (gdf[geometry_column].notnull())]
 
     # Create colormap with caption
     min_data = gdf[factor].min()
     max_data = gdf[factor].max()
 
     if colors is not None:
-        colormap =  cm.LinearColormap(colors = colors, vmin = min_data, vmax = max_data).to_step(12, method = method)
+        colormap =  cm.LinearColormap(colors = colors, vmin = min_data, vmax = max_data).to_step(12, method = method, round_method = round_method)
     else:
-        colormap =  cm.LinearColormap(colors = [start_color, mid_color, end_color], vmin = min_data, vmax = max_data).to_step(12, method = method)
+        colormap =  cm.LinearColormap(colors = [start_color, mid_color, end_color], vmin = min_data, vmax = max_data).to_step(12, method = method, round_method = round_method)
     if scale_name is None:
         colormap.caption = layer_name
     else:
