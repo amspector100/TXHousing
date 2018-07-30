@@ -26,7 +26,7 @@ import helpers
 
 # For polygon gdfs: ignore multipolygons and make invalid polygons valid
 def process_geometry(gdf, geometry_column = 'geometry', drop_multipolygons = True):
-    gdf.loc[:, geometry_column] = gdf[geometry_column].apply(poly if poly.is_valid else poly.buffer(0))
+    gdf.loc[:, geometry_column] = gdf[geometry_column].apply(lambda poly: poly if poly.is_valid else poly.buffer(0))
     if drop_multipolygons:
         gdf = gdf.loc[gdf[geometry_column].apply(lambda x: isinstance(x, shapely.geometry.polygon.Polygon))]
     return gdf

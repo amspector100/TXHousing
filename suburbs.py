@@ -427,7 +427,6 @@ def get_all_houston_parcel_data():
 
     print('Finished saving, time is {}'.format(time.time() - time0))
 
-
 def get_municipality_choropleth_path(name):
     return 'data/caches/suburbs/{}_municipality_calculations/municipality_calculations.shp'.format(name)
 
@@ -527,7 +526,6 @@ def land_use_by_municipality_path(name):
 
 def lot_size_by_municipality_path(name):
     return 'data/caches/suburbs/{}_lot_size_by_municipality.csv'.format(name)
-
 
 def analyze_land_use_by_metro(name):
 

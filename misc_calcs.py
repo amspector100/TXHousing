@@ -2,6 +2,7 @@ from inputs import *
 from helpers import *
 import spatial_functions as sf
 from tqdm import tqdm
+from functools import reduce
 
 import time
 import numpy as np
@@ -13,12 +14,12 @@ from plotnine import *
 
 
 special_setbacks_and_lots = False
-calc_percent_residential = False
+calc_percent_residential_in_block_groups = False
 calc_landmarks_in_houston = False
 calc_parking_cost = False
-calc_percent_used = False
+calc_percent_used = True
 validate_parcel_results = False
-calc_overlays = True
+calc_overlays = False
 
 calculate = False
 
@@ -34,21 +35,21 @@ if special_setbacks_and_lots:
     # Find areas
     special_setbacks = sf.get_area_in_units(special_setbacks) # Remember, this defaults to miles
     special_lots = sf.get_area_in_units(special_lots)
-    print(special_setbacks['area'].sum())
-    print(special_lots['area'].sum())
+    print('Special setbacks area', special_setbacks['area'].sum())
+    print('Special lots area', special_lots['area'].sum())
 
     # Find population in the particular areas - B01001e1 is the column which counts population in he block data
     block_data = sf.get_block_geodata(['X01_AGE_AND_SEX'], cities = 'Houston')
     special_lots = sf.get_all_averages_by_area(block_data, special_lots, fillna = 0) # Defaults to getting pop data
     special_setbacks = sf.get_all_averages_by_area(block_data, special_setbacks, fillna = 0)
 
-    print(special_lots['B01001e1'].sum())
-    print(special_setbacks['B01001e1'].sum())
+    print('Special lots population', special_lots['B01001e1'].sum())
+    print('Special setbacks population', special_setbacks['B01001e1'].sum())
 
 
-# Calculate percent of land that is residential ------------------------------ (Austin/Dallas) ---------------------------------------------------- Calculate percent of land that is residential
+# Calculate percent of land that is residential for block groups -------------------- (Austin/Dallas) ---------------------------------------------------- Calculate percent of land that is residential
 
-if calc_percent_residential:
+if calc_percent_residential_in_block_groups:
     # Get block and zoning data
     block_data = sf.get_block_geodata(['X19_INCOME'], cities = ['Austin', 'Dallas'])
     austin_block_data = block_data['Austin']
@@ -92,10 +93,6 @@ if calc_landmarks_in_houston:
     tx_hd_data = gpd.read_file(tx_hd_path)
     houston_nat_districts = tx_hd_data.loc[tx_hd_data['CITY'] == 'Houston'].to_crs({'init':'epsg:4326'})
     houston_block_data = sf.get_block_geodata(['X01_AGE_AND_SEX'], cities = 'Houston')
-    fig, ax = plt.subplots()
-    houston_block_data.plot(ax = ax, column = 'B01001e1', edgecolor = 'black', legend = True)
-    houston_nat_districts.plot(ax = ax, color = 'blue', alpha = 0.5)
-    plt.show()
 
     # Calculate number of points in polygons
     num_points = sf.points_over_area(houston_landmarks, houston_nat_districts, normalize_by_area = False)
@@ -110,7 +107,7 @@ if calc_parking_cost:
 
     if calculate:
 
-        def subset_to_core(name, path, zoning_input, value_feature, area_feature = None, merge_path = None, left_on = None, right_on = None, parcel_data = None, write_file = False):
+        def subset_to_core(name, path, zoning_input, value_feature, area_feature = None, merge_path = None, left_on = None, right_on = None, parcel_data = None, write_file = True):
 
             if parcel_data is None:
                 # Read parcel data
@@ -127,7 +124,10 @@ if calc_parking_cost:
                     extra_data = extra_data.drop_duplicates(subset = right_on, keep = 'first')
                     parcel_data = parcel_data.merge(extra_data, left_on = left_on, right_on = right_on, how = 'left')
 
-            # Transform
+            # Transform and drop duplicates
+            parcel_data['centroids_string'] = parcel_data['geometry'].centroid.astype(str)
+            parcel_data = parcel_data.drop_duplicates(subset = 'centroids_string', keep = 'first')
+
             if parcel_data.crs != {'init':'epsg:4326'} and parcel_data.crs is not None:
                 parcel_data = parcel_data.to_crs({'init':'epsg:4326'})
             elif parcel_data.crs is None:
@@ -196,23 +196,25 @@ if calc_parking_cost:
     maximum = all_data['val_per_sqft'].quantile(.95)
     all_data.loc[all_data['val_per_sqft'] > maximum, 'val_per_sqft'] = maximum
 
-    print(ggplot(all_data, aes(x = 'val_per_sqft', fill = 'City', group = 'City'))
+    p = (ggplot(all_data, aes(x = 'val_per_sqft', fill = 'City', group = 'City'))
           + geom_histogram()
+          + labs(title = 'Property Values within 1 Mile of City Center in Texas Triangle',
+                 x = 'Value per Square Foot',
+                 y = 'Number of Parcels')
           + facet_wrap('~City'))
+    print(p)
+    p.save('Figures/property_value_histogram.svg', width = 10, height = 8)
 
 if calc_percent_used:
 
     from suburbs import process_lot_descriptions
-
-    def get_cached_use_percenatges_path(method):
-        return 'data/caches/percent_undeveloped_{}.csv'.format(method)
 
     warning_flag = True
 
     if calculate and warning_flag:
         raise Warning('You just tried to recalculate the percent of land that is undeveloped in each city. The problem is that'
                       'redoing this will actually add extra columns on and mess up the CSVs. On this run, I threw an exception.'
-                      'If you are totally sure you want to do this, change "warning_flag" to True in line 2015 in misc_calcs.py.'
+                      'If you are totally sure you want to do this, change "warning_flag" to False in line 214 in misc_calcs.py.'
                       'But make sure it is really what you want.')
     elif calculate:
 
@@ -271,17 +273,17 @@ if calc_percent_used:
     all_data['smoothed_dist_to_center'] = all_data['dist_to_center'].apply(np.ceil)
 
     # Medians
-    medians = all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['percent_undeveloped'].median().reset_index()
-    medians.to_csv(get_cached_use_percenatges_path('median'))
+    medians = (100*(all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['percent_undeveloped'].median())).reset_index()
+    medians = medians.rename(columns = {'percent_undeveloped':'percent_undeveloped_median'})
 
     # Simple means
-    simple_means = all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['percent_undeveloped'].mean().reset_index()
-    simple_means.to_csv(get_cached_use_percenatges_path('simple_mean'))
+    simple_means = (100*(all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['percent_undeveloped'].mean())).reset_index()
+    simple_means = simple_means.rename(columns = {'percent_undeveloped':'percent_undeveloped_simple_mean'})
 
     # Weighted means
     total_areas = all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['area'].sum()
-    total_developed_area = all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['developed_sqft'].sum(skipna = True)
-    weighted_means = total_developed_area.divide(total_areas).rename(columns = {0:'percent_undeveloped'})
+    total_developed_area = (100*(all_data.groupby(['smoothed_dist_to_center', 'broad_zone', 'City'])['developed_sqft'].sum(skipna = True)))
+    weighted_means = total_developed_area.divide(total_areas)
 
     def replace_high_values(x):
         if x > 1:
@@ -289,8 +291,22 @@ if calc_percent_used:
         else:
             return x
 
-    weighted_means = weighted_means.apply(replace_high_values).reset_index()
-    weighted_means.to_csv(get_cached_use_percenatges_path('weighted_means'))
+    weighted_means = weighted_means.apply(replace_high_values).reset_index().rename(columns = {0:'percent_undeveloped_weighted_average'})
+
+    all_results = reduce(lambda left, right: pd.merge(left, right, on = ['broad_zone', 'smoothed_dist_to_center', 'City'], how = 'outer', sort = False),
+                         [weighted_means, simple_means, medians])
+    all_results.to_csv('shared_data/percent_undeveloped.csv')
+
+    # Now graph
+    all_results = all_results.loc[all_results['broad_zone'] == 'Single Family']
+    all_results = all_results.loc[all_results['smoothed_dist_to_center'] < 11]
+    p = (ggplot(all_results, aes(x = 'smoothed_dist_to_center', y = 'percent_undeveloped_simple_mean', fill = 'City', group = 'City'))
+         + geom_col(position = 'dodge')
+         + labs(title = 'Percent of Area of Single Family Lots which are Undeveloped',
+                x = 'Distance from City Center',
+                y = 'Simple Mean of Undeveloped Percentage of SF Lots'))
+    print(p)
+    p.save('Figures/Bucket 2/percent_undeveloped.svg', width = 10, height = 8)
 
 if validate_parcel_results:
 
