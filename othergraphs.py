@@ -70,58 +70,6 @@ if min_lot_size:
     if plot:
         plt.show()
 
-# far graph -------------------------------------
-
-if far:
-    dallas_zones['far'] = get_regulation_data(dallas_zones[dallas_inputs.feature], dallas_regulations_path, 'far', fill = None)
-    austin_zones['far'] = get_regulation_data(austin_zones[austin_inputs.feature], austin_regulations_path, 'far', fill = None)
-
-    print('Far, intersection 1')
-    dallas_far_radii = sf.polygons_intersect_rings(dallas_zones, dallas_inputs, factor='far', categorical=False,
-                                                                            newproj='epsg:2276', step=0.5, maximum = 5)
-
-    print('Far, intersection 2')
-    austin_far_radii = sf.polygons_intersect_rings(austin_zones, austin_inputs, factor='far', categorical=False,
-                                                                            newproj='epsg:2277', step=0.5, maximum = 5)
-
-    fardata = pd.concat([dallas_far_radii, austin_far_radii], axis = 1)
-    fardata.columns = ['Dallas', 'Austin']
-    fardata.plot(kind='bar', legend = True)
-    plt.title('Floor to Area Ratio in Austin and Dallas')
-    plt.xlabel('Distance from the city center (Miles)')
-    plt.ylabel('Floor to Area Ratio')
-    if save:
-        plt.savefig('Figures/Bucket 2/FAR.png', bbox_inches = 'tight')
-    if plot:
-        plt.show()
-
-# coverage --------------------------------------------------------
-if coverage:
-    dallas_zones['coverage'] = get_regulation_data(dallas_zones[dallas_inputs.feature], dallas_regulations_path, 'coverage', fill = 100)
-    austin_zones['max_build_cov'] = get_regulation_data(austin_zones[austin_inputs.feature], austin_regulations_path, 'max_build_cov', fill = 100)
-
-    print(dallas_zones['coverage'])
-
-    print('cov, intersection 1')
-    cov_dallas = sf.polygons_intersect_rings(dallas_zones, dallas_inputs, factor='coverage', categorical=False,
-                                                                            newproj='epsg:2276', step=1, maximum = 19)
-
-    print('cov, intersection 2')
-    cov_austin = sf.polygons_intersect_rings(austin_zones, austin_inputs, factor='max_build_cov', categorical=False,
-                                                                            newproj='epsg:2277', step=1, maximum = 19)
-
-    coverage_data = pd.concat([cov_dallas, cov_austin], axis = 1)
-    coverage_data.columns = ['Dallas', 'Austin']
-    coverage_data.plot(kind='bar', legend = True)
-    plt.title('Maximum Building Coverage in Austin and Dallas')
-    plt.xlabel('Distance from the city center (Miles)')
-    plt.ylabel('Max Building Coverage (%)')
-    if save:
-        plt.savefig('Figures/Bucket 2/BldgCoverage.png', bbox_inches = 'tight')
-    if plot:
-        plt.show()
-
-
 if plot_permits:
 
     austin_permit_data = process_austin_permit_data(searchfor=['101 single family houses',
@@ -135,13 +83,12 @@ if plot_permits:
         if '101' in text:
             return 'Single Family Permit'
         else:
-            return 'Mutifamily Permit'
+            return 'Multifamily Permit'
 
     austin_permit_data['PermitClass'] = austin_permit_data['PermitClass'].apply(map_permitclass)
 
     austin_permit_rings = sf.points_intersect_rings(austin_permit_data, austin_inputs, factor = 'PermitClass', step = 1, categorical = True, maximum = 10)
     austin_permit_rings['city'] = 'Austin'
-    print(austin_permit_rings)
     print('Finished with Austin, time is {}'.format(time.time() - time0))
 
     dallas_permit_data = get_corrected_dallas_permit_data()  # Get dallas permit data from the saved file with CORRECTED geocodes and the original columns.
@@ -161,12 +108,9 @@ if plot_permits:
     houston_permit_data.loc[houston_permit_data['PROJ_DESC'].str.contains('|'.join(['NEW S.F.', 'NEW SF', 'NEW TOWNHOUSE', 'NEW SINGLE'])), 'Permit Type'] = 'Single Family Permit'
     houston_permit_rings = sf.points_intersect_rings(houston_permit_data, houston_inputs, factor='Permit Type', step=1, categorical=True,  maximum = 10)
     houston_permit_rings['city'] = 'Houston'
-    print(houston_permit_rings)
     print('Finished with Houston, time is {}'.format(time.time() - time0))
 
-    all_permit_data = pd.concat([austin_permit_rings, dallas_permit_rings, houston_permit_rings], axis = 1)
-    all_permit_data['dist_to_center'] = all_permit_data.index
-    all_permit_data.reset_index()
+    all_permit_data = pd.concat([austin_permit_rings, dallas_permit_rings, houston_permit_rings], axis = 0).reset_index()
     print(all_permit_data)
 
     # Format distances properly
@@ -178,20 +122,26 @@ if plot_permits:
             return text
     all_permit_data['dist_to_center'] = all_permit_data['dist_to_center'].apply(format_distance)
 
+    all_permit_data = pd.melt(all_permit_data, var_name = 'permit_type', value_name = 'num_permits', id_vars = ['city', 'dist_to_center'])
+
+
     # Order the distances properly
     from pandas.api.types import CategoricalDtype
     distances_cat = CategoricalDtype(categories = all_permit_data['dist_to_center'].unique(), ordered = True)
     all_permit_data['dist_to_center'] = all_permit_data['dist_to_center'].astype('category')
-    all_permit_data['dist_to_center'] = all_permit_data['dist_to_center'].cat.reorder_categories(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '10+'])
-    print(all_permit_data)
-    all_permit_data = all_permit_data.melt(var_name = 'permit_type', value_name = 'num_permits', id_vars = ['city', 'dist_to_center'])
+    all_permit_data['dist_to_center'] = all_permit_data['dist_to_center'].cat.reorder_categories(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
 
 
-    permit_plot = (ggplot(all_permit_data, aes(x = 'dist_to_center', y = 'num_permits', color = 'city'))
+    permit_plot = (ggplot(all_permit_data, aes(x = 'dist_to_center', y = 'num_permits', fill = 'city'))
                    + geom_col(position = 'dodge')
-                   + facet_wrap('~Permit Type'))
+                   + facet_wrap('~permit_type', scales = 'free')
+                   + theme_bw()
+                   + labs(title = 'Construction Permits Issued by Distance from City Center in Texas Triangle',
+                          x = 'Distance from City Center (Miles)',
+                          y = 'Number of Construction Permits Issued per Square Mile')
+                   + scale_x_discrete(expand=(0, 0.1)))
     print(permit_plot)
-
+    permit_plot.save('Figures/Bucket 2/all_cities_permit_rings.svg', width = 10, height = 8)
 
 
 
