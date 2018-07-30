@@ -286,8 +286,8 @@ if calc_percent_used:
     weighted_means = total_developed_area.divide(total_areas)
 
     def replace_high_values(x):
-        if x > 1:
-            return 1
+        if x > 100:
+            return 100
         else:
             return x
 
@@ -302,7 +302,7 @@ if calc_percent_used:
     all_results = all_results.loc[all_results['smoothed_dist_to_center'] < 11]
     p = (ggplot(all_results, aes(x = 'smoothed_dist_to_center', y = 'percent_undeveloped_simple_mean', fill = 'City', group = 'City'))
          + geom_col(position = 'dodge')
-         + labs(title = 'Percent of Area of Single Family Lots which are Undeveloped',
+         + labs(title = 'Undeveloped Area of Single Family Lots in Texas Triangle',
                 x = 'Distance from City Center',
                 y = 'Simple Mean of Undeveloped Percentage of SF Lots'))
     print(p)
