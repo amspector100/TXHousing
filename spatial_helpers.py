@@ -15,16 +15,16 @@ import spatial_functions as sf
 # and therefore require importing the spatial_functions model. Most of these functions are run once and then cached and
 # never run again (hopefully).
 
-def process_travis_parcel_data():
+def process_harris_parcel_data():
 
     time0 = time.time()
     print('Reading Houston parcel data')
-    parcel_data = gpd.read_file(travis_parcel_path_2018)
+    parcel_data = gpd.read_file(harris_parcel_path_2018)
     print('Finished reading Houston parcel data, time is {}. Now transforming.'.format(time.time() - time0))
 
     # Get rid of bad geometries and process crs. This eliminiates 5,000 out of nearly 1.5 million parcels so is rather negligible.
-    parcel_data = parcel_data.loc[[not bool for bool in parcel_data['geometry'].apply(lambda x: x is None)]]
-    parcel_data = parcel_data.loc[[not bool for bool in parcel_data['geometry'].apply(lambda x: x.is_empty)]]
+    parcel_data = parcel_data.loc[~parcel_data['geometry'].apply(lambda x: x is None)]
+    parcel_data = parcel_data.loc[~parcel_data['geometry'].apply(lambda x: x.is_empty)]
     parcel_data = parcel_data.loc[parcel_data['geometry'].apply(lambda x: isinstance(x, shapely.geometry.polygon.Polygon))]
     parcel_data = parcel_data.to_crs({'init':'epsg:4326'})
     print('Finished transforming, time is {}. Now subsetting.'.format(time.time() - time0))
@@ -59,8 +59,6 @@ def process_travis_parcel_data():
 
     print('Saving')
     houston_parcels.to_file(houston_parcel_path_2018)
-    print('Plotting')
-    houston_parcels.plot()
-    plt.show()
+
 
     return houston_parcels

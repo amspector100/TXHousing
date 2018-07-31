@@ -12,3 +12,13 @@ Property Data Processing
 ------------------------
 .. automodule:: property
   :members:
+
+Parcel Data Processing
+----------------------
+.. automodule:: parcel
+  :members:
+
+Permit Data Processing
+----------------------
+.. automodule:: parcel
+  :members:

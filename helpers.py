@@ -130,8 +130,6 @@ def get_regulation_data(zones, regulations_path, regulation_feature, fill = None
 
     reg_data = reg_data[regulation_feature]
     reg_data.index = [str(ind) for ind in reg_data.index]
-    # Add missing object just in case
-
 
     # Fill missing values
     if fill is None:

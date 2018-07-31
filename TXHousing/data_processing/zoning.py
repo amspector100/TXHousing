@@ -24,7 +24,7 @@ class Zoning_Input():
         self.crs = crs
         self.regulations_path = regulations_path
 
-    def process_zoning_shapefile(self, overlay = {'-MU':'Multifamily'}, broaden = True, parse_base_zones = True, quietly = False):
+    def process_zoning_shapefile(self, overlay = {'-MU':'Multifamily'}, broaden = True, parse_base_zones = True, regulation_features = None, quietly = False):
         """
         :param broaden: Default true. If true, will decode zoning data into a broader classification (i.e. sf, mf)
             as specified by the zoning input class - this processed zoning data will go in a column labelled "broad_zone."
@@ -34,6 +34,7 @@ class Zoning_Input():
             the function recognize that mixed-use zones are multifamily zones.
         :param parse_base_zones: Boolean. Default true. If true, will use the regulations path provided by the input to
             parse the base zones of the zoning data.
+        :param regulation_features: A list of features to retrieve from the regulation data. Default None.
         :param quietly: Default false. If true, will suppress all print statements and make the function "quiet"
         :type quietly: Boolean
         """
@@ -63,11 +64,14 @@ class Zoning_Input():
                 for key in [key for key in overlay]:
                     raw_data.loc[raw_data[self.feature].str.contains(key), 'broad_zone'] = overlay[key]
 
+        # Parse base zones and retrieve regulatory data
         if parse_base_zones:
 
             if self.regulations_path is not None:
 
-                # Get regulations data - we only read this in because we need the list of base zones.
+                # Start by parsing base zones ------------
+
+                # Get regulations data - this has all the data and the list of base zones.
                 reg_data = pd.read_csv(self.regulations_path, index_col=0, encoding='Latin-1')
 
                 # If the data includes non-base zones, only include base zones in this particular search
@@ -85,8 +89,15 @@ class Zoning_Input():
                             return i
                     return 'Unknown'
 
-                # Apply
+                # Apply and get base zone
                 raw_data['base_zone'] = raw_data[self.feature].apply(process_zone)
+
+                # Now get regulation features ------------
+                if regulation_features is not None:
+                    if isinstance(regulation_features, str):
+                        regulation_features = [regulation_features]
+                    for regulation_feature in regulation_features:
+                        raw_data[regulation_feature] = raw_data['base_zone'].map(reg_data[regulation_feature])
 
             else:
                 warnings.warn(
