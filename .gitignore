@@ -1,8 +1,17 @@
-# Don't copy the data over
+# _____ Custom for this project ____
+
+# Don't track the data over
 data/
 
-# Don't copy any large figures
+# Don't track any large figures
 Figures/Large Files/
+
+# Don't track unnecessary docs
+_static/
+_templates/
+
+# Don't track the random tests I make
+test/
 
 # _____ R Defaults _______
 # History files

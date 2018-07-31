@@ -1,9 +1,8 @@
-import numpy as np
 import datetime as dt
 import time
 import pandas as pd
 import geopandas as gpd
-import fiona
+import warnings
 import shapely.geometry
 import matplotlib.pyplot as plt
 from inputs import *
@@ -50,13 +49,10 @@ def will_it_float(text):
 
 def process_zoning_shapefile(input, overlay = {'-MU':'Multifamily'}, broaden = True, parse_base_zones = True):
     """"
-    Processes shapefile.
     :param input: An input, of class 'zoning_inputs.'
     :param broaden: Boolean. Default true. If true, will decode zoning data into a broader classification (i.e. sf, mf)
     as specified by the zoning input class - this processed zoning data will go in a column labelled "broad_zone."
-    :param overlay: A dictionary which maps overlay strings to broadened outputs. This is mostly useful for dealing with
-    mixed use overlays in austin (there are no mixed-use base zones, so passing in {'-mu':'Multifamily'} will help the
-    function recognize that mixed-use zones are multifamily zones.
+    :param overlay: A dictionary which maps overlay strings to broadened outputs. This is mostly useful for dealing with mixed use overlays in austin (there are no mixed-use base zones, so passing in '-mu':'Multifamily'} will help the function recognize that mixed-use zones are multifamily zones.
     """
 
     # Begin timing
@@ -64,8 +60,7 @@ def process_zoning_shapefile(input, overlay = {'-MU':'Multifamily'}, broaden = T
 
     # Make sure input is correct
     if isinstance(input, zoning_inputs) == False:
-        warning('Error, Input must be of class zoning_inputs')
-        return None
+        TypeError('Input must be of class zoning_inputs')
 
     # Read data and process zone codes
     print('Reading file')
@@ -123,8 +118,7 @@ def get_regulation_data(zones, regulations_path, regulation_feature, fill = None
     :param zones: a pandas series of zoning.
     :param regulations_path: The path for the data which specifies regulations by base zone or zone code.
     :param regulation_feature: The feature of interest to find by zone.
-    :param fill: How to fill na values inside the specific regulation feature, i.e. 0. Defaults to None, will leave empty
-    values as empty.
+    :param fill: How to fill na values inside the specific regulation feature, i.e. 0. Defaults to None, will leave empty values as empty.
     :return: A series of the desired regulation feature, i.e. minimum lot size.
     """
 
@@ -377,12 +371,12 @@ def process_austin_permit_data(searchfor, permittypedesc = None, workclass = Non
                                earliest = None, latest = None):
     """
     :param searchfor: List of strings to search for in the 'PermitClass' and 'Description' columns. Often it's worth
-    explicitly passing in permit classes, i.e. searchfor = ['101 single family houses'].
+        explicitly passing in permit classes, i.e. searchfor = ['101 single family houses'].
     :param permittypedesc: The permittypedesc to match. Ex: "Building Permit."
     :param workclass: Workclass to match. Ex: "New"
     :param earliest: Earliest date to consider (inclusive). Data runs from 1971-2018.
     :param latest: Latest date to consider (inclusive). Data runs from 1971-2018.
-    :return: GeoDataFrame of subsetted permit data
+    :return: GeoDataFrame of subsetted permit data.
     """
 
     time0 = time.time()
@@ -428,17 +422,20 @@ def process_austin_permit_data(searchfor, permittypedesc = None, workclass = Non
     print('Finished processing Austin permit data, took {}.'.format(time.time() - time0))
     return construction
 
-# Pretty self explanatory, except ONLY use this if you don't want to use the corrected data. Dallas permit data
-# has some incorrect lat and longs near the center of the city, which have been corrected and stored at
-# dpm_save_path (listed in inputs) using the zipcode_scrape.py functions.
+
 def process_dallas_permit_data(permit_types, earliest = None, latest = None):
     """
-    :param permit_types: List of permit types to filter for. Will only consider rows where the permit type is one of these
-    permit types.
+    :param permit_types: List of permit types to filter for. Will only consider rows where the permit type is one of
+        these permit types.
     :param earliest: Earliest date to consider. Data runs from 2011-2016. Defaults to None.
     :param latest: Latest date to consider. Data runs from 2011-2016. Defaults to None.
+    :raises: UserWarning; some permit data is incorrect. Construction data has been corrected, and the corrected data is
+        stored at 'dpm_save_path' as listed in the inputs.py file.
     :return: GeoDataFrame of subsetted permit data
     """
+
+    warnings.warn("""Some permit data is incorrect. It has been corrected and the corrected data is stored at 
+    "dpm_save_path" as listed in the inputs.py file.""")
 
     permit_data = pd.read_csv(dallas_permit_path)
 
@@ -481,12 +478,11 @@ def process_dallas_permit_data(permit_types, earliest = None, latest = None):
     return construction
 
 
-def process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE'], 
-                                searchin = ['PROJ_DESC'], 
+def process_houston_permit_data(searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE'],
+                                searchin = ['PROJ_DESC'],
                                 kind = 'structural',
                                 earliest = None, latest = None):
-    """
-    Process houston permit data. Note that houston permit data does not specify whether housing is new or not, so I have
+    """ Process houston permit data. Note that houston permit data does not specify whether housing is new or not, so I have
     to parse the descriptions to figure out whether housing is new sf/new mf housing. Thankfully the descriptions
     are rather formulaic so this is not too hard to do.
     :param searchfor: A list of keywords to search for, i.e. ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE']).
