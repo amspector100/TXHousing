@@ -5,7 +5,7 @@ import pandas as pd
 import geopandas as gpd
 import warnings
 
-class zoning_inputs():
+class Zoning_Input():
 
     """ Simple class which binds information about zoning datasets. Also, the lat/long features define the city
         center for each city."""
@@ -103,7 +103,7 @@ class zoning_inputs():
         return raw_data
 
 # Downloaded from http://data-nctcoggis.opendata.arcgis.com/datasets/2015-land-use
-north_texas_inputs = zoning_inputs(path = 'data/Zoning Shapefiles/2015_North_Texas_Land_Use/2015_Land_Use.shp',
+north_texas_inputs = Zoning_Input(path = 'data/Zoning Shapefiles/2015_North_Texas_Land_Use/2015_Land_Use.shp',
                                    feature = 'CATEGORY',
                                    separator = 'no_separator',
                                    proj4string = 'EPSG:4326',
@@ -118,7 +118,7 @@ north_texas_inputs = zoning_inputs(path = 'data/Zoning Shapefiles/2015_North_Tex
 
 # Downloaded from https://data.austintexas.gov/Locations-and-Maps/Zoning/5rzy-nm5e
 austin_regulations_path = "shared_data/austin zoning standards.csv"
-austin_inputs = zoning_inputs(path = "data/Zoning Shapefiles/austin_zoning/geo_export_571668ee-52f1-4ac9-a4e0-3b8bb348eae7.shp",
+austin_inputs = Zoning_Input(path = "data/Zoning Shapefiles/austin_zoning/geo_export_571668ee-52f1-4ac9-a4e0-3b8bb348eae7.shp",
                               feature = 'zoning_zty',
                               separator = '-',
                               proj4string = 'EPSG:4326',
@@ -133,7 +133,7 @@ austin_inputs = zoning_inputs(path = "data/Zoning Shapefiles/austin_zoning/geo_e
 
 # From dallas's open data site
 dallas_regulations_path = 'shared_data/dallas zoning standards.csv'
-dallas_inputs = zoning_inputs(path = "data/Zoning Shapefiles/DallasBaseZoning/BaseZoning.shp",
+dallas_inputs = Zoning_Input(path = "data/Zoning Shapefiles/DallasBaseZoning/BaseZoning.shp",
                               feature = 'ZONE_DIST',
                               separator = '-',
                               proj4string = 'EPSG:2276',
@@ -149,7 +149,7 @@ dallas_inputs = zoning_inputs(path = "data/Zoning Shapefiles/DallasBaseZoning/Ba
                               regulations_path=dallas_regulations_path)
 
 # Houston has no base zones but this is useful for making maps
-houston_inputs = zoning_inputs(path = None,
+houston_inputs = Zoning_Input(path = None,
                                feature = None,
                                separator = None,
                                proj4string = None,

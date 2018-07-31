@@ -2,9 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="610eaf4e-4b7c-48de-a471-08db3eb6d393" name="Default" comment="">
+      <change beforePath="" afterPath="$PROJECT_DIR$/TXHousing/data_processing/parcel.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/TXHousing/data_processing/property.py" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/TXHousing/data_processing/__init__.py" afterPath="$PROJECT_DIR$/TXHousing/data_processing/__init__.py" />
       <change beforePath="$PROJECT_DIR$/TXHousing/data_processing/zoning.py" afterPath="$PROJECT_DIR$/TXHousing/data_processing/zoning.py" />
       <change beforePath="$PROJECT_DIR$/docs/source/index.rst" afterPath="$PROJECT_DIR$/docs/source/index.rst" />
-      <change beforePath="$PROJECT_DIR$/docs/source/zoning.rst" afterPath="$PROJECT_DIR$/docs/source/zoning.rst" />
+      <change beforePath="$PROJECT_DIR$/docs/source/zoning.rst" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/helpers.py" afterPath="$PROJECT_DIR$/helpers.py" />
+      <change beforePath="$PROJECT_DIR$/prop_values.py" afterPath="$PROJECT_DIR$/prop_values.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -15,11 +21,21 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
+      <file leaf-file-name="inputs.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/inputs.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="208">
+              <caret line="161" column="0" lean-forward="false" selection-start-line="161" selection-start-column="0" selection-end-line="170" selection-end-column="47" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="helpers.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/helpers.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="279" column="0" lean-forward="false" selection-start-line="279" selection-start-column="0" selection-end-line="279" selection-end-column="0" />
+            <state relative-caret-position="307">
+              <caret line="302" column="7" lean-forward="true" selection-start-line="302" selection-start-column="7" selection-end-line="302" selection-end-column="7" />
               <folding>
                 <element signature="e#0#21#0" expanded="true" />
               </folding>
@@ -27,47 +43,13 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="test_zoning.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/test/test_zoning.py">
+      <file leaf-file-name="property.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/property.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="21" column="87" lean-forward="false" selection-start-line="21" selection-start-column="87" selection-end-line="21" selection-end-column="87" />
+            <state relative-caret-position="136">
+              <caret line="8" column="21" lean-forward="true" selection-start-line="8" selection-start-column="21" selection-end-line="8" selection-end-column="21" />
               <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="chdir.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/TXHousing/chdir.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="5" column="26" lean-forward="false" selection-start-line="5" selection-start-column="26" selection-end-line="5" selection-end-column="26" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="zoning.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/zoning.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" column="32" lean-forward="false" selection-start-line="10" selection-start-column="32" selection-end-line="10" selection-end-column="32" />
-              <folding>
-                <element signature="e#72#83#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="othergraphs.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/othergraphs.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="653" column="39" lean-forward="false" selection-start-line="653" selection-start-column="39" selection-end-line="653" selection-end-column="39" />
-              <folding>
-                <element signature="e#0#20#0" expanded="true" />
+                <element signature="e#63#82#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -76,19 +58,41 @@
       <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+            <state relative-caret-position="0">
+              <caret line="0" column="41" lean-forward="false" selection-start-line="0" selection-start-column="41" selection-end-line="0" selection-end-column="41" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="zoning.rst" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/docs/source/zoning.rst">
+      <file leaf-file-name="parcel.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/parcel.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="1" column="54" lean-forward="false" selection-start-line="1" selection-start-column="54" selection-end-line="1" selection-end-column="54" />
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="zoning.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/zoning.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="136">
+              <caret line="11" column="0" lean-forward="true" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="test_processing.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/test_processing.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="663">
+              <caret line="39" column="41" lean-forward="false" selection-start-line="39" selection-start-column="41" selection-end-line="39" selection-end-column="41" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -96,8 +100,8 @@
       <file leaf-file-name="index.rst" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/docs/source/index.rst">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" column="22" lean-forward="false" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
+            <state relative-caret-position="204">
+              <caret line="12" column="18" lean-forward="false" selection-start-line="12" selection-start-column="18" selection-end-line="12" selection-end-column="18" />
               <folding />
             </state>
           </provider>
@@ -124,38 +128,41 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>address_dictionary</find>
-      <find>sptbcode_201</find>
-      <find>process_dallas_parcel_data</find>
-      <find>state_sptbcode_dictionary</find>
-      <find>extensions</find>
-      <find>spt</find>
-      <find>dpm_save_path)</find>
-      <find>import sys</find>
-      <find>Dallas</find>
-      <find>sp</find>
-      <find>nt_highways</find>
-      <find>nt_counties</find>
-      <find>zoning</find>
-      <find>austin</find>
-      <find>mport</find>
-      <find>TXHousing</find>
-      <find>import</find>
-      <find>&quot;&quot;&quot;</find>
-      <find>process_zoning_shapefile</find>
-      <find>self.proj4string</find>
-      <find>xlims</find>
-      <find>self.</find>
-      <find>zoning_input</find>
-      <find>austin_regulations_path</find>
-      <find>.crs =</find>
-      <find>.path</find>
-      <find>zon</find>
+      <find>feature</find>
       <find>input.</find>
+      <find>location</find>
+      <find>self.canvas</find>
+      <find>plt.show()</find>
+      <find>self.canvas.manager</find>
+      <find>self.canvas =</find>
+      <find>['name']</find>
+      <find>Zoning_input</find>
+      <find>self.geo_filter_parameters</find>
+      <find>self.geo_filter_class</find>
+      <find>geography =</find>
+      <find>geography =</find>
+      <find>self.geography</find>
+      <find>datetime</find>
+      <find>to_datetime</find>
+      <find>Qualit</find>
+      <find>zoning_inputs</find>
+      <find>raw_data[[</find>
+      <find>- Examples</find>
+      <find>self.feature</find>
+      <find>self.name</find>
+      <find>dallas_inputs</find>
+      <find>print(</find>
+      <find>realtore</find>
       <find>state_sptbcode</find>
-      <find>quietly</find>
+      <find>Demand_Input</find>
+      <find>H</find>
+      <find>Dem</find>
+      <find>process_property</find>
     </findStrings>
     <replaceStrings>
+      <replace>geo_filter_parameters</replace>
+      <replace>Zoning_Input</replace>
+      <replace />
       <replace>self.</replace>
     </replaceStrings>
   </component>
@@ -175,20 +182,23 @@
         <option value="$PROJECT_DIR$/docs/conf.py" />
         <option value="$PROJECT_DIR$/test/test1.py" />
         <option value="$PROJECT_DIR$/test/test2.py" />
-        <option value="$PROJECT_DIR$/inputs.py" />
         <option value="$PROJECT_DIR$/docs/source/helpers.rst" />
         <option value="$PROJECT_DIR$/data-processing/zoning.py" />
         <option value="$PROJECT_DIR$/helpers.py" />
         <option value="$PROJECT_DIR$/TXHousing/data-processing/__init__.py" />
         <option value="$PROJECT_DIR$/test/__init__.py" />
-        <option value="$PROJECT_DIR$/TXHousing/data_processing/__init__.py" />
         <option value="$PROJECT_DIR$/TXHousing/setup.py" />
         <option value="$PROJECT_DIR$/TXHousing/chdir.py" />
         <option value="$PROJECT_DIR$/docs/source/conf.py" />
-        <option value="$PROJECT_DIR$/test/test_zoning.py" />
+        <option value="$PROJECT_DIR$/inputs.py" />
+        <option value="$PROJECT_DIR$/docs/source/zoning.rst" />
         <option value="$PROJECT_DIR$/TXHousing/data_processing/zoning.py" />
         <option value="$PROJECT_DIR$/docs/source/index.rst" />
-        <option value="$PROJECT_DIR$/docs/source/zoning.rst" />
+        <option value="$PROJECT_DIR$/test/test_zoning.py" />
+        <option value="$PROJECT_DIR$/TXHousing/data_processing/property.py" />
+        <option value="$PROJECT_DIR$/test/test_processing.py" />
+        <option value="$PROJECT_DIR$/TXHousing/data_processing/__init__.py" />
+        <option value="$PROJECT_DIR$/TXHousing/data_processing/parcel.py" />
       </list>
     </option>
   </component>
@@ -247,6 +257,12 @@
               <item name="TXHousing" type="462c0819:PsiDirectoryNode" />
               <item name="TXHousing" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="TXHousing" type="b2602c69:ProjectViewProjectNode" />
+              <item name="TXHousing" type="462c0819:PsiDirectoryNode" />
+              <item name="TXHousing" type="462c0819:PsiDirectoryNode" />
+              <item name="data_processing" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -257,7 +273,8 @@
   </component>
   <component name="PropertiesComponent">
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyIntegratedToolsModulesConfigurable" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/TXHousing/data_processing/zoning.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/test/test_processing.py" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$2/Languages" value="Python" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -276,8 +293,26 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.test_zoning">
-    <configuration name="test_zoning" type="PythonConfigurationType" factoryName="Python">
+  <component name="RunManager" selected="Python.test_processing">
+    <configuration name="property" type="PythonConfigurationType" factoryName="Python">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Python36\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/TXHousing/data_processing" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="TXHousing" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/TXHousing/data_processing/property.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="test_processing" type="PythonConfigurationType" factoryName="Python">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -289,7 +324,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="TXHousing" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/test_zoning.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/test_processing.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -313,9 +348,10 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
-    <list size="2">
-      <item index="0" class="java.lang.String" itemvalue="Python.test_zoning" />
-      <item index="1" class="java.lang.String" itemvalue="Python.zoning" />
+    <list size="3">
+      <item index="0" class="java.lang.String" itemvalue="Python.test_processing" />
+      <item index="1" class="java.lang.String" itemvalue="Python.property" />
+      <item index="2" class="java.lang.String" itemvalue="Python.zoning" />
     </list>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
@@ -538,14 +574,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/inputs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4369">
-          <caret line="257" column="14" lean-forward="false" selection-start-line="257" selection-start-column="14" selection-end-line="257" selection-end-column="14" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/TXHousing/data-processing/zoning.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
@@ -594,14 +622,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/docs/source/conf.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
@@ -610,42 +630,78 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/helpers.py">
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="279" column="0" lean-forward="false" selection-start-line="279" selection-start-column="0" selection-end-line="279" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#21#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/othergraphs.py">
+    <entry file="file://C:/Python36/Lib/site-packages/matplotlib/backend_bases.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="653" column="39" lean-forward="false" selection-start-line="653" selection-start-column="39" selection-end-line="653" selection-end-column="39" />
-          <folding>
-            <element signature="e#0#20#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="291">
+          <caret line="200" column="32" lean-forward="true" selection-start-line="200" selection-start-column="32" selection-end-line="200" selection-end-column="32" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Python36/Lib/site-packages/matplotlib/backends/backend_tkagg.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="188">
+          <caret line="661" column="22" lean-forward="false" selection-start-line="661" selection-start-column="8" selection-end-line="661" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/zoning.rst">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="9" column="0" lean-forward="true" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/index.rst">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" column="18" lean-forward="false" selection-start-line="12" selection-start-column="18" selection-end-line="12" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/inputs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="208">
+          <caret line="161" column="0" lean-forward="false" selection-start-line="161" selection-start-column="0" selection-end-line="170" selection-end-column="47" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/test/test_zoning.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="21" column="87" lean-forward="false" selection-start-line="21" selection-start-column="87" selection-end-line="21" selection-end-column="87" />
+        <state relative-caret-position="374">
+          <caret line="27" column="28" lean-forward="false" selection-start-line="27" selection-start-column="28" selection-end-line="27" selection-end-column="28" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/test_processing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="663">
+          <caret line="39" column="41" lean-forward="false" selection-start-line="39" selection-start-column="41" selection-end-line="39" selection-end-column="41" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/zoning.py">
+    <entry file="file://$PROJECT_DIR$/othergraphs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="32" lean-forward="false" selection-start-line="10" selection-start-column="32" selection-end-line="10" selection-end-column="32" />
+        <state relative-caret-position="85">
+          <caret line="657" column="33" lean-forward="false" selection-start-line="657" selection-start-column="33" selection-end-line="657" selection-end-column="33" />
           <folding>
-            <element signature="e#72#83#0" expanded="true" />
+            <element signature="e#0#20#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -658,18 +714,46 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/docs/source/index.rst">
+    <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/zoning.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="22" lean-forward="false" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
+        <state relative-caret-position="136">
+          <caret line="11" column="0" lean-forward="true" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/docs/source/zoning.rst">
+    <entry file="file://$PROJECT_DIR$/helpers.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="54" lean-forward="false" selection-start-line="1" selection-start-column="54" selection-end-line="1" selection-end-column="54" />
+        <state relative-caret-position="307">
+          <caret line="302" column="7" lean-forward="true" selection-start-line="302" selection-start-column="7" selection-end-line="302" selection-end-column="7" />
+          <folding>
+            <element signature="e#0#21#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/property.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" column="21" lean-forward="true" selection-start-line="8" selection-start-column="21" selection-end-line="8" selection-end-column="21" />
+          <folding>
+            <element signature="e#63#82#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="41" lean-forward="false" selection-start-line="0" selection-start-column="41" selection-end-line="0" selection-end-column="41" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/parcel.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>

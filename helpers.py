@@ -241,7 +241,7 @@ def process_demand_data(input, graph = False, style = 'Line', date = dt.date(yea
                 plt.show()
 
         elif input.source == 'Realtor':
-            for location in input.geo_filter_classes:
+            for location in input.geo_filter_parameters:
                 print('Starting to graph for {}'.format(location))
                 ids = [region for region in data.index if metadata.loc[region, geo_filter] == location]
                 filtered_data = data.loc[ids].sort_values(input.name)

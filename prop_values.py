@@ -60,14 +60,14 @@ class Demand_Input:
 
     def __init__(self, path, source,
                  feature = 'Value',
-                 geo_filter_classes=[austin, dallas, houston],
+                 geo_filter_parameters=[austin, dallas, houston],
                  geography = 'zip',
                  **kwargs):
         """
         :param path: Path of the dataset, assumed csv
         :param source: Source of the data. Can either be "Zillow" or "Realtor"
         :param feature: Name of the feature. In the case of Realtor data, this must be the column of the data.
-        :param geo_filter_classes: A list of City classes which are used to subset the data.
+        :param geo_filter_parameters: A list of City classes which are used to subset the data.
         :param geography: The level of detail of the dataset, i.e. "zip" or "neighborhood."
         :param geo_filter: A kwarg. This is the geography level (i.e. city, state, county) by which to filter data,
         and it should be a column of the dataset. Default depends on the source.
@@ -79,7 +79,7 @@ class Demand_Input:
         self.path = path
         self.source = source
         self.feature = feature
-        self.geo_filter_classes = geo_filter_classes
+        self.geo_filter_parameters = geo_filter_parameters
         self.geography = geography
 
         # Depending on the source, use different defaults
@@ -104,7 +104,7 @@ class Demand_Input:
         try:
             self.geo_filter_values = kwargs['geo_filter_values']
         except:
-            self.geo_filter_values = [city.name for city in self.geo_filter_classes]
+            self.geo_filter_values = [city.name for city in self.geo_filter_parameters]
 
         try:
             self.name = kwargs['name']
@@ -252,7 +252,7 @@ def process_and_graph(input, graph = False, style = 'Line', date = dt.date(year 
                 plt.show()
 
         elif input.source == 'Realtor':
-            for location in input.geo_filter_classes:
+            for location in input.geo_filter_parameters:
                 print('Starting to graph for {}'.format(location))
                 ids = [region for region in data.index if metadata.loc[region, geo_filter] == location]
                 filtered_data = data.loc[ids].sort_values(input.name)
@@ -298,7 +298,7 @@ def choropleth_processed_data(input, date = dt.date(year = 2018, month = 4, day 
     # Plot
     if plot_folium:
         boundaries['index'] = boundaries.index
-        for location in input.geo_filter_classes:
+        for location in input.geo_filter_parameters:
             basemap = folium.Map([location.long, location.lat], zoom_start=location.zoom)
             basemap.choropleth(geo_data=boundaries,
                                data=boundaries,
