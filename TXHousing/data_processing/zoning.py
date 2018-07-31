@@ -7,7 +7,7 @@ import warnings
 
 class zoning_inputs():
 
-    """ Very simple class which binds information about zoning datasets. Also, the lat/long features define the city
+    """ Simple class which binds information about zoning datasets. Also, the lat/long features define the city
         center for each city."""
 
     def __init__(self, path, feature, separator, proj4string, base_zones, lat = 0, long = 0, zoom = 10,
@@ -23,6 +23,84 @@ class zoning_inputs():
         self.title = title
         self.crs = crs
         self.regulations_path = regulations_path
+
+    def process_zoning_shapefile(self, overlay = {'-MU':'Multifamily'}, broaden = True, parse_base_zones = True, quietly = False):
+        """
+        :param broaden: Default true. If true, will decode zoning data into a broader classification (i.e. sf, mf)
+            as specified by the zoning input class - this processed zoning data will go in a column labelled "broad_zone."
+        :type broaden: Boolean
+        :param overlay: A dictionary which maps overlay strings to broadened outputs. This is mostly useful for dealing with
+            mixed use overlays in Austin (there are no mixed-use base zones, so passing in '-mu':'Multifamily'} will help
+            the function recognize that mixed-use zones are multifamily zones.
+        :param parse_base_zones: Boolean. Default true. If true, will use the regulations path provided by the input to
+            parse the base zones of the zoning data.
+        :param quietly: Default false. If true, will suppress all print statements and make the function "quiet"
+        :type quietly: Boolean
+        """
+
+        # Begin timing
+        time0 = time.time()
+
+        # Read data and process zone codes
+        if quietly is not True:
+            print('Reading file')
+        raw_data = gpd.read_file(self.path)
+        if quietly is not True:
+            print('Finished reading file, took {}'.format(time.time() - time0))
+
+        if broaden:
+            def get_zone(text):
+                split_text = text.split(self.separator)[0]
+                for key in self.base_zones:
+                    if split_text in self.base_zones[key]:
+                        return (key)
+                return ([key for key in self.base_zones][-1])
+
+            raw_data['broad_zone'] = raw_data[self.feature].apply(get_zone)
+
+            # Now put account for overlays
+            if overlay is not None:
+                for key in [key for key in overlay]:
+                    raw_data.loc[raw_data[self.feature].str.contains(key), 'broad_zone'] = overlay[key]
+
+        if parse_base_zones:
+
+            if self.regulations_path is not None:
+
+                # Get regulations data - we only read this in because we need the list of base zones.
+                reg_data = pd.read_csv(self.regulations_path, index_col=0, encoding='Latin-1')
+
+                # If the data includes non-base zones, only include base zones in this particular search
+                if 'class' in reg_data.columns:
+                    reg_data = reg_data.loc[reg_data['class'] == 'base']
+
+                reg_data.index = [str(ind) for ind in reg_data.index]
+
+                # Process the zoning data - this function is well defined, I checked
+                base_zones = reg_data.index.unique().tolist()
+
+                def process_zone(text):
+                    for i in base_zones:
+                        if i in text:
+                            return i
+                    return 'Unknown'
+
+                # Apply
+                raw_data['base_zone'] = raw_data[self.feature].apply(process_zone)
+
+            else:
+                warnings.warn(
+                    """parse_base_zones = True, but a regulations path is required to parse base_zones from zoning data.""")
+
+        # Manually set CRS if necessary, then transform
+        if raw_data.crs is not None:
+            raw_data.crs = self.crs
+        raw_data = raw_data.to_crs({'init': 'epsg:4326'})
+
+        if quietly is not True:
+            print('Finished processing zones, mixed use overlay, and crs, took {}'.format(time.time() - time0))
+
+        return raw_data
 
 # Downloaded from http://data-nctcoggis.opendata.arcgis.com/datasets/2015-land-use
 north_texas_inputs = zoning_inputs(path = 'data/Zoning Shapefiles/2015_North_Texas_Land_Use/2015_Land_Use.shp',
@@ -80,88 +158,3 @@ houston_inputs = zoning_inputs(path = None,
                                long = -95.3698,
                                zoom = 9,
                                title = 'Houston Texas')
-
-def process_zoning_shapefile(input, overlay = {'-MU':'Multifamily'}, broaden = True, parse_base_zones = True, quietly = False):
-    """
-    :param input: An input corresponding to a zoning shapefile, e.g. 'austin_inputs'
-    :type input: zoning_inputs
-    :param broaden: Default true. If true, will decode zoning data into a broader classification (i.e. sf, mf)
-        as specified by the zoning input class - this processed zoning data will go in a column labelled "broad_zone."
-    :type broaden: Boolean
-    :param overlay: A dictionary which maps overlay strings to broadened outputs. This is mostly useful for dealing with
-        mixed use overlays in Austin (there are no mixed-use base zones, so passing in '-mu':'Multifamily'} will help
-        the function recognize that mixed-use zones are multifamily zones.
-    :param parse_base_zones: Boolean. Default true. If true, will use the regulations path provided by the input to
-        parse the base zones of the zoning data.
-    :param quietly: Default false. If true, will suppress all print statements and make the function "quiet"
-    :type quietly: Boolean
-    """
-
-    # Begin timing
-    time0 = time.time()
-
-    # Make sure input is correct
-    if isinstance(input, zoning_inputs) == False:
-        TypeError('Input must be of class zoning_inputs')
-
-    # Read data and process zone codes
-    if quietly is not True:
-        print('Reading file')
-    raw_data = gpd.read_file(input.path)
-    if quietly is not True:
-        print('Finished reading file, took {}'.format(time.time() - time0))
-
-    if broaden:
-        def get_zone(text):
-            split_text = text.split(input.separator)[0]
-            for key in input.base_zones:
-                if split_text in input.base_zones[key]:
-                    return(key)
-            return([key for key in input.base_zones][-1])
-
-        raw_data['broad_zone'] = raw_data[input.feature].apply(get_zone)
-
-        # Now put account for overlays
-        if overlay is not None:
-            for key in [key for key in overlay]:
-                raw_data.loc[raw_data[input.feature].str.contains(key), 'broad_zone'] = overlay[key]
-
-    if parse_base_zones:
-
-        if input.regulations_path is not None:
-
-            # Get regulations data - we only read this in because we need the list of base zones.
-            reg_data = pd.read_csv(input.regulations_path, index_col=0, encoding='Latin-1')
-
-            # If the data includes non-base zones, only include base zones in this particular search
-            if 'class' in reg_data.columns:
-                reg_data = reg_data.loc[reg_data['class'] == 'base']
-
-            reg_data.index = [str(ind) for ind in reg_data.index]
-
-            # Process the zoning data - this function is well defined, I checked
-            base_zones = reg_data.index.unique().tolist()
-
-            def process_zone(text):
-                for i in base_zones:
-                    if i in text:
-                        return i
-                return 'Unknown'
-
-            # Apply
-            raw_data['base_zone'] = raw_data[input.feature].apply(process_zone)
-
-        else:
-            warnings.warn("""parse_base_zones = True, but a regulations path is required to parse base_zones from zoning data.""")
-
-
-
-    # Manually set CRS if necessary, then transform
-    if raw_data.crs is not None:
-        raw_data.crs = input.crs
-    raw_data = raw_data.to_crs({'init':'epsg:4326'})
-
-    if quietly is not True:
-        print('Finished processing zones, mixed use overlay, and crs, took {}'.format(time.time() - time0))
-
-    return raw_data

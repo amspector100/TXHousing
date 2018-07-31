@@ -7,12 +7,10 @@ Welcome to TXHousing's documentation!
 =====================================
 
 .. toctree::
-
-   zoning
-
    :maxdepth: 2
    :caption: Contents:
 
+   zoning
 
 
 Indices and tables
