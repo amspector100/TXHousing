@@ -664,12 +664,12 @@ def suburbs_scatterplot():
     sfplot = (ggplot(landuse_data.loc[landuse_data['broad_zone'] == 'Single Family'],
                     aes(x = 'dist_to_center', y = 'Percent of Land Used', size = 'area', shape = 'jobcenter', fill = 'city', label = 'place'))
              + geom_point()
-             + geom_text(nudge_y = 0.025)
-             + facet_wrap('~city')
+             + geom_text(nudge_y = 0.01) # 0.025 for faceted version
+             #+ facet_wrap('~city')
              + labs(title = 'Percent of Land Developed as Single Family in Various Municipalities in the Texas Triangle',
                     x = 'Distance from City Center (Miles)',
                     y = 'Percent of Land Used as Single Family'))
-    sfplot.save('Figures/Suburbs/sf_landuse_scatterplot.svg', width = 8.5, height = 11)
+    sfplot.save('Figures/Suburbs/sf_landuse_scatterplot_unfaceted.svg', width = 8.5, height = 11)
 
     mfplot = (ggplot(landuse_data.loc[landuse_data['broad_zone'] == 'Multifamily'],
                     aes(x = 'dist_to_center', y = 'Percent of Land Used', size = 'area', shape = 'jobcenter', fill = 'city'))
@@ -680,12 +680,12 @@ def suburbs_scatterplot():
                     aes(x = 'dist_to_center', y = 'mean_lot_size', size = 'area', shape = 'jobcenter', fill = 'city', label = 'place'))
              + geom_point()
              + scale_y_log10()
-             + geom_text(nudge_y=0.025)
-             + facet_wrap('~city')
+             + geom_text(nudge_y=0.025) # 0.025 for faceted version
+             #+ facet_wrap('~city')
              + labs(title='Average Single Family Lotsize in Various Municipalities in the Texas Triangle',
                     x='Distance from City Center (Miles)',
                     y='Average Single Family Lotsize'))
-    lplot.save('Figures/Suburbs/sf_lotsize_scatterplot.svg', width = 8.5, height = 11)
+    lplot.save('Figures/Suburbs/sf_lotsize_scatterplot_unfaceted.svg', width = 8.5, height = 11)
 
 def plot_choropleth_close_to_point(lat, long, zoning_input, gdf, spatial_index, save_path, column = None, num_polygons = 2500):
 

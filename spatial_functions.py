@@ -12,7 +12,7 @@
 import time
 from tqdm import tqdm
 
-import math
+import scipy
 import shapely
 import numpy as np
 import pandas as pd
@@ -143,24 +143,28 @@ def make_point_grid(gdf, horiz=20, vert=20, factor=None, by='mean', geometry_col
 
 # Calculates distance between two lat/long points using haversine formula.
 # See https://gis.stackexchange.com/questions/279109/calculate-distance-between-a-coordinate-and-a-county-in-geopandas
-def haversine(point1, point2):
+def haversine(point1, point2, lon1 = None, lat1 = None, lon2 = None, lat2 = None):
     """
     :param point1: Shapely point. Long then lat.
     :param point2: Shapely point. Long then lat.
+    :param lon1, lat1, lon2, lat2: Alternatively, supply the long and lattitudes.
     :return: Distance in miles.
     """
 
-    lon1, lat1 = list(point1.coords[:][0][0:])
-    lon2, lat2 = list(point2.coords[:][0][0:])
+    # Retrieve lat and long
+    if lon1 is None or lat1 is None:
+        lon1, lat1 = list(point1.coords[:][0][0:])
+    if lon2 is None or lat2 is None:
+        lon2, lat2 = list(point2.coords[:][0][0:])
 
     # convert decimal degrees to radians
-    lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+    lon1, lat1, lon2, lat2 = map(scipy.radians, [lon1, lat1, lon2, lat2])
 
     # haversine formula
     dlon = lon2 - lon1
     dlat = lat2 - lat1
-    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
-    c = 2 * math.asin(math.sqrt(a))
+    a = scipy.sin(dlat / 2) ** 2 + scipy.cos(lat1) * scipy.cos(lat2) * scipy.sin(dlon / 2) ** 2
+    c = 2 * scipy.arcsin(scipy.sqrt(a))
     r = 3956  # Radius of earth in miles. Use 6371 for km
     return c * r
 
