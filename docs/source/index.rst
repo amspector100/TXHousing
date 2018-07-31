@@ -8,7 +8,7 @@ Welcome to TXHousing's documentation!
 
 .. toctree::
 
-   helpers
+   zoning
 
    :maxdepth: 2
    :caption: Contents:

@@ -46,7 +46,6 @@ def will_it_float(text):
         return False
 
 # Zoning data processing functions-------------------------------------------------------------------------------------------- Zoning Data
-
 def process_zoning_shapefile(input, overlay = {'-MU':'Multifamily'}, broaden = True, parse_base_zones = True):
     """"
     :param input: An input, of class 'zoning_inputs.'
@@ -165,7 +164,7 @@ def process_demand_data(input, graph = False, style = 'Line', date = dt.date(yea
 
     # Check that it's the right class
     if isinstance(input, Demand_Input) == False:
-        warning('Error, Input must be of class Demand_Input')
+        TypeError('input must be of class Demand_Input')
         return None
 
     # Helper functions

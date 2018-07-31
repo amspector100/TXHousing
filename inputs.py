@@ -37,27 +37,6 @@ north_texas_inputs = zoning_inputs(path = 'data/Zoning Shapefiles/2015_North_Tex
                                    title = 'Base Zones in and around Dallas, Texas')
                                    #xlims = [-97.3, -96.1],
                                    #ylims = [32.25, 33.25])
-# Downloaded from https://data-nctcoggis.opendata.arcgis.com/datasets/81916863ab394786ab5caaa731f5ac36_4?geometry=-104.084%2C30.991%2C-83.342%2C34.229
-nt_highways = zoning_inputs(path = "data/Zoning Shapefiles/NT_Highways_2017/Highways_2017.shp",
-                            feature = 'unsure',
-                            separator = 'no_separator',
-                            proj4string = 'EPSG:4326',
-                            base_zones = {},
-                            long = north_texas_inputs.long,
-                            lat = north_texas_inputs.lat,
-                            zoom = north_texas_inputs.zoom)
-
-# Downloaded from https://data-nctcoggis.opendata.arcgis.com/datasets/counties-
-nt_counties = zoning_inputs(path = "data/Zoning Shapefiles/nt_counties/Counties_.shp",
-                            feature = '',
-                            separator = '',
-                            proj4string = 'EPSG:4326',
-                            base_zones = {},
-                            long = north_texas_inputs.long,
-                            lat = north_texas_inputs.lat,
-                            zoom = north_texas_inputs.zoom)
-
-
 
 # Downloaded from https://data.austintexas.gov/Locations-and-Maps/Zoning/5rzy-nm5e
 austin_regulations_path = "data/austin zoning standards.csv"
@@ -91,7 +70,7 @@ dallas_inputs = zoning_inputs(path = "data/Zoning Shapefiles/DallasBaseZoning/Ba
                               crs = {'init':'epsg:2276'},
                               regulations_path=dallas_regulations_path)
 
-# Houston has no base zones but this is useful for making the graph
+# Houston has no base zones but this is useful for making maps
 houston_inputs = zoning_inputs(path = None,
                                feature = None,
                                separator = None,
@@ -101,7 +80,6 @@ houston_inputs = zoning_inputs(path = None,
                                long = -95.3698,
                                zoom = 9,
                                title = 'Houston Texas')
-
 
 
 # City class  --------------------------------------------------------------------------------------------------------
