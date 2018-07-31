@@ -735,9 +735,9 @@ if plot_parcels:
 
         # Work on Dallas data ---------------------------------------------------
         print('Starting to work on Dallas data, time is {}'.format(time.time() - time0))
-        dallas_parcels = process_dallas_parcel_data(quickly = True)
+        dallas_parcels = gpd.read_file(dallas_parcel_data_path_2016)
         print('Finished reading dallas parcel data, time is {}'.format(time.time() - time0))
-        dallas_feature = 'sptbcode_2016'
+        dallas_feature = 'sptbcode'
         # Note A12 are townhouses, A13 are condominiums
         dallas_dictionary = dallas_sptb_dictionary
         dallas_result = get_rings_of_parcels(dallas_parcels, dallas_feature, dallas_dictionary, dallas_inputs, 'Dallas')

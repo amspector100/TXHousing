@@ -278,8 +278,6 @@ austin_zip_features_dic = {'Median DOM (vs CBSA)':['Median Days on Market', 'Med
                    'mf_avg_listing': ['Multifamily Homes Price', 'Average Multifamily Home Listing Price (Realtor)']}
 
 austin_processed_parcel_data_path = 'data/Processed Austin Parcel Data/processed_parcel_data.shp'
-austin_downzone_path = 'data/Zoning Shapefiles/Austin Downzoning/austin_downzoning.shp'
-austin_construction_path = 'data/Zoning Shapefiles/Austin Construction/austin_construction.shp'
 austin_permit_path = 'data/austin_construction_permits.csv'
 
 # Dallas -------------------------------------------------------------------------------------------------------------
@@ -304,15 +302,10 @@ dallas_zip_features_dic = {'Median DOM (vs CBSA)':['Median Days on Market', 'Med
                            'sf_avg_listing': ['Single Family Homes Price', 'Average Single Family Home Listing Price (Realtor)'],
                            'mf_avg_listing': ['Multifamily Homes Price', 'Average Multifamily Home Listing Price (Realtor)']}
 
-# This is a misnomer - it's not all the parcels in the county, just the ones in teh city.
+# This is a misnomer - it's not all the parcels in the county, just the ones in the city.
 dallas_parcel_data_path_2013 = "data/Zoning Shapefiles/Dallas County Parcels 2013/geo_export_9b090abf-d5d9-4c74-a6be-4486e75ee147.shp"
 dallas_parcel_data_path_2016 = "data/Zoning Shapefiles/Dallas County Parcels 2016/geo_export_bd65f212-41ce-4166-804a-5dc5ef85ee84.shp"
-
-dallas_processed_parcel_data_path = 'data/Processed Dallas Parcel Data/processed_parcel_data.shp' # This doesn't work for some reason
-dallas_downdev_path = 'data/Zoning Shapefiles/Dallas Downdevelopments/dallas_downdevelopments.shp'
-dallas_construction_path = 'data/Zoning Shapefiles/Dallas Construction/dallas_construction.shp'
 dallas_permit_path = 'data/dallas_construction_permits.csv'
-
 dpm_save_path = "C:/Users/amspe/Documents/R/MI2018/TXHousing/data/Zoning Shapefiles/Dallas Corrected Permits/dallas_permits_corrected.shp"
 
 

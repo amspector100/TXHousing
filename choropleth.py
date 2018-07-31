@@ -260,7 +260,7 @@ def final_austin_graph(zoning_input, zip_features_dic):
     print('Retreiving Austin basemap')
     basemap = folium.Map([zoning_input.lat, zoning_input.long], zoom_start=zoning_input.zoom)
 
-    # Get initial parcel data, zip data, and zoning data
+    # Get zoning data
     print('Finished retrieving basemap, took {}. Reading initial data'.format(time.time() - time0))
 
     # Make sure input is correct
@@ -284,14 +284,6 @@ def final_austin_graph(zoning_input, zip_features_dic):
 
     base_zones = FeatureGroup('Base Zoning', show = False)
     #categorical_choropleth(simplified_zoning_data, 'broad_zone').add_to(base_zones)
-
-    # ---------------------------------------------------See print statement---------------------------------------------
-    print('Finished reading and processing zoning data, took {}. Starting to create downzone and construction color markers.'.format(time.time() - time0))
-
-    downzone_fg = FeatureGroup(name='Downzoned Locations', show = False)
-    downzone = gpd.read_file(austin_downzone_path)
-    make_marker_cluster(downzone, make_centroids = True).add_to(downzone_fg)
-
 
     # Single family construction - - - - - - - - -
 
@@ -350,7 +342,7 @@ def final_austin_graph(zoning_input, zip_features_dic):
                        min_opacity=0.5).add_to(basemap)
 
     # ---------------------------------------------------See print statement---------------------------------------------
-    print('Finished creating downzone and construction color markers, took {}. Now creating historic zones markers.'.format(time.time() - time0))
+    print('Finished permitting layers, took {}. Now creating historic zones markers.'.format(time.time() - time0))
 
     # Use texas historical sites data for national zones - - - - -
     national_hd_fg = FeatureGroup(name = 'National Historic Registry Zones', show = False)
@@ -424,7 +416,6 @@ def final_austin_graph(zoning_input, zip_features_dic):
 
     # Add to basemap
     base_zones.add_to(basemap)
-    downzone_fg.add_to(basemap)
     national_hd_fg.add_to(basemap)
     local_hd_fg.add_to(basemap)
     landmark_fg.add_to(basemap)
@@ -561,13 +552,6 @@ def final_dallas_graph(zoning_input, zip_features_dic, included_counties = ['Dal
     zip_geodata = add_demand_data(zip_geodata=zip_geodata, demand_input = realtor_avg_cth_price, city = 'Dallas, TX', feature_name = 'mf_avg_listing')
 
 
-    # Downzoning and construction layers
-    print('In Dallas final graph call, starting to work on downdevelopment and construction layers at time {}'.format(time.time() - time0))
-    downdevelopment = gpd.read_file(dallas_downdev_path)
-    downdevelopment_fg = FeatureGroup(name='Downdeveloped Locations', show = False)
-    make_marker_cluster(downdevelopment, make_centroids=True).add_to(downdevelopment_fg)
-
-
     # Construction
     all_construction = get_corrected_dallas_permit_data(path = dpm_save_path)
 
@@ -617,7 +601,6 @@ def final_dallas_graph(zoning_input, zip_features_dic, included_counties = ['Dal
                        min_opacity=0.5).add_to(basemap)
 
     # Final list of featuregroups: base_zones, conservation_fg, historic_overlay_fg, historic_subdistricts_fg,
-    # construction_fg, downdevelopment_fg
 
     print('Adding things to Dallas basemap')
     # Add regulatory and demand factors
@@ -633,7 +616,6 @@ def final_dallas_graph(zoning_input, zip_features_dic, included_counties = ['Dal
     conservation_fg.add_to(basemap)
     historic_overlay_fg.add_to(basemap)
     historic_subdistricts_fg.add_to(basemap)
-    downdevelopment_fg.add_to(basemap)
 
     # Add dark basemap
     folium.TileLayer('cartodbdark_matter').add_to(basemap)

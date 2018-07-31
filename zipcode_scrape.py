@@ -105,7 +105,7 @@ def finish_geocoding():
     :return: None
     """
 
-    from address_dictionary import address_dictionary # This is the dictionary
+    address_dictionary = pd.read_csv('shared_data/address_dictionary.csv')
 
     # Reget subset
     permit_data = process_dallas_permit_data(permit_types=['Building (BU) Single Family  New Construction', 'Building (BU) Multi Family  New Construction'])

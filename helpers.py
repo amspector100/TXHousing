@@ -279,7 +279,31 @@ def add_demand_data(zip_geodata, demand_input, city, feature_name = None):
 
 # Parcel data -------------------------------------------------------------------------------------------------------------- parcel data
 
-# Join old and new dallas parcel data
+def process_austin_parcel_data():
+    """
+     Reads Austin parcel data and processes base zones.
+    :return: parcel_data geodataframe.
+    """
+
+    time0 = time.time()
+    print('Starting to read parcel data')
+    parcel_data = gpd.read_file(austin_parcel_path)
+    print('Finished reading parcel data, took {} seconds. Now processing base zones.'.format(time.time() - time0))
+
+    # Get basezone in proper format - originally it provides a description in parenthesis as well which is not necessary
+    def format_basezone(s):
+        s = str(s)
+        try:
+            return s.split('(')[1][:-1]
+        except:
+            # Usually this means there's no basezone information
+            return s
+    parcel_data['basezone'] = parcel_data['basezone'].apply(format_basezone)
+
+
+    return parcel_data
+
+# Join old and new dallas parcel data, if necessary
 def join_dallas_parcel_data():
 
     time0 = time.time()
@@ -301,42 +325,6 @@ def join_dallas_parcel_data():
     parcel_data = gpd.GeoDataFrame(data = parcel_data[[col for col in parcel_data.columns if 'geometry' not in col]],
                                    geometry = parcel_data['geometry_2016'])
     print(parcel_data.columns, parcel_data.index)
-    return parcel_data
-
-def process_dallas_parcel_data(quickly = False):
-    """
-    :param quickly: Boolean, if true, will read just the 2016 parcel data without processing it or joining it to other
-    data. Otherwise will join data to 2013 parcel data.
-    :return: Parcel data
-    """
-
-    if quickly:
-        p2016 = gpd.read_file(dallas_parcel_data_path_2016)
-        p2016 = p2016.rename(columns = {'sptbcode':'sptbcode_2016'})
-        return p2016
-
-    time0 = time.time()
-
-    print('Loading data')
-    parcel_data = join_dallas_parcel_data()
-    print('Finished loading data, took {} seconds. Now normalizing data conditionally on land use.'.format(time.time() - time0))
-
-    parcel_data['area'] = 1000*parcel_data['geometry'].area
-
-    parcel_data.loc[:, 'value_per_area'] = parcel_data['tot_val_2013'].divide(parcel_data['area'])
-    land_use_means = {}
-    land_use_stds = {}
-    for code in parcel_data['sptbcode_2013'].unique():
-        subset = parcel_data.loc[parcel_data['sptbcode_2013'] == code]
-        land_use_means[code] = subset['value_per_area'].mean()
-        land_use_stds[code] = subset['value_per_area'].std()
-
-    # Normalize - there should be no key errors because we just called parcel_data['land_use'].unique().
-    vpa_mean = parcel_data['sptbcode_2013'].map(land_use_means)
-    vpa_std = parcel_data['sptbcode_2013'].map(land_use_stds)
-    norm_pva = (parcel_data['value_per_area'] - vpa_mean).divide(vpa_std)
-    parcel_data['normalized_value_per_area'] = norm_pva
-
     return parcel_data
 
 def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path_2018],
