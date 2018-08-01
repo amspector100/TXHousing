@@ -4,7 +4,7 @@ import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
 
-# Helper functions
+# Helper functions ------------------------------------------------------
 
 # Convert to datetime
 def to_datetime(inputstring):
@@ -30,7 +30,7 @@ def in_multiindex(inputstring):
     except:
         return True
 
-# Demand input class ------------------------------------------------------------------------------------------------
+# Class for property data ---------------------------------------------------------------------------------------------
 class Property_Input():
     """
     :param path: Path of the dataset of property data. Data should be in a csv.

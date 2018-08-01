@@ -408,12 +408,6 @@ denton_county_parcel_path = "data/parcels/denton_county_parcels_2018/County_Parc
 tarrant_county_parcel_path = "data/parcels/tarrant_county_parcels_2018/TADData.gdb" # 2018
 processed_tarrant_county_parcel_path = "data/parcels/processed_tarrant_county_parcels_2018/TADData.shp"
 
-
-# These are useless probably but why delete data...
-forth_worth_parcel_path = "data/parcels/fort_worth_parcels/CAD_CFWLAND.shp" # Unknown year
-fort_worth_zones = "data/parcels/fort_worth_zones/ADM_ZONING.shp"
-fort_worth_abstract = "data/parcels/fort_worth_abstracts/CAD_ABSTRACTS.shp"
-
 # Austin
 travis_county_parcel_path = "data/parcels/travis_county_parcels_2016/Parcels_Travis_2016.shp" # 2016
 travis_county_data_path = 'data/parcels/travis_county_parcel_data/land_det.csv'

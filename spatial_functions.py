@@ -213,7 +213,7 @@ def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', 
     gdf = gdf.to_crs(final_projection)
     return gdf
 
-# Part 4: Functions which deal with block data and spatial joins with non-block data -------------------------------------------
+# Part 4: Functions which deal with block data and spatial joins with non-block data ----------------------------------
 
 # See datadic at https://www2.census.gov/geo/tiger/TIGER_DP/2016ACS/Metadata/BG_METADATA_2016.txt
 def get_block_geodata(data_layers, cities = None, get_percent_residential = True):

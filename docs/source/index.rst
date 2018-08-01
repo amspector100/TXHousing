@@ -10,6 +10,7 @@ Welcome to TXHousing's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   utilities
    data_processing
 
 
