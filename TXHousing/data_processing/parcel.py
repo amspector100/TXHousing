@@ -1,7 +1,7 @@
 import time
 import pandas as pd
 import geopandas as gpd
-from utilities import simple
+from ..utilities import simple
 
 # Globals ------------------------------------------------------------------------------------------------------------
 austin_parcel_path = "data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"

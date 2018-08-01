@@ -14,8 +14,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('C:/Users/amspe/Documents/R/MI2018/TXHousing/TXHousing/data_processing'))
-sys.path.insert(0, os.path.abspath('C:/Users/amspe/Documents/R/MI2018/TXHousing/TXHousing/utilities'))
+sys.path.insert(0, os.path.abspath('C:/Users/amspe/Documents/R/MI2018/TXHousing'))
 
 
 # -- Project information -----------------------------------------------------

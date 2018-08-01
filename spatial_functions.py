@@ -462,7 +462,7 @@ def points_intersect_rings(gdf, zoning_input, factor = None, step = 1, categoric
     if per_square_mile:
 
         def get_area_ring(radius):
-            return math.pi*(radius**2 - (radius - step)**2)
+            return scipy.pi*(radius**2 - (radius - step)**2)
 
         areas = pd.Series(result.index.map(get_area_ring).tolist(), index = result.index)
 

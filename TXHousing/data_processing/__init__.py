@@ -1,1 +1,1 @@
-__all__ = ['zoning', 'property', 'parcel']
+__all__ = ['zoning', 'property', 'parcel', 'boundaries', 'permit']

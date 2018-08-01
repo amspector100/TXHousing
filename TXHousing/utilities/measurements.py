@@ -4,8 +4,8 @@ import scipy
 import shapely
 import pandas as pd
 import geopandas as gpd
-import simple
 import warnings
+from . import simple
 
 texas_places_path = "data/cb_2017_48_place_500k/cb_2017_48_place_500k.shp"
 
@@ -13,8 +13,9 @@ texas_places_path = "data/cb_2017_48_place_500k/cb_2017_48_place_500k.shp"
 
 def haversine(point1, point2, lon1 = None, lat1 = None, lon2 = None, lat2 = None):
     """
+
     Haversine function calculates distance (in miles) between two points in lat/long coordinates. See
-        https://gis.stackexchange.com/questions/279109/calculate-distance-between-a-coordinate-and-a-county-in-geopandas
+    https://gis.stackexchange.com/questions/279109/calculate-distance-between-a-coordinate-and-a-county-in-geopandas
 
     :param point1: Shapely point. Long then lat.
     :param point2: Shapely point. Long then lat.
@@ -70,16 +71,17 @@ def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', 
     """
 
     Get the area of each polygon of a geodataframe in units of your choice (defaults to square miles). This function
-        relies on crs transformations, so for large/complex gdfs, this function is very computationally expensive.
+    relies on crs transformations, so for large/complex gdfs, this function is very computationally expensive.
 
     :param gdf: Geodataframe with polygons in the geometry column.
     :param geometry_column: Geometry column of the geodataframe, defaults to 'geometry'
     :param newproj: The new projection to use to calculate units. Defaults to epsg:2277, which is probably fine for
-    Austin/Dallas/Houston and is in feet.
+        Austin/Dallas/Houston and is in feet.
     :param scale: A scale to multiply by. Defaults to 3.58701*10**(-8) which is the number of square miles in a square
-    foot.
+        foot.
     :param name: The name of the new column that will be created to store the area information. Defaults to 'area'.
     :param final_projection: The final projection that the returned gdf should be in. Defaults to the gdf's current crs.
+
     :return: The geodataframe with a column named name (defualts to 'area') which has the area of each polygon in
     the desired units.
 
@@ -99,22 +101,27 @@ def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', 
 
 def points_intersect_rings(gdf, lat, long, factor = None, step = 1, categorical = True, by = 'mean',
                            geometry_column = 'geometry', per_square_mile = True, maximum = None):
-
     """
-    :param gdf: Geodataframe. Assumes this is already transformed to lat long coord system. Should be polygon geometry.
-    :param factor: A factor to calculate for. If none, will just calculate the area or number of points radiating out
-    from city center.
+    Given a gdf of points, calculates the distance of each point from the center of the city. Can also group by
+    a categorical variable or alternatively calculate the mean/median of a continuous variable.
+
+    :param gdf: GDF in points geometry.
     :param lat: The latitude of the center of the rings.
     :param long: The longitude of the center of the rings.
+    :param factor: A factor of the gdf to condition on or calculate means/medians of, e.g. 'Race' or'Population'
     :param step: Number of miles where the ring radiates outwards.
     :param maximum: Max radius (miles)
-    :param categorical: If true, will only calculate percent land (or % of points) in the radius
+    :param categorical: If true, will only calculate percent land (or % of points) in the radius, conditional on the
+        factor if factor is not None.
     :param by: Defaults to "mean". If categorical = False, use "by" to determine how to calculate averages over points.
     :param geometry_column: name of geometry column. Default geometry.
-    :param psm: if true, divide by the area of the ring.
+    :param per_square_mile: if true, divide by the area of the ring.
     :param maximum: float, defualts to None. If not None, will group everything greater than this maximum into a single
-    category.
-    :return: Dataframe
+        category.
+    :return: If factor is None, a pd Series which lists the number of points by distance from city center. If
+        categorical = True and factor is None, a pandas Dataframe which lists the number of points by distance  from the
+        city center (index) against their categorical value from the factor (columns). Lastly, if categorical = False and
+        factor is not None, returns a pd Series of the mean/median of the factor conditional on distance to city center.
     """
 
     # Get distance from center of city, in miles currently
@@ -124,6 +131,11 @@ def points_intersect_rings(gdf, lat, long, factor = None, step = 1, categorical 
         dist = haversine(point, center)
         rdist = step*((dist // step) + 1) # Do this to get smoother bins (i.e. always round up)
         return rdist
+
+    # Handle crs and apply
+    if gdf.crs != {'init':'epsg:4326'}:
+        warnings.warn('In points_intersect_rings call, forced to transform gdf to lat long')
+        gdf = gdf.to_crs({'init':'epsg:4326'})
 
     gdf['dist_to_center'] = gdf[geometry_column].apply(rounded_dist_to_center)
 
@@ -183,27 +195,38 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
                              group_outliers = True, outlier_maximum = 35, city = None):
 
     """
-    :param gdf: Geodataframe. Assumes this is already transformed to lat long coord system. Should be polygon geometry.
-    :param factor: A factor to calculate for. If none, will just calculate the area or number of points radiating out
-    from city center.
+
+    Given a gdf of polygons, groups the polygons by distance from the center of the city and calculates the
+    percent of area of the city that the polygons cover. Can also group by a categorical variable or alternatively
+    calculate the mean/median of a continuous variable (adjusting for the area of the polygons).
+
+    :param gdf: Geopandas GeoDataFrame, in polygon geometry.
+    :param factor: A factor of the gdf to condition on or calculate means/medians of, e.g. 'Race' or'Population'
     :param lat: The latitude of the center of the rings.
     :param long: The longitude of the center of the rings.
     :param newproj: the new projection system necessarily used in this. Defaults to 2277 which is good for Austin and
-    fine for Texas. Note units in this are in feet.
+        fine for Texas. Note units in this are in feet.
     :param step: Number of miles where the ring radiates outwards.
     :param maximum: Max radius (miles)
     :param points: Boolean. If true, assumes geometry of gdf is a point geometry.
     :param geometry_column: name of geometry column. Default geometry.
     :param categorical: If true, will only calculate percent land (or % of points) in the radius. Else will calculate
-    mean by area.
+        mean by area.
     :param city: If not "none", if factor is "none", will read the shapefile of the boundaries of the city to ensure
-    more accurate calculations. (Otherwise, for a radius of size 12, the area of the circle might be greater than the
-    area of the city).
+        more accurate calculations. (Otherwise, for a radius of size 12, the area of the circle might be greater than the
+        area of the city).
     :param group_outliers: Boolean, defaults to true. If true, group everything with a distance greater than the maximum
-     into one group (of maximum size).
+        into one group (of maximum size).
     :param outlier_maximum: Float, defaults to 35. For computational efficiency, this function will not consider outliers
-     higher than this distance from the cneter of the city.
+        higher than this distance from the cneter of the city.
     :return: Dataframe or Series
+
+    Note::
+
+    To ensure accurate results, this function will break up polygons which straddle the boundary between being
+    (for example) 5-6 miles from the city center as opposed to 6-7 miles from the city center; this makes it
+    computationally expensive. To calculate similar results more cheaply with slightly less accuracy, just take the
+    centroids of the geodataframe and apply points_intersect_rings.
     """
 
     feet_to_mile = 5280

@@ -1,5 +1,5 @@
 """Paths and methods for boundary files (uas, csa, counties, blocks, etc)"""
-from utilities import measurements
+from ..utilities import measurements
 
 csa_path = "data/cb_2017_us_csa_500k/cb_2017_us_csa_500k.shp"
 cbsa_path =  "data/cb_2017_us_cbsa_500k/cb_2017_us_cbsa_500k.shp"
