@@ -1,6 +1,7 @@
 import time
 import pandas as pd
 import geopandas as gpd
+from utilities import simple
 
 # Globals ------------------------------------------------------------------------------------------------------------
 austin_parcel_path = "data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
@@ -111,7 +112,7 @@ def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path
     geodata = gpd.read_file(harris_parcel_path_2018)
     geodata = geodata.loc[geodata['geometry'].is_valid]
     geodata.reset_index(inplace = True)
-    geodata = geodata.loc[geodata['HCAD_NUM'].apply(will_it_float)]
+    geodata = geodata.loc[geodata['HCAD_NUM'].apply(simple.will_it_float)]
     geodata['HCAD_NUM'] = geodata['HCAD_NUM'].astype(float)
 
     # Make sure feature_files is a list not a string

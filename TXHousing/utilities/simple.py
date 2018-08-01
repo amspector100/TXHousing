@@ -38,7 +38,7 @@ def convert_to_hex(rgba_color):
 def process_geometry(gdf, geometry_column = 'geometry', drop_multipolygons = True):
     """Processing for polygon-based gdfs: makes geometries valid and possibly drops multipolygons."""
     gdf.loc[:, geometry_column] = gdf[geometry_column].apply(lambda poly: poly if poly.is_valid else poly.buffer(0))
-    gdf = gdf.loc[gdf[geometry_column]]
+    gdf = gdf.loc[gdf[geometry_column].apply(lambda x: x is not None)]
     if drop_multipolygons:
         gdf = gdf.loc[gdf[geometry_column].apply(lambda x: isinstance(x, shapely.geometry.polygon.Polygon))]
     return gdf

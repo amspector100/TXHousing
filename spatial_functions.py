@@ -532,7 +532,7 @@ def polygons_intersect_rings(gdf, zoning_input, factor = None, newproj = 'epsg:2
         result = pd.Series()
         if city is not None:
             place_shapes = gpd.read_file(texas_places_path)
-            places_shapes.crs = {'init':'epsg:4326'}
+            place_shapes.crs = {'init':'epsg:4326'}
             city_shape = place_shapes.loc[place_shapes['NAME'] == city, 'geometry'].values[0]
 
     else:

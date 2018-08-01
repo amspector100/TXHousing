@@ -5,3 +5,8 @@ Simple Utilities
 --------------------
 .. automodule:: simple
   :members:
+
+Measurement Utilities
+---------------------
+.. automodule:: measurements
+  :members:
