@@ -148,7 +148,7 @@ def make_point_grid(gdf, horiz=20, vert=20, factor=None, by='mean', geometry_col
         box = result[ind]
         possible_matches_index = list(spatial_index.intersection(box.bounds))
         possible_matches = gdf.iloc[possible_matches_index]
-        precise_matches = possible_matches[geometry_column].intersection(box)
+        precise_matches = possible_matches.loc[possible_matches[geometry_column].intersects(box)]
 
         if factor is None:
             value[ind] = len(precise_matches)

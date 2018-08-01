@@ -2,16 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="610eaf4e-4b7c-48de-a471-08db3eb6d393" name="Default" comment="">
-      <change beforePath="" afterPath="$PROJECT_DIR$/TXHousing/utilities/__init__.py" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/docs/source/utilities.rst" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/TXHousing/data_processing/property.py" afterPath="$PROJECT_DIR$/TXHousing/data_processing/property.py" />
-      <change beforePath="$PROJECT_DIR$/docs/source/New Text Document.txt" afterPath="$PROJECT_DIR$/TXHousing/data_processing/boundaries.py" />
-      <change beforePath="$PROJECT_DIR$/docs/source/conf.py" afterPath="$PROJECT_DIR$/docs/source/conf.py" />
-      <change beforePath="$PROJECT_DIR$/docs/source/data_processing.rst" afterPath="$PROJECT_DIR$/docs/source/data_processing.rst" />
-      <change beforePath="$PROJECT_DIR$/docs/source/index.rst" afterPath="$PROJECT_DIR$/docs/source/index.rst" />
-      <change beforePath="$PROJECT_DIR$/inputs.py" afterPath="$PROJECT_DIR$/inputs.py" />
-      <change beforePath="$PROJECT_DIR$/spatial_functions.py" afterPath="$PROJECT_DIR$/spatial_functions.py" />
+      <change beforePath="$PROJECT_DIR$/TXHousing/utilities/simple.py" afterPath="$PROJECT_DIR$/TXHousing/utilities/simple.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,18 +14,6 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="helpers.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/helpers.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="221">
-              <caret line="22" column="16" lean-forward="false" selection-start-line="22" selection-start-column="16" selection-end-line="22" selection-end-column="16" />
-              <folding>
-                <element signature="e#0#21#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="property.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/property.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -58,11 +38,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="simple.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="simple.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TXHousing/utilities/simple.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="408">
-              <caret line="24" column="0" lean-forward="true" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+            <state relative-caret-position="188">
+              <caret line="101" column="33" lean-forward="false" selection-start-line="101" selection-start-column="29" selection-end-line="101" selection-end-column="33" />
               <folding>
                 <element signature="e#145#159#0" expanded="true" />
               </folding>
@@ -92,6 +72,16 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="simplifiers.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/simplifiers.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="184">
+              <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="12" selection-end-column="34" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="utilities.rst" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/docs/source/utilities.rst">
           <provider selected="true" editor-type-id="text-editor">
@@ -102,12 +92,26 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="test_utilities.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="test_utilities.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/test/test_utilities.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
+            <state relative-caret-position="901">
+              <caret line="53" column="20" lean-forward="true" selection-start-line="53" selection-start-column="20" selection-end-line="53" selection-end-column="20" />
+              <folding>
+                <element signature="e#72#110#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="test_processing.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/test_processing.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="170">
+              <caret line="30" column="30" lean-forward="true" selection-start-line="30" selection-start-column="30" selection-end-line="30" selection-end-column="30" />
+              <folding>
+                <element signature="e#42#51#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -117,16 +121,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="204">
               <caret line="12" column="12" lean-forward="false" selection-start-line="12" selection-start-column="12" selection-end-line="12" selection-end-column="12" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="data_processing.rst" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/docs/source/data_processing.rst">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="51">
-              <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="6" selection-end-column="11" />
               <folding />
             </state>
           </provider>
@@ -143,10 +137,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>- Examples</find>
-      <find>self.feature</find>
-      <find>self.name</find>
-      <find>dallas_inputs</find>
       <find>print(</find>
       <find>state_sptbcode</find>
       <find>Demand_Input</find>
@@ -173,6 +163,10 @@
       <find>.</find>
       <find>pd.</find>
       <find>_path</find>
+      <find>crs transformations</find>
+      <find>gpd.GeoDataFrame</find>
+      <find>factor is None</find>
+      <find>4326</find>
     </findStrings>
     <replaceStrings>
       <replace>geo_filter_parameters</replace>
@@ -219,11 +213,11 @@
         <option value="$PROJECT_DIR$/TXHousing/utilities/nonspatial.py" />
         <option value="$PROJECT_DIR$/TXHousing/data_processing/property.py" />
         <option value="$PROJECT_DIR$/docs/source/index.rst" />
-        <option value="$PROJECT_DIR$/test/test_utilities.py" />
         <option value="$PROJECT_DIR$/docs/source/conf.py" />
         <option value="$PROJECT_DIR$/TXHousing/utilities/__init__.py" />
         <option value="$PROJECT_DIR$/docs/source/utilities.rst" />
         <option value="$PROJECT_DIR$/TXHousing/utilities/simple.py" />
+        <option value="$PROJECT_DIR$/test/test_utilities.py" />
       </list>
     </option>
   </component>
@@ -297,7 +291,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyIntegratedToolsModulesConfigurable" />
-    <property name="last_opened_file_path" value="$USER_HOME$/PycharmProjects/CampaignSpendingv2" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/test/test_utilities.py" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$2/Languages" value="Python" />
   </component>
   <component name="RecentsManager">
@@ -317,7 +311,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.test_processing">
+  <component name="RunManager" selected="Python.test_utilities">
     <configuration name="property" type="PythonConfigurationType" factoryName="Python">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -354,6 +348,24 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
+    <configuration name="test_utilities" type="PythonConfigurationType" factoryName="Python">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Python36\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/test" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="TXHousing" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/test_utilities.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
     <configuration name="zoning" type="PythonConfigurationType" factoryName="Python">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -372,10 +384,11 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
-    <list size="3">
+    <list size="4">
       <item index="0" class="java.lang.String" itemvalue="Python.test_processing" />
-      <item index="1" class="java.lang.String" itemvalue="Python.property" />
-      <item index="2" class="java.lang.String" itemvalue="Python.zoning" />
+      <item index="1" class="java.lang.String" itemvalue="Python.test_utilities" />
+      <item index="2" class="java.lang.String" itemvalue="Python.property" />
+      <item index="3" class="java.lang.String" itemvalue="Python.zoning" />
     </list>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
@@ -446,14 +459,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/suburbs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="275" column="68" lean-forward="false" selection-start-line="275" selection-start-column="68" selection-end-line="275" selection-end-column="68" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Makefile">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="221">
@@ -706,16 +711,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/test_processing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="378">
-          <caret line="79" column="30" lean-forward="false" selection-start-line="79" selection-start-column="30" selection-end-line="79" selection-end-column="30" />
-          <folding>
-            <element signature="e#42#51#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/spatial_helpers.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="89">
@@ -773,7 +768,7 @@
         <state relative-caret-position="221">
           <caret line="22" column="16" lean-forward="false" selection-start-line="22" selection-start-column="16" selection-end-line="22" selection-end-column="16" />
           <folding>
-            <element signature="e#0#21#0" expanded="true" />
+            <element signature="e#0#21#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -838,22 +833,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/docs/source/utilities.rst">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" column="11" lean-forward="false" selection-start-line="6" selection-start-column="11" selection-end-line="6" selection-end-column="11" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test/test_utilities.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/spatial_functions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="187">
@@ -864,12 +843,48 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test/test_processing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="30" column="30" lean-forward="true" selection-start-line="30" selection-start-column="30" selection-end-line="30" selection-end-column="30" />
+          <folding>
+            <element signature="e#42#51#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/utilities.rst">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" column="11" lean-forward="false" selection-start-line="6" selection-start-column="11" selection-end-line="6" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/simplifiers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="184">
+          <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="12" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/TXHousing/utilities/simple.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="408">
-          <caret line="24" column="0" lean-forward="true" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+        <state relative-caret-position="188">
+          <caret line="101" column="33" lean-forward="false" selection-start-line="101" selection-start-column="29" selection-end-line="101" selection-end-column="33" />
           <folding>
             <element signature="e#145#159#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/test_utilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="901">
+          <caret line="53" column="20" lean-forward="true" selection-start-line="53" selection-start-column="20" selection-end-line="53" selection-end-column="20" />
+          <folding>
+            <element signature="e#72#110#0" expanded="true" />
           </folding>
         </state>
       </provider>
