@@ -6,6 +6,11 @@ Simple Utilities
 .. automodule:: TXHousing.utilities.simple
   :members:
 
+Spatial Join Utilities
+----------------------
+.. automodule:: TXHousing.utilities.spatial_joins
+  :members:
+
 Measurement Utilities
 ---------------------
 .. automodule:: TXHousing.utilities.measurements

@@ -48,6 +48,10 @@ def fragment(polygon, horiz = 10, vert = 10):
     :param vert: # of vertical fragments
     :return: Grid, a list of polygons
     """
+
+    if horiz == 1 and vert == 1:
+        return [polygon]
+
     minx, miny, maxx, maxy = polygon.bounds
     xlen = (maxx - minx) / horiz
     ylen = (maxy - miny) / vert

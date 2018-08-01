@@ -67,7 +67,7 @@ def calculate_dist_to_center(gdf, lat, long, drop_centroids = True):
         gdf.drop('centroids', inplace=True, axis=1)
     return distances
 
-def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', scale = 3.58701*10**(-8), name = 'area', final_projection = None):
+def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', scale = 3.58701*10**(-8), name = 'area', final_projection = None, reproject = True):
     """
 
     Get the area of each polygon of a geodataframe in units of your choice (defaults to square miles). This function
@@ -81,16 +81,27 @@ def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', 
         foot.
     :param name: The name of the new column that will be created to store the area information. Defaults to 'area'.
     :param final_projection: The final projection that the returned gdf should be in. Defaults to the gdf's current crs.
+    :param reproject: If False, do not reproject the data after calculating area (this is useful to save time in specific
+        cases).
+    :type reproject: Boolean
 
-    :return: The geodataframe with a column named name (defualts to 'area') which has the area of each polygon in
+    :return: The geodataframe with a column named name (defaults to 'area') which has the area of each polygon in
     the desired units.
 
     """
+
+    # Get final projection
     if final_projection is None:
         final_projection = gdf.crs
+
+    # Project and get area
     gdf = gdf.to_crs({'init':newproj})
     gdf[name] = scale*gdf[geometry_column].area
-    gdf = gdf.to_crs(final_projection)
+
+    # Optionally reproject (usually do this)
+    if reproject:
+        gdf = gdf.to_crs(final_projection)
+
     return gdf
 
 # These functions group gdfs into successive rings in distance from city center. They employ spatial joins and are
