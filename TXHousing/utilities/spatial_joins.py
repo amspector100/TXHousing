@@ -147,7 +147,7 @@ def points_intersect_multiple_polygons(points_gdf, polygons_gdf, points_spatial_
     points_intersect_single_polygon function and apply it to the geometry column of a polygon gdf.
 
     :param points_gdf: A geodataframe of points data.
-    :param polygons_gdf:
+    :param polygons_gdf: A geodataframe of polygons data.
     :param points_spatial_index: Optional; the spatial_index of the points geodataframe. If not supplied, the function
         will automatically generate the spatial index.
     :param points_geometry_column: Geometry column for the points data.

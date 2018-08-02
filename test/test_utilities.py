@@ -17,7 +17,6 @@ np.random.seed(110)
 class TestSimpleUtilities(unittest.TestCase):
 
     def setUp(self):
-        # Create point/polygon data
 
         # Create points/features
         x_coords = np.random.randn(100)
@@ -193,6 +192,10 @@ class TestMeasurements(unittest.TestCase):
         p4 = shapely.geometry.polygon.Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         self.gdf = gpd.GeoDataFrame(data = pd.DataFrame(pd.Series([0, 4, 2, 2]), columns = ['values']), geometry = [p1, p2, p3, p4])
         self.gdf.crs = {'init':'epsg:2277'}
+
+    def test_data_existence(self):
+
+        texas_places_path
 
 
     def test_haversine(self):

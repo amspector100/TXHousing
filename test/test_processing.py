@@ -1,8 +1,9 @@
 """Tests the data_processing package."""
 
 import os
-from TXHousing.data_processing import zoning, property, parcel
+from TXHousing.data_processing import zoning, property, parcel, boundaries
 import TXHousing.chdir # This changes the directory to the parent directory
+import matplotlib.pyplot as plt
 
 import unittest
 
@@ -13,7 +14,7 @@ while comprehensive_flag not in ['y', 'n']:
 
 class TestZoningProcessing(unittest.TestCase):
     def setUp(self):
-        pass
+        print('Testing zoning module')
 
     # Test existence of data
     def test_data_existence(self):
@@ -38,7 +39,7 @@ class TestZoningProcessing(unittest.TestCase):
 
 class TestPropertyProcessing(unittest.TestCase):
     def setUp(self):
-        pass
+        print('Testing property module')
 
     # Test existence of absolutely necessary data.
     def test_data_existence(self):
@@ -63,7 +64,7 @@ class TestPropertyProcessing(unittest.TestCase):
 # Note that this only tests ParcelProcessing for core municipalities
 class TestParcelProcessing(unittest.TestCase):
     def setUp(self):
-        pass
+        print('Testing parcel module')
 
     # Test existence of necessary data
     def test_data_existence(self):
@@ -85,6 +86,38 @@ class TestParcelProcessing(unittest.TestCase):
             except Exception as e:
                 self.fail('process_houston_parcel_data unexpectedly raised {}'.format(e))
 
+class TestBoundariesProcessing(unittest.TestCase):
+
+    def setUp(self):
+        print('Testing boundaries module')
+
+    def test_data_existence(self):
+        self.assertTrue(os.path.exists(boundaries.zip_boundaries_path),
+                        'Zipcode boundaries data is not in the data directory; download it from https://census.gov/geo/maps-data/data/cbf/cbf_zcta.html')
+        self.assertTrue(os.path.exists(boundaries.county_boundaries_path),
+                        'County boundaries data is not in the data directory; download it from https://census.gov/geo/maps-data/data/cbf/cbf_counties.html')
+        self.assertTrue(os.path.exists(boundaries.texas_blocks_path),
+                        'Texas block data is not in the data directory; download it from https://census.gov/geo/maps-data/data/tiger-data.html; use 2012-2016 selected tables')
+        self.assertTrue(os.path.exists(parcel.harris_parcel_building_res_path_2018),
+                        'Houston municipal parcel data to merge with the shapefile is not in the data directory; download it from http://pdata.hcad.org/download/index.html')
+
+
+    def test_boundaries_parent_class(self):
+
+        # This actually has remarkably high code coverage for __init__ although it might not seem like it initially
+        try:
+            zipdata = boundaries.ZipBoundaries(ziplist = None, bounding_counties = ['Harris', 'Travis'])
+        except Exception as e:
+            self.fail('Boundaries class initialization unexpectedly raised {}'.format(e))
+
+        try:
+            counties = boundaries.Boundaries(path = boundaries.county_boundaries_path,
+                                             subset_by = 'STATEFP',
+                                             subset_to = ['48'])
+            result = zipdata.fast_intersection(counties.data)
+            print(result)
+        except Exception as e:
+            self.fail('Boundaries.fast_intersection unexpectedly raised {}'.format(e))
 
 
 
