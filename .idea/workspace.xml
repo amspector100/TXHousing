@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="610eaf4e-4b7c-48de-a471-08db3eb6d393" name="Default" comment="``">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/TXHousing/utilities/measurements.py" afterPath="$PROJECT_DIR$/TXHousing/utilities/measurements.py" />
       <change beforePath="$PROJECT_DIR$/TXHousing/utilities/spatial_joins.py" afterPath="$PROJECT_DIR$/TXHousing/utilities/spatial_joins.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -44,11 +44,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="spatial_joins.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="spatial_joins.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TXHousing/utilities/spatial_joins.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1428">
-              <caret line="96" column="84" lean-forward="false" selection-start-line="96" selection-start-column="84" selection-end-line="96" selection-end-column="84" />
+            <state relative-caret-position="226">
+              <caret line="115" column="78" lean-forward="false" selection-start-line="115" selection-start-column="78" selection-end-line="115" selection-end-column="78" />
               <folding>
                 <element signature="e#35#54#0" expanded="true" />
               </folding>
@@ -69,8 +69,8 @@
       <file leaf-file-name="test_utilities.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/test_utilities.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="123">
-              <caret line="137" column="30" lean-forward="true" selection-start-line="137" selection-start-column="30" selection-end-line="137" selection-end-column="30" />
+            <state relative-caret-position="409">
+              <caret line="237" column="26" lean-forward="false" selection-start-line="237" selection-start-column="26" selection-end-line="237" selection-end-column="26" />
               <folding>
                 <element signature="e#72#139#0" expanded="true" />
               </folding>
@@ -82,7 +82,7 @@
         <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/boundaries.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="85">
-              <caret line="5" column="62" lean-forward="true" selection-start-line="5" selection-start-column="62" selection-end-line="5" selection-end-column="62" />
+              <caret line="5" column="62" lean-forward="false" selection-start-line="5" selection-start-column="62" selection-end-line="5" selection-end-column="62" />
               <folding />
             </state>
           </provider>
@@ -91,18 +91,18 @@
       <file leaf-file-name="spatial_functions.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/spatial_functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="154">
-              <caret line="558" column="106" lean-forward="false" selection-start-line="558" selection-start-column="106" selection-end-line="558" selection-end-column="106" />
+            <state relative-caret-position="239">
+              <caret line="594" column="61" lean-forward="false" selection-start-line="594" selection-start-column="56" selection-end-line="594" selection-end-column="61" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="measurements.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="measurements.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/TXHousing/utilities/measurements.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1058">
-              <caret line="81" column="75" lean-forward="false" selection-start-line="81" selection-start-column="75" selection-end-line="81" selection-end-column="75" />
+            <state relative-caret-position="752">
+              <caret line="325" column="0" lean-forward="false" selection-start-line="325" selection-start-column="0" selection-end-line="325" selection-end-column="0" />
               <folding>
                 <element signature="e#75#87#0" expanded="true" />
               </folding>
@@ -121,14 +121,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>if categorical</find>
-      <find>4326</find>
-      <find>simple</find>
-      <find>utilities.simple</find>
-      <find>newproj</find>
-      <find>simple.</find>
-      <find>sys.path</find>
-      <find>process_geometry</find>
       <find>points_over_area</find>
       <find>points_intersect_polygon</find>
       <find>get</find>
@@ -146,11 +138,19 @@
       <find>polygons_gdf</find>
       <find>points_intersect_mu</find>
       <find>result</find>
-      <find>polygons_intersect_rings</find>
       <find>large_polygons</find>
       <find>warnings.warn</find>
       <find>account_for_area</find>
+      <find>precise_matches_to_add</find>
+      <find>polygons_intersect_rings</find>
       <find>polygons_intersect_single</find>
+      <find>assertEqual</find>
+      <find>assertE</find>
+      <find>.multiply</find>
+      <find>me</find>
+      <find>measurements.polygons_intersect_rings(</find>
+      <find>np.sqrt(n</find>
+      <find>.dot(</find>
     </findStrings>
     <replaceStrings>
       <replace>geo_filter_parameters</replace>
@@ -203,11 +203,11 @@
         <option value="$PROJECT_DIR$/docs/source/conf.py" />
         <option value="$PROJECT_DIR$/TXHousing/data_processing/parcel.py" />
         <option value="$PROJECT_DIR$/TXHousing/data_processing/boundaries.py" />
-        <option value="$PROJECT_DIR$/TXHousing/utilities/measurements.py" />
         <option value="$PROJECT_DIR$/spatial_functions.py" />
         <option value="$PROJECT_DIR$/docs/source/utilities.rst" />
         <option value="$PROJECT_DIR$/test/test_utilities.py" />
         <option value="$PROJECT_DIR$/TXHousing/utilities/spatial_joins.py" />
+        <option value="$PROJECT_DIR$/TXHousing/utilities/measurements.py" />
       </list>
     </option>
   </component>
@@ -495,11 +495,11 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32987553" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32987553" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13066386" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13066386" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32987553" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -737,24 +737,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/TXHousing/utilities/measurements.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1058">
-          <caret line="81" column="75" lean-forward="false" selection-start-line="81" selection-start-column="75" selection-end-line="81" selection-end-column="75" />
-          <folding>
-            <element signature="e#75#87#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/spatial_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="154">
-          <caret line="558" column="106" lean-forward="false" selection-start-line="558" selection-start-column="106" selection-end-line="558" selection-end-column="106" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/docs/source/utilities.rst">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="272">
@@ -763,30 +745,48 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/boundaries.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="5" column="62" lean-forward="true" selection-start-line="5" selection-start-column="62" selection-end-line="5" selection-end-column="62" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test/test_utilities.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="123">
-          <caret line="137" column="30" lean-forward="true" selection-start-line="137" selection-start-column="30" selection-end-line="137" selection-end-column="30" />
+        <state relative-caret-position="409">
+          <caret line="237" column="26" lean-forward="false" selection-start-line="237" selection-start-column="26" selection-end-line="237" selection-end-column="26" />
           <folding>
             <element signature="e#72#139#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/TXHousing/data_processing/boundaries.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="62" lean-forward="false" selection-start-line="5" selection-start-column="62" selection-end-line="5" selection-end-column="62" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/spatial_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="239">
+          <caret line="594" column="61" lean-forward="false" selection-start-line="594" selection-start-column="56" selection-end-line="594" selection-end-column="61" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/TXHousing/utilities/spatial_joins.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1428">
-          <caret line="96" column="84" lean-forward="false" selection-start-line="96" selection-start-column="84" selection-end-line="96" selection-end-column="84" />
+        <state relative-caret-position="226">
+          <caret line="115" column="78" lean-forward="false" selection-start-line="115" selection-start-column="78" selection-end-line="115" selection-end-column="78" />
           <folding>
             <element signature="e#35#54#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TXHousing/utilities/measurements.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="752">
+          <caret line="325" column="0" lean-forward="false" selection-start-line="325" selection-start-column="0" selection-end-line="325" selection-end-column="0" />
+          <folding>
+            <element signature="e#75#87#0" expanded="true" />
           </folding>
         </state>
       </provider>

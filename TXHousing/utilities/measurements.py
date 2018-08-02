@@ -2,10 +2,11 @@
 
 import scipy
 import shapely
+import numpy as np
 import pandas as pd
 import geopandas as gpd
 import warnings
-from . import simple
+from . import simple, spatial_joins
 
 texas_places_path = "data/cb_2017_48_place_500k/cb_2017_48_place_500k.shp"
 
@@ -245,7 +246,6 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
     gdf.reset_index(drop = True)
     gdf.index = [str(ind) for ind in gdf.index]
 
-
     # Necessarily will have to transform into new epsg code in order to efficiently calculate this.
     # Here, gdf should be in (lat, long) format
     if gdf.crs is None:
@@ -267,7 +267,7 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
     # Initialize result. If categorical, need a dataframe (one column for each unique value). Else, use a pd.Series.
     if factor is None or categorical == False:
         result = pd.Series()
-        if city is not None and factor is None:
+        if city is not None:
             place_shapes = gpd.read_file(texas_places_path)
             place_shapes.crs = {'init':'epsg:4326'}
             city_shape = place_shapes.loc[place_shapes['NAME'] == city, 'geometry'].values[0]
@@ -276,6 +276,7 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
         result = pd.DataFrame(columns = gdf[factor].unique().tolist())
 
     if categorical == False and factor is not None:
+
         # To make this play nicely with regulation data, just in case. Can't harm either way.
         gdf = gdf.loc[gdf[factor].notnull()]
 
@@ -289,78 +290,37 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
 
         radius += step
         circle = center.buffer(feet_to_mile*radius).difference(center.buffer(feet_to_mile*(radius - step)))
+        if city is not None:
+            circle = circle.intersection(city_shape)
 
-        # Find intersections, and be efficient for larger circles
-        if radius <= maximum/2:
-            possible_matches_index = list(spatial_index.intersection(circle.bounds))
-            possible_matches = gdf.iloc[possible_matches_index]
-            # Get precise matches and data
-            precise_matches_index = possible_matches.loc[:, geometry_column].intersects(circle)
-            precise_matches = possible_matches.loc[precise_matches_index]
-            precise_matches.loc[:, geometry_column] = precise_matches.loc[:, geometry_column].intersection(circle) # And adjust geometry
-        else:
-            grid = simple.fragment(circle, horiz = 10, vert = 10)
-            possible_matches_index = set()
-            for polygon in grid:
-                possible_matches_index = possible_matches_index.union(set(spatial_index.intersection(polygon.bounds)))
-            possible_matches = gdf.iloc[list(possible_matches_index)]
-            # Get precise matches and data
-            precise_matches_index = possible_matches.loc[:, geometry_column].intersects(circle)
-            precise_matches = possible_matches.loc[precise_matches_index]
-            precise_matches.loc[:, geometry_column] = precise_matches.loc[:, geometry_column].intersection(circle) # And adjust geometry
+        # Get kwargss to pass to fragment call (we will fragment more as the circle we're dealing with gets bigger)
+        horiz = np.ceil(np.sqrt(radius))
+        vert = np.ceil(np.sqrt(radius))
+        total_area = circle.area
 
-        precise_matches.loc[:, 'area'] = precise_matches.loc[:, geometry_column].area
-        total_area = precise_matches['area'].sum()
+        # Call intersection function
+        result.loc[radius] = spatial_joins.polygons_intersect_single_polygon(gdf, circle, spatial_index,
+                                                                             factor = factor, categorical = categorical,
+                                                                             account_for_area = True, ignore_empty_space = True,
+                                                                             by = 'mean', horiz = horiz, vert = vert)
 
-        # In this case, the denominator is the total area within the ring
-        if factor is None:
-            if city is not None:
-                area = circle.intersection(city_shape).area
-            else:
-                area = circle.area
-            result.loc[radius] = total_area/area
-        elif total_area == 0:
-            result.loc[radius] = float('NaN')
+        # And adjust to sum to 1 for categorical calls
+        if categorical and factor is not None:
+            result.loc[radius] = result.loc[radius]/(result.loc[radius].sum())
 
-        # In all other cases, the denominator is the total area inside the 'factor' column
-        elif categorical:
-            result.loc[radius] = precise_matches[['area', factor]].groupby(factor)['area'].sum().divide(total_area)
-        else:
-            result.loc[radius] = precise_matches['area'].dot(precise_matches[factor]) / (total_area)
 
     # If this optional arg is true, then lump everything else into one category
     if group_outliers:
-        circle = center.buffer(feet_to_mile*outlier_maximum).difference(center.buffer(feet_to_mile*radius))
-        grid = simple.fragment(circle, horiz=15, vert=15)
-        possible_matches_index = set()
-        for polygon in grid:
-            possible_matches_index = possible_matches_index.union(set(spatial_index.intersection(polygon.bounds)))
-        possible_matches = gdf.iloc[list(possible_matches_index)]
-        # Get precise matches and data
-        precise_matches_index = possible_matches.loc[:, geometry_column].intersects(circle)
-        precise_matches = possible_matches.loc[precise_matches_index]
-        precise_matches.loc[:, geometry_column] = precise_matches.loc[:, geometry_column].intersection(circle)  # And adjust geometry
 
-        # Compute areas
-        precise_matches.loc[:, 'area'] = precise_matches.loc[:, geometry_column].area
-        total_area = precise_matches['area'].sum()
+        # Create circle
+        circle = center.buffer(feet_to_mile*outlier_maximum).difference(center.buffer(feet_to_mile*radius))
 
         # In this case, the denominator is the total area within the ring
         label = str(radius) + '+'
-        if factor is None:
-            if city is not None:
-                area = circle.intersection(city_shape).area
-            else:
-                area = circle.area
-            result.loc[label] = total_area/area
-        elif total_area == 0:
-            result.loc[radius] = float('NaN')
 
-        # In all other cases, the denominator is the total area inside the 'factor' column
-        elif categorical:
-            result.loc[radius] = precise_matches[['area', factor]].groupby(factor)['area'].sum().divide(total_area)
-        else:
-            result.loc[radius] = precise_matches['area'].dot(precise_matches[factor]) / (total_area)
+        result.loc[label] = spatial_joins.polygons_intersect_single_polygon(gdf, circle, spatial_index,
+                                                                             factor = factor, categorical = categorical,
+                                                                             account_for_area = True, ignore_empty_space = True,
+                                                                             by = 'mean', horiz = horiz, vert = vert)
 
-    # If this optional arg is true, then lump everything else into one category
     return result

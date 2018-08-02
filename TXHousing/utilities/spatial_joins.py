@@ -59,7 +59,7 @@ def points_intersect_single_polygon(points, polygon, spatial_index, points_geome
 
 
 def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, geometry_column = 'geometry',
-                                      factor = None, categorical = True, account_for_area = True, by = 'mean', **kwargs):
+                                      factor = None, categorical = True, account_for_area = True, ignore_empty_space = False, by = 'mean', **kwargs):
     """
 
     Given many polygons (i.e. parcels) and a larger polygon (i.e. county boundary), finds one of three things.
@@ -76,8 +76,10 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
     :param categorical: If True, then the factor should be treated as a categorical variable.
     :param by: If categorical is False, can either summarize using by = 'mean' or by = 'median'
     :param account_for_area: If categorical is False, by = 'mean', and account_for_area = True, then instead of returning
-        the mean of the factor, this will return the divided dot product of the mean and the area of each small_polygon
-        that intersects the large_polygon.
+        the mean of the factor, this will return the dot product of the mean and the area of each small_polygon
+        that intersects the large_polygon divided by the area of the large polygon.
+    :param ignore_empty_space: Defaults False. If true and account_for_area is True (and categorical = False and by = 'mean'),
+        then instead of dividing by the area of the large_polygon, will divide by the sum of the area of the intersections.
     :param **kwargs: Kwargs to pass to the "fragment" function in the TXHousing.utilities.simple module. Fragmenting polygons
         speeds up the computation for all but very small polygons. If you do not want to fragment the polygons (the
         only reason to do this is speed, it will not affect the results), pass in horiz = 1 and vert = 1 as kwargs.
@@ -113,8 +115,10 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
         if categorical == True:
             return precise_matches.groupby(factor)['area'].sum().divide(polygon.area)
         elif by == 'mean':
-            if account_for_area:
-                return precise_matches[factor].multiply(precise_matches['area']).sum()/(polygon.area)
+            if account_for_area and ignore_empty_space:
+                return precise_matches[factor].dot(precise_matches['area'])/(precise_matches['area'].sum())
+            elif account_for_area:
+                return precise_matches[factor].dot(precise_matches['area'])/(polygon.area)
             else:
                 return precise_matches[factor].mean()
         elif by == 'median':
