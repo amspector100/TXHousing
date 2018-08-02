@@ -3,6 +3,7 @@
 from TXHousing.utilities import simple, spatial_joins, measurements
 import unittest
 import warnings
+import os
 
 # For testing
 import numpy as np
@@ -195,7 +196,8 @@ class TestMeasurements(unittest.TestCase):
 
     def test_data_existence(self):
 
-        texas_places_path
+        self.assertTrue(os.path.exists(measurements.texas_places_path),
+                        'Texas places boundary data is not in the data directory; download it from http://pdata.hcad.org/download/index.html')
 
 
     def test_haversine(self):

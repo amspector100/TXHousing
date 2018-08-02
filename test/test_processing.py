@@ -98,8 +98,7 @@ class TestBoundariesProcessing(unittest.TestCase):
                         'County boundaries data is not in the data directory; download it from https://census.gov/geo/maps-data/data/cbf/cbf_counties.html')
         self.assertTrue(os.path.exists(boundaries.texas_blocks_path),
                         'Texas block data is not in the data directory; download it from https://census.gov/geo/maps-data/data/tiger-data.html; use 2012-2016 selected tables')
-        self.assertTrue(os.path.exists(parcel.harris_parcel_building_res_path_2018),
-                        'Houston municipal parcel data to merge with the shapefile is not in the data directory; download it from http://pdata.hcad.org/download/index.html')
+
 
 
     def test_boundaries_parent_class(self):
