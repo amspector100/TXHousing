@@ -31,8 +31,8 @@ class TestSimpleUtilities(unittest.TestCase):
     def test_fragment(self):
         try:
             grid = simple.fragment(self.polygon)
-        except:
-            print('hello')
+        except Exception as e:
+            self.fail('simple.fragment unexpectedly raised {}'.format(e))
         self.assertAlmostEqual(self.polygon.area, sum(p.area for p in grid), places = 6, msg = 'simple.fragment failed to precisely partition polygon area')
         self.assertTrue(np.all(p.area < self.polygon.area/100 for p in grid), 'simple.fragment failed to sufficiently decrease the size of fragments')
 
@@ -197,8 +197,7 @@ class TestMeasurements(unittest.TestCase):
     def test_data_existence(self):
 
         self.assertTrue(os.path.exists(measurements.texas_places_path),
-                        'Texas places boundary data is not in the data directory; download it from http://pdata.hcad.org/download/index.html')
-
+                        'Texas places boundary data is not in the data directory; download it from https://census.gov/geo/maps-data/data/cbf/cbf_place.html')
 
     def test_haversine(self):
         NY_to_HK = measurements.haversine(point1=self.HK, point2=self.NYC)

@@ -11,10 +11,9 @@ comprehensive_flag = False
 while comprehensive_flag not in ['y', 'n']:
     comprehensive_flag = input("""For test_processing module, would you like to run a comprehensive test? Enter one of [Y/N]""").lower()
 
-
 class TestZoningProcessing(unittest.TestCase):
     def setUp(self):
-        print('Testing zoning module')
+        pass
 
     # Test existence of data
     def test_data_existence(self):
@@ -39,7 +38,7 @@ class TestZoningProcessing(unittest.TestCase):
 
 class TestPropertyProcessing(unittest.TestCase):
     def setUp(self):
-        print('Testing property module')
+        pass
 
     # Test existence of absolutely necessary data.
     def test_data_existence(self):
@@ -64,7 +63,7 @@ class TestPropertyProcessing(unittest.TestCase):
 # Note that this only tests ParcelProcessing for core municipalities
 class TestParcelProcessing(unittest.TestCase):
     def setUp(self):
-        print('Testing parcel module')
+        pass
 
     # Test existence of necessary data
     def test_data_existence(self):
@@ -89,7 +88,7 @@ class TestParcelProcessing(unittest.TestCase):
 class TestBoundariesProcessing(unittest.TestCase):
 
     def setUp(self):
-        print('Testing boundaries module')
+        pass
 
     def test_data_existence(self):
         self.assertTrue(os.path.exists(boundaries.zip_boundaries_path),
@@ -98,10 +97,13 @@ class TestBoundariesProcessing(unittest.TestCase):
                         'County boundaries data is not in the data directory; download it from https://census.gov/geo/maps-data/data/cbf/cbf_counties.html')
         self.assertTrue(os.path.exists(boundaries.texas_blocks_path),
                         'Texas block data is not in the data directory; download it from https://census.gov/geo/maps-data/data/tiger-data.html; use 2012-2016 selected tables')
+        self.assertTrue(os.path.exists(boundaries.texas_places_path),
+                        'Texas places boundary data is not in the data directory; download it from https://census.gov/geo/maps-data/data/cbf/cbf_place.html')
+        self.assertTrue(os.path.exists(boundaries.ua_path),
+                        'Texas urban areas boundary data is not in the data directory; download it from https://www.census.gov/geo/maps-data/data/cbf/cbf_ua.html')
 
+    def test_boundaries_class(self):
 
-
-    def test_boundaries_parent_class(self):
 
         # This actually has remarkably high code coverage for __init__ although it might not seem like it initially
         try:
@@ -109,14 +111,22 @@ class TestBoundariesProcessing(unittest.TestCase):
         except Exception as e:
             self.fail('Boundaries class initialization unexpectedly raised {}'.format(e))
 
-        try:
-            counties = boundaries.Boundaries(path = boundaries.county_boundaries_path,
-                                             subset_by = 'STATEFP',
-                                             subset_to = ['48'])
-            result = zipdata.fast_intersection(counties.data)
-            print(result)
-        except Exception as e:
-            self.fail('Boundaries.fast_intersection unexpectedly raised {}'.format(e))
+        if comprehensive_flag == 'y':   
+            try:
+                counties = boundaries.Boundaries(path = boundaries.county_boundaries_path,
+                                                 subset_by = 'STATEFP',
+                                                 subset_to = ['48'])
+                result = counties.fast_intersection(zipdata.data)
+            except Exception as e:
+                self.fail('Boundaries.fast_intersection unexpectedly raised {}'.format(e))
+
+            try:
+                self.assertEqual(result.unique().tolist(), [227, 233, 670, 684, 692, 695, 697, 981, 1027, 2240, 2242, 2273, 2294, 2325, 2504],
+                                 'boundaries.Boundaries.fast_intersection does not calculate correct intersections')
+            except NameError:
+                pass
+
+        # Now test block geodata function
 
 
 

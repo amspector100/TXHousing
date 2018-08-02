@@ -193,6 +193,7 @@ def points_intersect_multiple_polygons(points_gdf, polygons_gdf, points_spatial_
         warnings.warn("""In points_intersect_polygons, up to {} points are in multiple polygons, but points_intersect_polygons
          only returns one polygon per point (if a point is in two polygons, it will only show up as being in one).""".format(warning_count))
 
+    print(warning_count)
     result = pd.Series(result)
     return result
 

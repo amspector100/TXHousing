@@ -30,7 +30,8 @@ class Boundaries():
     :param bounding_counties: Default None. A list of counties. If not None, __init__ will subset the data
         to only include boundaries intersecting these counties.
     :param bounding_polygon: Default None. A shapely polygon. If not None, __init__ will subset the data to only include
-        boundaries intersecting the polygon."""
+        boundaries intersecting the polygon.
+    :param to_latlong: Default True. Initially tansform data to lat long."""
 
 
     def spatial_subset(self, polygon):
@@ -40,7 +41,7 @@ class Boundaries():
         return result
 
     def __init__(self, path, crs = None, index_col = None, index_type = None, subset_by = None, subset_to = None,
-                 bounding_counties = None, bounding_polygon = None):
+                 bounding_counties = None, bounding_polygon = None, to_latlong = True):
 
         # Read data, get sindex, crs
         self.path = path
@@ -50,6 +51,9 @@ class Boundaries():
                 self.data.crs = None
             else:
                 warnings.warn('No CRS provided for boundaries data at {}'.format(self.path))
+        if to_latlong:
+            self.data = self.data.to_crs({'init':'epsg:4326'})
+
         self.sindex = self.data.sindex
 
         # Set index and subset
@@ -155,6 +159,69 @@ class ZipBoundaries(Boundaries):
 
         super().__init__(path = zip_boundaries_path, index_col = 'ZCTA5CE10', index_type = 'str', subset_by = subset_by,
                          subset_to = self.ziplist, bounding_counties=bounding_counties, bounding_polygon=bounding_polygon)
+
+
+class BlockBoundaries(Boundaries):
+    """ Class for block data, wraps Boundaries class, with a substantially different init method."""
+
+    def __init__(self, data_layers, cities = None, get_percent_residential = True):
+
+        """
+        Get geodata by block group and subset to only include the municipality
+        :param data_layers: Iterable of codes for the data layer of the geodatabase.
+        :param cities: City name (i.e. 'Austin'), or iterable of city names to filter by (i.e. ['Austin', 'Dallas'].
+        Need to be in Texas or this won't work. Defaults to None, and will not filter the data at all.
+        :return: Dictionary of geodataframes in the form {cityname: geodataframe} or just a single geodataframe if 'cities'
+        is a string, not an iterable.
+        """
+
+        # Merge layers from geodatabase - this is a pretty cheap operation, relatively speaking (10 sec or so)
+        geodata = gpd.read_file(texas_blocks_path, layer='ACS_2016_5YR_BG_48_TEXAS')
+        geodata['geometry'] = geodata['geometry'].apply(lambda x: x[0])
+        for data_layer in data_layers:
+            data = gpd.read_file(texas_blocks_path, layer=data_layer)
+            geodata = geodata.merge(data, how='inner', left_on='GEOID_Data', right_on='GEOID')
+            geodata.rename({'GEOID_y': 'GEOID'}, axis='columns', inplace=True)
+
+        geodata.set_index('GEOID', inplace=True)
+
+        # Get the percent of land which is zoned residential inside the city limits
+        if get_percent_residential:
+            percent_residential = pd.read_csv('shared_data/bg_percent_residential.csv', index_col=0).fillna(1)
+            percent_residential.columns = ['percent_residential']
+            geodata = geodata.join(percent_residential)
+
+        geodata = gpd.GeoDataFrame(data=geodata[[x for x in geodata.columns if x != 'geometry_x']],
+                                   geometry=geodata['geometry_x'])
+        geodata.rename({'geometry_x': 'geometry'}, axis='columns', inplace=True)
+        geodata.crs = {'init': 'epsg:4326'}
+        spatial_index = geodata.sindex
+
+        if cities is not None:
+
+            # Only consider blocks in cities
+            place_shapes = gpd.read_file(texas_places_path)
+
+            def fast_intersect(city):
+                shape = place_shapes.loc[place_shapes['NAME'] == city, 'geometry'].values[0]
+                possible_intersections_index = list(spatial_index.intersection(shape.bounds))
+                possible_intersections = geodata.iloc[possible_intersections_index]
+                precise_intersections = possible_intersections['geometry'].intersects(shape)
+                return precise_intersections[
+                    precise_intersections.values]  # only include shapes that actually intersect
+
+            # Check if cities is a string, if so get a result
+            if isinstance(cities, str):
+                result = geodata.loc[fast_intersect(cities).index.tolist()]
+            else:
+                result = {}
+                for city in cities:
+                    precise_intersections = fast_intersect(city)
+                    result[city] = geodata.loc[precise_intersections.index.tolist()]
+            return result
+
+        else:
+            return geodata
 
 
 
