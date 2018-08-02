@@ -10,9 +10,6 @@ Figures/Large Files/
 _static/
 _templates/
 
-# Don't track the random tests I make
-test/
-
 # _____ R Defaults _______
 # History files
 .Rhistory
