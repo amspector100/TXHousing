@@ -11,7 +11,7 @@ _static/
 _templates/
 
 # The .idea folder isn't necessary yet
-.idea/
+.idea
 
 # _____ R Defaults _______
 # History files
