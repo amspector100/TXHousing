@@ -10,6 +10,9 @@ Figures/Large Files/
 _static/
 _templates/
 
+# The .idea folder isn't necessary yet
+.idea/
+
 # _____ R Defaults _______
 # History files
 .Rhistory

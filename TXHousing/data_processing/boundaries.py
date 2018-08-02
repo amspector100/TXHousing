@@ -7,7 +7,7 @@ import shapely.geometry
 # One exception is that this is needed for utilities, so the places path is listed there.
 texas_places_path = measurements.texas_places_path
 
-# All other boundaries paths are listed here. 
+# All other boundaries paths are listed here.
 csa_path = "data/cb_2017_us_csa_500k/cb_2017_us_csa_500k.shp"
 cbsa_path =  "data/cb_2017_us_cbsa_500k/cb_2017_us_cbsa_500k.shp"
 ua_path = "data/cb_2017_us_ua10_500k/cb_2017_us_ua10_500k.shp"
