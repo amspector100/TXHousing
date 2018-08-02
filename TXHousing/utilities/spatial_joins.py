@@ -76,9 +76,10 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
     :param factors: The factors to average over (if continuous) or subset by the cartesian product of (if categorical).
     :param categorical: If True, then the factor should be treated as a categorical variable.
     :param by: If categorical is False, can either summarize using by = 'mean' or by = 'median'
-    :param account_for_area: If categorical is False, by = 'mean', and account_for_area = True, then instead of returning
-        the mean of the factor, this will return the dot product of the mean and the area of each small_polygon
-        that intersects the large_polygon divided by the area of the large polygon.
+    :param account_for_area: Default True. If True, instead of returning the mean of the factor, this will return the
+        dot product of the mean and the area of each small_polygon that intersects the large_polygon divided by the area
+         of the large polygon (happens if categorical is False, by = 'mean', and account_for_area = True). Also,
+         if factor = None, divides answer by area of polygon.
     :param ignore_empty_space: Defaults False. If true and account_for_area is True (and categorical = False and by = 'mean'),
         then instead of dividing by the area of the large_polygon, will divide by the sum of the area of the intersections.
     :param **kwargs: Kwargs to pass to the "fragment" function in the TXHousing.utilities.simple module. Fragmenting polygons
@@ -111,7 +112,10 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
 
     # Calculate answers
     if factors is None:
-        return precise_matches['area'].sum()
+        if account_for_area:
+            return precise_matches['area'].sum()/polygon.area
+        else:
+            return precise_matches['area'].sum()
 
     # Group by categorical
     if categorical == True:
@@ -193,7 +197,6 @@ def points_intersect_multiple_polygons(points_gdf, polygons_gdf, points_spatial_
         warnings.warn("""In points_intersect_polygons, up to {} points are in multiple polygons, but points_intersect_polygons
          only returns one polygon per point (if a point is in two polygons, it will only show up as being in one).""".format(warning_count))
 
-    print(warning_count)
     result = pd.Series(result)
     return result
 

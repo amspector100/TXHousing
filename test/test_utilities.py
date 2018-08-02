@@ -1,6 +1,7 @@
 """Tests core utilities. This is NOT a comprehensive testing suite."""
 
 from TXHousing.utilities import simple, spatial_joins, measurements
+import TXHousing.chdir # Changes working directory
 import unittest
 import warnings
 import os

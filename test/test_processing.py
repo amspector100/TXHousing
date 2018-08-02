@@ -6,6 +6,7 @@ import TXHousing.chdir # This changes the directory to the parent directory
 import matplotlib.pyplot as plt
 
 import unittest
+import warnings
 
 comprehensive_flag = False
 while comprehensive_flag not in ['y', 'n']:
@@ -101,6 +102,10 @@ class TestBoundariesProcessing(unittest.TestCase):
                         'Texas places boundary data is not in the data directory; download it from https://census.gov/geo/maps-data/data/cbf/cbf_place.html')
         self.assertTrue(os.path.exists(boundaries.ua_path),
                         'Texas urban areas boundary data is not in the data directory; download it from https://www.census.gov/geo/maps-data/data/cbf/cbf_ua.html')
+        if os.path.exists(boundaries.bg_percent_residential_path) == False:
+            warnings.warn("""Percent_residential for block data has not been cached. This may reduce the accuracy of a 
+            couple of population calculations. Either run calculate_percent_residential in the boundaries module, or 
+            simple pull the cache from https://github.com/amspector100/TXHousing/tree/reorganization/shared_data""")
 
     def test_boundaries_class(self):
 
@@ -111,7 +116,7 @@ class TestBoundariesProcessing(unittest.TestCase):
         except Exception as e:
             self.fail('Boundaries class initialization unexpectedly raised {}'.format(e))
 
-        if comprehensive_flag == 'y':   
+        if comprehensive_flag == 'y':
             try:
                 counties = boundaries.Boundaries(path = boundaries.county_boundaries_path,
                                                  subset_by = 'STATEFP',
@@ -127,6 +132,10 @@ class TestBoundariesProcessing(unittest.TestCase):
                 pass
 
         # Now test block geodata function
+        try:
+            blockdata = boundaries.BlockBoundaries(data_layers = ['X01_AGE_AND_SEX', 'X08_COMMUTING', 'X19_INCOME'], cities = ['Austin'])
+        except Exception as e:
+            self.fail('BlockBoundaries class initialization unexpectedly raised {}'.format(e))
 
 
 

@@ -1,8 +1,10 @@
 """Paths and methods for boundary files (uas, csa, counties, blocks, etc)"""
 from ..utilities import simple, measurements, spatial_joins
 import geopandas as gpd
+import pandas as pd
 import warnings
 import shapely.geometry
+import os
 
 # One exception is that this is needed for utilities, so the places path is listed there.
 texas_places_path = measurements.texas_places_path
@@ -15,6 +17,10 @@ ua_path = "data/cb_2017_us_ua10_500k/cb_2017_us_ua10_500k.shp"
 zip_boundaries_path = "data/cb_2017_us_zcta510_500k/cb_2017_us_zcta510_500k.shp"
 county_boundaries_path = "data/cb_2017_us_county_500k/cb_2017_us_county_500k.shp"
 texas_blocks_path = "data/ACS_2016_5YR_BG_48_TEXAS.gdb"
+
+# This is the percent of land in each block group that is zoned as residential land. The function below calculates it for
+# Austin and Dallas to improve accuracy of some population-based calculations.
+bg_percent_residential_path = 'shared_data/bg_percent_residential.csv'
 
 
 class Boundaries():
@@ -137,7 +143,6 @@ class Boundaries():
         return self.data.__str__(**kwargs)
 
 
-
 class ZipBoundaries(Boundaries):
     """ Class for Zipcode Boundaries Data, wraps Boundaries class.
 
@@ -162,22 +167,21 @@ class ZipBoundaries(Boundaries):
 
 
 class BlockBoundaries(Boundaries):
-    """ Class for block data, wraps Boundaries class, with a substantially different init method."""
+    """ Class for block data, wraps Boundaries class, with a substantially different init method. After initialization,
+    self.data is a gdf with a 'geometry' column, a variety of block data columns, and if cities is not None, it has a
+    'place' column as well.
+
+    :param data_layers: Iterable of codes for the data layer of the geodatabase.
+    :param cities: City name (i.e. 'Austin'), or iterable of city names to filter by (i.e. ['Austin', 'Dallas'].
+        Need to be in Texas or this won't work. Defaults to None.
+   """
 
     def __init__(self, data_layers, cities = None, get_percent_residential = True):
-
-        """
-        Get geodata by block group and subset to only include the municipality
-        :param data_layers: Iterable of codes for the data layer of the geodatabase.
-        :param cities: City name (i.e. 'Austin'), or iterable of city names to filter by (i.e. ['Austin', 'Dallas'].
-        Need to be in Texas or this won't work. Defaults to None, and will not filter the data at all.
-        :return: Dictionary of geodataframes in the form {cityname: geodataframe} or just a single geodataframe if 'cities'
-        is a string, not an iterable.
-        """
 
         # Merge layers from geodatabase - this is a pretty cheap operation, relatively speaking (10 sec or so)
         geodata = gpd.read_file(texas_blocks_path, layer='ACS_2016_5YR_BG_48_TEXAS')
         geodata['geometry'] = geodata['geometry'].apply(lambda x: x[0])
+        geodata['real_geometry_column'] = geodata['geometry'].copy()
         for data_layer in data_layers:
             data = gpd.read_file(texas_blocks_path, layer=data_layer)
             geodata = geodata.merge(data, how='inner', left_on='GEOID_Data', right_on='GEOID')
@@ -187,43 +191,62 @@ class BlockBoundaries(Boundaries):
 
         # Get the percent of land which is zoned residential inside the city limits
         if get_percent_residential:
-            percent_residential = pd.read_csv('shared_data/bg_percent_residential.csv', index_col=0).fillna(1)
-            percent_residential.columns = ['percent_residential']
-            geodata = geodata.join(percent_residential)
+            if os.path.exists(bg_percent_residential_path):
+                percent_residential = pd.read_csv(bg_percent_residential_path, index_col=0).fillna(1)
+                percent_residential.columns = ['percent_residential']
+                geodata = geodata.join(percent_residential)
+            else:
+                warnings.warn('Cannot retrieve percent_residential for block data because percent_residential data has not been cached')
 
-        geodata = gpd.GeoDataFrame(data=geodata[[x for x in geodata.columns if x != 'geometry_x']],
-                                   geometry=geodata['geometry_x'])
-        geodata.rename({'geometry_x': 'geometry'}, axis='columns', inplace=True)
+        geodata = gpd.GeoDataFrame(data=geodata[[x for x in geodata.columns if x != 'real_geometry_column']],
+                                   geometry=geodata['real_geometry_column']) # This automatically renames the columns
         geodata.crs = {'init': 'epsg:4326'}
-        spatial_index = geodata.sindex
 
         if cities is not None:
 
             # Only consider blocks in cities
             place_shapes = gpd.read_file(texas_places_path)
+            place_shapes = place_shapes.loc[place_shapes['NAME'].isin(cities)]
+            mapper = spatial_joins.fast_polygon_intersection(geodata, place_shapes, large_name_column = 'NAME')
+            geodata['place'] = geodata.index.map(mapper)
+            geodata = geodata.loc[geodata['place'].notnull()]
 
-            def fast_intersect(city):
-                shape = place_shapes.loc[place_shapes['NAME'] == city, 'geometry'].values[0]
-                possible_intersections_index = list(spatial_index.intersection(shape.bounds))
-                possible_intersections = geodata.iloc[possible_intersections_index]
-                precise_intersections = possible_intersections['geometry'].intersects(shape)
-                return precise_intersections[
-                    precise_intersections.values]  # only include shapes that actually intersect
-
-            # Check if cities is a string, if so get a result
-            if isinstance(cities, str):
-                result = geodata.loc[fast_intersect(cities).index.tolist()]
-            else:
-                result = {}
-                for city in cities:
-                    precise_intersections = fast_intersect(city)
-                    result[city] = geodata.loc[precise_intersections.index.tolist()]
-            return result
-
-        else:
-            return geodata
+        self.data = geodata
+        self.sindex = geodata.sindex
 
 
+def calc_percent_residential_in_block_groups():
+    """ Calculates the percent zoned as residential in each block group. Should be run in the setup.py. This has been
+    tested for accuracy but is not in the unittests.
+    """
+
+    from . import zoning
+
+    # Get block and zoning data
+    block_data = BlockBoundaries(data_layers = ['X19_INCOME'], cities = ['Austin', 'Dallas'], get_percent_residential = False)
+    austin_block_data = block_data.data.loc[block_data.data['place'] == 'Austin']
+    dallas_block_data = block_data.data.loc[block_data.data['place'] == 'Dallas']
+
+    # Get zone data and simplify for performance. Note zone data is a geoseries not a geodataframe.
+    dallas_zones = zoning.dallas_inputs.process_zoning_shapefile()
+    dallas_zones = simple.process_geometry(dallas_zones.loc[dallas_zones['broad_zone'].isin(['Single Family', 'Multifamily'])])
+    austin_zones = zoning.austin_inputs.process_zoning_shapefile()
+    austin_zones = simple.process_geometry(austin_zones.loc[austin_zones['broad_zone'].isin(['Single Family', 'Multifamily'])])
+
+    # Now find intersections
+    for cityname, block_data, zone_data in zip(['Dallas', 'Austin'], [dallas_block_data, austin_block_data], [dallas_zones, austin_zones]):
+        print('Starting to work on {}'.format(cityname))
+        spatial_index = zone_data.sindex
+        block_data['area'] = block_data['geometry'].area
+
+        def calc_percent_res(polygon):
+            percent_residential = spatial_joins.polygons_intersect_single_polygon(zone_data, polygon, spatial_index, factors = None, account_for_area = True, horiz = 1, vert = 1)
+            return percent_residential
+
+        block_data['percent_residential'] = block_data['geometry'].apply(calc_percent_res)
+
+    results = pd.concat([austin_block_data['percent_residential'], dallas_block_data['percent_residential']])
+    results.to_csv(bg_percent_residential_path)
 
 austin_zips = [73301, 73344, 78704, 78705, 78708, 78713, 78714, 78715, 78701, 78702, 78703, 78709, 78710, 78711, 78712,
 78716, 78717, 78718, 78719, 78720, 78721, 78722, 78723, 78728, 78729, 78730, 78731, 78734, 78724, 78725, 78726, 78727,
@@ -247,42 +270,3 @@ houston_zips = [77002, 77003, 77004, 77005, 77006, 77007, 77008, 77009, 77010, 7
                 77375, 77377, 77379, 77386, 77388, 77396, 77401, 77406, 77407, 77429, 77433, 77447, 77449, 77450, 77477,
                 77478, 77484, 77489, 77493, 77494, 77498, 77503, 77504, 77506, 77520, 77530, 77532, 77536, 77546, 77547,
                 77571, 77587, 77598]
-
-
-
-# Intersect zoning with zip codes with great precision
-def zip_intersect(gdf, zips):
-    """
-    :param gdf: A geodataframe of some sort (it should probably be in the US, otherwise this is pointless).
-    :param zips: The zip codes in the area of interest.
-    :return: The gdf but with an extra column for each zip code which specifies the fractional area in the zip code.
-    """
-
-    # Make sure zips input and data index is full of strings
-    zips = [str(something) for something in zips]
-    gdf.index = [str(ind) for ind in gdf.index]
-    gdf = gdf.to_crs({'init': 'EPSG:4326'})
-
-    # Get the zip code geodata
-    zipdata = helpers.get_zip_boundaries()
-    zipdata = zipdata.loc[zipdata['ZCTA5CE10'].isin(zips), ['geometry']]
-
-    # Create spatial index of zoning data
-    spatial_index = gdf.sindex
-
-    # Run through zip codes
-    print('Starting to calculate which zones are in which zip codes')
-    for code, row in tqdm(zipdata.iterrows()):
-
-        # Find intersections
-        polygon = row['geometry']
-        possible_matches_index = list(spatial_index.intersection(polygon.bounds))
-        possible_matches = gdf.iloc[possible_matches_index]
-        precise_matches = possible_matches['geometry'].intersection(polygon)
-
-        # Calculate percent of area in the zip code - this is a bit wasteful because most zones are only in one zip code,
-        # but it avoids fragmenting the shapes which are quite hard to put back together.
-        gdf[code] = precise_matches.area / gdf['geometry'].area
-        gdf[code].fillna(value = 0, inplace = True)
-
-    return gdf
