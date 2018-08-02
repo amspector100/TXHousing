@@ -4,11 +4,14 @@ import scipy
 import shapely
 import numpy as np
 import pandas as pd
+from pandas.api.types import CategoricalDtype
+
 import geopandas as gpd
 import warnings
 from . import simple, spatial_joins
 
 texas_places_path = "data/cb_2017_48_place_500k/cb_2017_48_place_500k.shp"
+
 
 # Haversine, area, dist to center - None of these use spatial joins -------------------------------------------------
 
@@ -111,6 +114,44 @@ def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', 
 
 # Part 5: Create dist from city center graphs, for points and polygons ------------------------------------------------
 
+def order_radii(data, inplace = True):
+    """Helper function which properly orders wacky indexes for pandas dataframes. If inplace = False, works
+    with a copy of the data to prevent global effects. """
+
+    # Sort all the floatable values (i.e. 1, 2.5, 3, 4, 5).
+    if inplace == False:
+        data = data.copy()
+
+    values = data.index.unique()
+
+    # Consider some floats
+    sorted_values = sorted([float(v) for v in values if simple.will_it_float(v)])
+
+    # Need to process index at the same time to avoid NaNs from cropping up
+    def process_index(item):
+        if simple.will_it_float(item):
+            item = float(item)
+            if item.is_integer():
+                item = int(item)
+        item = str(item)
+        return item
+    data.index = data.index.map(process_index)
+    sorted_values = list(map(process_index, sorted_values))
+
+    # Add the other values to the final list
+    other_values = [str(v) for v in values if not simple.will_it_float(v)]
+    if len(other_values) > 1:
+        warnings.warn('order_radii may not order properly if more than one value cannot be coerced to a float')
+
+    sorted_values.extend(other_values)
+
+    # Create categorical dtype
+    radii =  CategoricalDtype(sorted_values, ordered = True)
+    data.index = data.index.astype(radii)
+
+    return data
+
+
 def points_intersect_rings(gdf, lat, long, factor = None, step = 1, categorical = True, by = 'mean',
                            geometry_column = 'geometry', per_square_mile = True, maximum = None):
     """
@@ -198,6 +239,7 @@ def points_intersect_rings(gdf, lat, long, factor = None, step = 1, categorical 
             result = result.divide(areas)
 
     # Return result
+    result = order_radii(result)
     return result
 
 
@@ -296,7 +338,6 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
         # Get kwargss to pass to fragment call (we will fragment more as the circle we're dealing with gets bigger)
         horiz = np.ceil(np.sqrt(radius))
         vert = np.ceil(np.sqrt(radius))
-        total_area = circle.area
 
         # Call intersection function
         result.loc[radius] = spatial_joins.polygons_intersect_single_polygon(gdf, circle, spatial_index,
@@ -323,4 +364,5 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
                                                                              account_for_area = True, ignore_empty_space = True,
                                                                              by = 'mean', horiz = horiz, vert = vert)
 
+    result = order_radii(result)
     return result
