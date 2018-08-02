@@ -82,7 +82,7 @@ if calc_percent_residential_in_block_groups:
         block_data['percent_residential'] = block_data['geometry'].apply(calc_percent_res)
 
     results = pd.concat([austin_block_data['percent_residential'], dallas_block_data['percent_residential']])
-    results.to_csv('data/bg_percent_residential.csv')
+    results.to_csv('shared_data/bg_percent_residential.csv')
 
 # Calculate population of nat hist districts in Houston as well as
 if calc_landmarks_in_houston:

@@ -48,7 +48,7 @@ class TestSimpleUtilities(unittest.TestCase):
         try:
             result = simple.make_point_grid(gdf, factor = None, by = 'mean')
         except Exception as e:
-            self.fail('simple.make_point_grid unexpectedly raised {} for factor = None'.format(e))
+            self.fail('simple.make_point_grid unexpectedly raised {} for factors = None'.format(e))
 
     def test_urban_core(self):
 
@@ -74,19 +74,31 @@ class TestSpatialJoins(unittest.TestCase):
         self.p1 = shapely.geometry.polygon.Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         self.p2 = shapely.geometry.polygon.Polygon([[2, 0], [1.5, -1], [1, 0]])
         self.p3 = shapely.geometry.polygon.Polygon([[0, 0], [0, 0.6], [1, 1.6], [1, 0]])
+
+        # Large polygons
         self.large_polygons = gpd.GeoDataFrame(data = pd.DataFrame(pd.Series(['name1', 'name2']), columns = ['name']), geometry = [self.p1, self.p2])
+
+
+        # Create version of large_polygons that will throw a warning because a point will lie in multiple polygons;
+        # then add noncategorical data to the initial large_polygons instance.
+        self.large_polygons_v2 = self.large_polygons.copy()
+        self.large_polygons_v2.loc[self.large_polygons_v2.index[-1] + 1] = ['name3', self.p3]
+
+        self.large_polygons['value'] = np.arange(0, self.large_polygons.shape[0], 1) + 2
+        self.large_polygons['value2'] = np.arange(0, self.large_polygons.shape[0], 1) + 3
+
+
+        # Points
         self.points = [shapely.geometry.point.Point([0.5, 0.5]), shapely.geometry.point.Point([0.3, 0.4]),
                        shapely.geometry.point.Point(1.3, 0.3), shapely.geometry.point.Point([0.4, 0.2])]
         self.points_gdf = gpd.GeoDataFrame(data = pd.DataFrame(pd.Series([1,2,3,4]), columns = ['value']), geometry = self.points)
+        self.points_gdf['value2'] = [0, 1, 2, 3]
 
         # Create small gdf
         small_gdf = self.points_gdf.copy()
         small_gdf['geometry'] = small_gdf['geometry'].apply(lambda x: x.buffer(5))
         self.small_gdf = small_gdf
 
-        # Create version of large_polygons that will throw a warning because a point will lie in multiple polygons
-        self.large_polygons_v2 = self.large_polygons.copy()
-        self.large_polygons_v2.loc[self.large_polygons_v2.index[-1] + 1] = ['name3', self.p3]
 
     def test_points_intersections(self):
 
@@ -101,19 +113,22 @@ class TestSpatialJoins(unittest.TestCase):
         # Check that calculations and intersections are correct for points_intersect_single_polygon
         categorical_result = spatial_joins.points_intersect_single_polygon(points = self.points_gdf, polygon = self.p1,
                                                                            spatial_index = self.points_gdf.sindex,
-                                                                           factor = 'value', categorical = True)
-        self.assertEqual(categorical_result.unique().tolist(), [1],
+                                                                           factors = ['value', 'value2'], categorical = True)
+
+        self.assertEqual(np.unique(categorical_result.values).tolist(), [1],
                          'spatial_joins.points_intersect_single_polygon incorrectly calculates intersections')
 
-        self.assertEqual(categorical_result.index.tolist(), [1, 2, 4],
+        self.assertEqual(categorical_result.index.tolist(), [(1, 0), (2, 1), (4, 3)],
                          """spatial_joins.points_intersect_single_polygon either incorrectly calclulates intersections 
                          or incorrectly groups by categorical factors""")
 
         continuous_result = spatial_joins.points_intersect_single_polygon(points = self.points_gdf, polygon = self.p1,
                                                                            spatial_index = self.points_gdf.sindex,
-                                                                           factor = 'value', categorical = False, by = 'median')
+                                                                           factors = ['value', 'value2'], categorical = False, by = 'median')
 
-        self.assertEqual(continuous_result, 2,
+        self.assertIsInstance(continuous_result, pd.Series,
+                              'spatial_joins.points_intersect_single_polygon does not return a series for multiple non-categorical factors')
+        self.assertEqual(continuous_result['value'], 2,
                          """spatial_joins.points_intersect_single_polygon  either incorrectly calclulates intersections 
                          or incorrectly calculates medians""")
 
@@ -142,11 +157,10 @@ class TestSpatialJoins(unittest.TestCase):
 
         # Now test polygons_intersect_single_polygon
         spatial_index = self.large_polygons.sindex
-        self.large_polygons['value'] = np.arange(0, self.large_polygons.shape[0], 1) + 2
         categorical_result = spatial_joins.polygons_intersect_single_polygon(small_polygons = self.large_polygons,
                                                                              polygon = self.p3,
                                                                              spatial_index = spatial_index,
-                                                                             factor = 'name',
+                                                                             factors = 'name',
                                                                              categorical = True)
         self.assertAlmostEqual(categorical_result['name2'], 0,
                                msg = 'spatial_joins.polygons_intersect_single_polygon incorrectly calculates intersections')
@@ -154,11 +168,12 @@ class TestSpatialJoins(unittest.TestCase):
         continuous_result = spatial_joins.polygons_intersect_single_polygon(small_polygons = self.large_polygons,
                                                                             polygon = self.p3,
                                                                             spatial_index = spatial_index,
-                                                                            factor = 'value',
+                                                                            factors = ['value', 'value2'],
                                                                             by = 'mean',
                                                                             categorical = False)
+
         expected_result = 2*(self.large_polygons.loc[0, 'geometry'].intersection(self.p3).area/self.p3.area)
-        self.assertAlmostEqual(continuous_result, expected_result,
+        self.assertAlmostEqual(continuous_result['value'], expected_result,
                                msg = 'spatial_joins.polygons_intersect_single_polygon incorrectly calculates area-weighted means')
 
 

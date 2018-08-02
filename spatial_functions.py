@@ -244,7 +244,7 @@ def get_block_geodata(data_layers, cities = None, get_percent_residential = True
 
     # Get the percent of land which is zoned residential inside the city limits
     if get_percent_residential:
-        percent_residential = pd.read_csv('data/bg_percent_residential.csv', index_col = 0).fillna(1)
+        percent_residential = pd.read_csv('shared_data/bg_percent_residential.csv', index_col = 0).fillna(1)
         percent_residential.columns = ['percent_residential']
         geodata = geodata.join(percent_residential)
 

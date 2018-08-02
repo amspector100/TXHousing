@@ -255,7 +255,7 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
     calculate the mean/median of a continuous variable (adjusting for the area of the polygons).
 
     :param gdf: Geopandas GeoDataFrame, in polygon geometry.
-    :param factor: A factor of the gdf to condition on or calculate means/medians of, e.g. 'Race' or'Population'
+    :param factor: A factor of the gdf to condition on or calculate means/medians of e.g. 'Race' or 'Population'
     :param lat: The latitude of the center of the rings.
     :param long: The longitude of the center of the rings.
     :param newproj: the new projection system necessarily used in this. Defaults to 2277 which is good for Austin and
@@ -284,7 +284,7 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
     """
 
     feet_to_mile = 5280
-    gdf = simple.process_geometry(gdf)
+    gdf = simple.process_geometry(gdf, geometry_column = geometry_column)
     gdf.reset_index(drop = True)
     gdf.index = [str(ind) for ind in gdf.index]
 
@@ -305,15 +305,15 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
     center_gdf = center_gdf.to_crs({'init':newproj})
     center = center_gdf.loc[0, 'geometry']
 
+    # Possibly get city shape
+    if city is not None:
+        place_shapes = gpd.read_file(texas_places_path)
+        place_shapes.crs = {'init': 'epsg:4326'}
+        city_shape = place_shapes.loc[place_shapes['NAME'] == city, 'geometry'].values[0]
 
     # Initialize result. If categorical, need a dataframe (one column for each unique value). Else, use a pd.Series.
     if factor is None or categorical == False:
         result = pd.Series()
-        if city is not None:
-            place_shapes = gpd.read_file(texas_places_path)
-            place_shapes.crs = {'init':'epsg:4326'}
-            city_shape = place_shapes.loc[place_shapes['NAME'] == city, 'geometry'].values[0]
-
     else:
         result = pd.DataFrame(columns = gdf[factor].unique().tolist())
 
@@ -341,7 +341,7 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
 
         # Call intersection function
         result.loc[radius] = spatial_joins.polygons_intersect_single_polygon(gdf, circle, spatial_index,
-                                                                             factor = factor, categorical = categorical,
+                                                                             factors = factor, categorical = categorical,
                                                                              account_for_area = True, ignore_empty_space = True,
                                                                              by = 'mean', horiz = horiz, vert = vert)
 
@@ -360,7 +360,7 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
         label = str(radius) + '+'
 
         result.loc[label] = spatial_joins.polygons_intersect_single_polygon(gdf, circle, spatial_index,
-                                                                             factor = factor, categorical = categorical,
+                                                                             factors = factor, categorical = categorical,
                                                                              account_for_area = True, ignore_empty_space = True,
                                                                              by = 'mean', horiz = horiz, vert = vert)
 

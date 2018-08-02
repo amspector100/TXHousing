@@ -6,24 +6,25 @@ import warnings
 from . import simple
 
 def points_intersect_single_polygon(points, polygon, spatial_index, points_geometry_column = 'geometry',
-                             factor = None, categorical = True, by = 'mean', **kwargs):
+                             factors = None, categorical = True, by = 'mean', **kwargs):
     """
 
-    Given many points and a polygon, finds one of three things. (1) If factor = None, the number of points inside the
-    polygon, (2) if factor is not None and categorical = True, the number of points inside the polygon subsetted by a
-    categorical factor, (3) if factor is not None and categorical = False, the summarized value (mean/median)
-    of a factor associated with each point of each point inside the polygon.
+    Given many points and a polygon, finds one of three things. (1) If factors = None, the number of points inside the
+    polygon, (2) if factors is not None and categorical = True, the number of points inside the polygon subsetted by a
+    categorical factors, (3) if factors is not None and categorical = False, the summarized value (mean/median)
+    of a factors associated with each point of each point inside the polygon.
 
     :param points: A GDF with a points geometry column
     :param polygon: The polygon to see whether the points are inside.
     :param spatial_index: The spatial index of the points
-    :param factor: The factor to average over (if continuous) or subset by (if categorical).
+    :param factors: The factors to average over (if continuous) or subset by the cartesian product of (if categorical).
+        This may be a list or a string.
     :param categorical: If True, then the factor should be treated as a categorical variable.
     :param by: If categorical is False, can either summarize using by = 'mean' or by = 'median'
     :param **kwargs: Kwargs to pass to the "fragment" function in the TXHousing.utilities.simple module. Fragmenting polygons
         speeds up the computation for all but very small polygons. If you do not want to fragment the polygons (the
         only reason to do this is speed, it will not affect the results), pass in horiz = 1 and vert = 1 as kwargs.
-    :return: float or pandas series
+    :return: Pandas series
 
     Note: it is often useful to apply this function to an entire gdf of polygons.
 
@@ -43,23 +44,23 @@ def points_intersect_single_polygon(points, polygon, spatial_index, points_geome
         precise_matches_index = set(possible_matches.index[possible_matches.intersects(grid_piece)].tolist())
         all_precise_matches_indexes = all_precise_matches_indexes.union(precise_matches_index)
 
-    if factor is None:
+    if factors is None:
         return len(precise_matches_index)
     else:
         precise_matches = points.loc[all_precise_matches_indexes]
         if categorical == True:
-            return precise_matches.groupby(factor)[points_geometry_column].count()
+            return precise_matches.groupby(factors)[points_geometry_column].count()
         elif by == 'mean':
-            return precise_matches[factor].mean()
+            return precise_matches[factors].mean()
         elif by == 'median':
-            return precise_matches[factor].median()
+            return precise_matches[factors].median()
         else:
             raise ValueError(
             'In points_intersect_polygon call, "by" must either equal "mean" or "median," not "{}"'.format(by))
 
 
 def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, geometry_column = 'geometry',
-                                      factor = None, categorical = True, account_for_area = True, ignore_empty_space = False, by = 'mean', **kwargs):
+                                      factors = None, categorical = True, account_for_area = True, ignore_empty_space = False, by = 'mean', **kwargs):
     """
 
     Given many polygons (i.e. parcels) and a larger polygon (i.e. county boundary), finds one of three things.
@@ -72,7 +73,7 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
     :param small_polygons: A GDF with a polygon geometry column
     :param polygon: The polygon to see whether the small_polygons are inside.
     :param spatial_index: The spatial index of the small_polygons
-    :param factor: The factor to average over (if continuous) or subset by (if categorical).
+    :param factors: The factors to average over (if continuous) or subset by the cartesian product of (if categorical).
     :param categorical: If True, then the factor should be treated as a categorical variable.
     :param by: If categorical is False, can either summarize using by = 'mean' or by = 'median'
     :param account_for_area: If categorical is False, by = 'mean', and account_for_area = True, then instead of returning
@@ -109,20 +110,28 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
     precise_matches['area'] = precise_matches[geometry_column].area
 
     # Calculate answers
-    if factor is None:
+    if factors is None:
         return precise_matches['area'].sum()
+
+    # Group by categorical
+    if categorical == True:
+        return precise_matches.groupby(factors)['area'].sum().divide(polygon.area)
     else:
-        if categorical == True:
-            return precise_matches.groupby(factor)['area'].sum().divide(polygon.area)
-        elif by == 'mean':
+        factor_data = precise_matches[factors]
+
+        # Transpose if there are multiple factors (for dot product)
+        if isinstance(factors, str) == False:
+            factor_data = factor_data.T
+
+        if by == 'mean':
             if account_for_area and ignore_empty_space:
-                return precise_matches[factor].dot(precise_matches['area'])/(precise_matches['area'].sum())
+                return factor_data.dot(precise_matches['area'])/(precise_matches['area'].sum())
             elif account_for_area:
-                return precise_matches[factor].dot(precise_matches['area'])/(polygon.area)
+                return factor_data.dot(precise_matches['area'])/(polygon.area)
             else:
-                return precise_matches[factor].mean()
+                return factor_data.mean()
         elif by == 'median':
-            return precise_matches[factor].median()
+            return factor_data.median()
         else:
             raise ValueError(
             'In points_intersect_polygon call, "by" must either equal "mean" or "median," not "{}"'.format(by))
