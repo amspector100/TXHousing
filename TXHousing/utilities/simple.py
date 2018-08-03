@@ -36,6 +36,12 @@ def convert_to_hex(rgba_color):
 
 # Processing functions ----------------------------------------------------------------------------------------
 
+def retrieve_coords(point):
+    """Retrieves coords and reverses their order for shapely point. (Reverses because folium and GeoPandas use opposite lat/long conventions)."""
+    result = list(point.coords[:][0][0:])
+    result.reverse()
+    return result
+
 def process_geometry(gdf, geometry_column = 'geometry', drop_multipolygons = True):
     """Processing for polygon-based gdfs: makes geometries valid and possibly drops multipolygons."""
 
