@@ -32,7 +32,7 @@ def convert_to_hex(rgba_color):
 
 # Get zip boundaries data for the entire United States ----------------------------------------------------------------------- Zip Data
 def get_zip_boundaries():
-    zipdata = gpd.read_file(zip_boundaries_path)
+    zipdata = gpd.read_file(zip_boundaries_path
     zipdata.index = zipdata['ZCTA5CE10']
     zipdata.index = [str(ind) for ind in zipdata.index]
     return zipdata
