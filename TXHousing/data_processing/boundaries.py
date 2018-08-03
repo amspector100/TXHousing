@@ -104,7 +104,7 @@ class Boundaries():
 
         :param gdf: A geodataframe, in the same crs as the boundaries data.
         :param geometry_column: The geometry column of the gdf.
-        :param **kwargs: kwargs to pass to the underlying fast_polygon_intersection or points_intersect_multiple_polygons
+        :param kwargs: kwargs to pass to the underlying fast_polygon_intersection or points_intersect_multiple_polygons
             functions.
         :return: A pandas series mapping the index of the gdf to the indexes/names of the boundaries. If an index does not
             appear in the returned series, that is because the point/polygon for that index did not lie inside any of
@@ -112,7 +112,7 @@ class Boundaries():
 
         """
 
-        gdf = self.process_external_gdf(gdf)
+        gdf = self.process_external_gdf(gdf, geometry_column = geometry_column)
 
         sample_geometry = gdf.loc[gdf.index[0], geometry_column]
         if isinstance(sample_geometry, shapely.geometry.polygon.Polygon):
@@ -126,15 +126,46 @@ class Boundaries():
         else:
             raise TypeError('gdf geometry must be a Shapely point or polygon, not {}'.format(type(sample_geometry)))
 
-    def spatial_summary(self, gdf, geometry_column = 'geometry', **kwargs):
+    def push_features(self, gdf, features, geometry_column = 'geometry', **kwargs):
 
         """
 
-        A slower alternative to the fast_intersection method. Currently not implemented.
+        Given features in boundaries data, this "pushes" or calculates those features for another gdf of other (usually
+        smaller) polygons. This is effectively a slower alternative to the fast_intersection method.
+
+        :param GeoDataFrame gdf: A geodataframe of polygon geometry.
+        :param features: The factors to calculate
+        :param geometry_column: The geometry column of the gdf.
+        :param kwargs: kwargs to pass to the underlying get_averages_by_area function.
+        :return: The gdf but with 'factors' columns.
 
         """
 
-        pass
+        gdf = self.process_external_gdf(gdf, geometry_column = geometry_column)
+
+        result = spatial_joins.get_averages_by_area(data_source = self.data, other_geometries = gdf, features = features,
+                                                    other_geometries_column = geometry_column, **kwargs)
+        return result
+
+    def pull_features(self, gdf, features, geometry_column = 'geometry', **kwargs):
+
+        """
+
+        Given features in a non-boundaries gdf, this "pulls" or calculates those features for the boundary data attribute.
+        This a slower alternative to the fast_intersection method.
+
+        :param GeoDataFrame gdf: A geodataframe of polygon geometry.
+        :param features: The factors to calculate from the gdf.
+        :param geometry_column: The geometry column of the gdf.
+        :param kwargs: kwargs to pass to the underlying get_averages_by_area function.
+        :return: None but modifies self.data so that it has 'factors' columns.
+
+        """
+
+        container = self.data
+
+        self.data = spatial_joins.get_averages_by_area(data_source = gdf, other_geometries = self.data, features = features,
+                                                    other_geometries_column = geometry_column, **kwargs)
 
     def plot(self, **kwargs):
         self.data.plot(**kwargs)
@@ -164,7 +195,6 @@ class ZipBoundaries(Boundaries):
 
         super().__init__(path = zip_boundaries_path, index_col = 'ZCTA5CE10', index_type = 'str', subset_by = subset_by,
                          subset_to = self.ziplist, bounding_counties=bounding_counties, bounding_polygon=bounding_polygon)
-
 
 class BlockBoundaries(Boundaries):
     """ Class for block data, wraps Boundaries class, with a substantially different init method. After initialization,
@@ -213,7 +243,6 @@ class BlockBoundaries(Boundaries):
 
         self.data = geodata
         self.sindex = geodata.sindex
-
 
 def calc_percent_residential_in_block_groups():
     """ Calculates the percent zoned as residential in each block group. Should be run in the setup.py. This has been

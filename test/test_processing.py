@@ -3,10 +3,14 @@
 import os
 from TXHousing.data_processing import zoning, property, parcel, boundaries
 import TXHousing.chdir # This changes the directory to the parent directory
-import matplotlib.pyplot as plt
 
 import unittest
 import warnings
+import numpy as np
+
+# Set random state for repeatability
+np.random.seed(110)
+
 
 comprehensive_flag = False
 while comprehensive_flag not in ['y', 'n']:
@@ -81,7 +85,7 @@ class TestParcelProcessing(unittest.TestCase):
     def test_processing(self):
         if comprehensive_flag == 'y':
             try:
-                houston_parcel_data = parcel.process_houston_parcel_data()
+                houston_parcel_data = parcel.process_houston_parcel_data(county_level = False)
                 del houston_parcel_data #( Save memory )
             except Exception as e:
                 self.fail('process_houston_parcel_data unexpectedly raised {}'.format(e))
@@ -112,7 +116,7 @@ class TestBoundariesProcessing(unittest.TestCase):
 
         # This actually has remarkably high code coverage for __init__ although it might not seem like it initially
         try:
-            zipdata = boundaries.ZipBoundaries(ziplist = None, bounding_counties = ['Harris', 'Travis'])
+            zipdata = boundaries.ZipBoundaries(ziplist = None, bounding_counties = ['Travis'])
         except Exception as e:
             self.fail('Boundaries class initialization unexpectedly raised {}'.format(e))
 
@@ -136,6 +140,11 @@ class TestBoundariesProcessing(unittest.TestCase):
             blockdata = boundaries.BlockBoundaries(data_layers = ['X01_AGE_AND_SEX', 'X08_COMMUTING', 'X19_INCOME'], cities = ['Austin'])
         except Exception as e:
             self.fail('BlockBoundaries class initialization unexpectedly raised {}'.format(e))
+
+        # Test pull and pushing data
+        zipdata.data = zipdata.data.sample(15)
+        zipdata.pull_features(blockdata.data, features = 'B01001e1', account_method = 'percent_residential')
+        zipdata.data = blockdata.push_features(zipdata.data, features=['B01002e1'], account_method='water')
 
 
 

@@ -60,7 +60,8 @@ def points_intersect_single_polygon(points, polygon, spatial_index, points_geome
 
 
 def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, geometry_column = 'geometry',
-                                      factors = None, categorical = True, account_for_area = True, ignore_empty_space = False, by = 'mean', **kwargs):
+                                      factors = None, categorical = True, account_for_area = True,
+                                      divide_area_by = 'polygon', by = 'mean', **kwargs):
     """
 
     Given many polygons (i.e. parcels) and a larger polygon (i.e. county boundary), finds one of three things.
@@ -74,14 +75,16 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
     :param polygon: The polygon to see whether the small_polygons are inside.
     :param spatial_index: The spatial index of the small_polygons
     :param factors: The factors to average over (if continuous) or subset by the cartesian product of (if categorical).
-    :param categorical: If True, then the factor should be treated as a categorical variable.
-    :param by: If categorical is False, can either summarize using by = 'mean' or by = 'median'
+    :param categorical: If True, factors will be treated as categorical variables.
+    :param by: If categorical is False, can summarize with by = 'mean' or by = 'median'
     :param account_for_area: Default True. If True, instead of returning the mean of the factor, this will return the
         dot product of the mean and the area of each small_polygon that intersects the large_polygon divided by the area
-         of the large polygon (happens if categorical is False, by = 'mean', and account_for_area = True). Also,
-         if factor = None, divides answer by area of polygon.
-    :param ignore_empty_space: Defaults False. If true and account_for_area is True (and categorical = False and by = 'mean'),
-        then instead of dividing by the area of the large_polygon, will divide by the sum of the area of the intersections.
+        of the large polygon (happens if categorical is False, by = 'mean', and account_for_area = True). Also,
+        if factor = None, divides answer by area of polygon.
+    :param divide_area_by: Defaults to 'polygon'. If account_for_area = True and by = 'mean', this parameter determines
+        what to divide the dot product of the mean and area of each small polygon by. If divide_area_by = 'polygon',
+        then this divides by the area of the polygon. If divide_area_by = 'nonempty', it will divide by the total area
+        of the intersection between the polygon/small_polygons. Else, it will simply return the dot product without dividing.
     :param **kwargs: Kwargs to pass to the "fragment" function in the TXHousing.utilities.simple module. Fragmenting polygons
         speeds up the computation for all but very small polygons. If you do not want to fragment the polygons (the
         only reason to do this is speed, it will not affect the results), pass in horiz = 1 and vert = 1 as kwargs.
@@ -128,12 +131,17 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
             factor_data = factor_data.T
 
         if by == 'mean':
-            if account_for_area and ignore_empty_space:
+
+            # Different division methods
+            if account_for_area and divide_area_by == 'nonempty':
                 return factor_data.dot(precise_matches['area'])/(precise_matches['area'].sum())
-            elif account_for_area:
+            elif account_for_area and divide_area_by == 'polygon':
                 return factor_data.dot(precise_matches['area'])/(polygon.area)
+            elif account_for_area:
+                return factor_data.dot(precise_matches['area'])
             else:
                 return factor_data.mean()
+
         elif by == 'median':
             return factor_data.median()
         else:
@@ -234,3 +242,112 @@ def fast_polygon_intersection(small_polygon_gdf, large_polygon_gdf, small_geomet
     small_polygon_gdf.set_geometry(small_geometry_column) # Undo global effects on small_polygon_gdf
 
     return result
+
+
+def get_averages_by_area(data_source, other_geometries, features, density_flag = False, data_source_geometry_column = 'geometry',
+                             other_geometries_column = 'geometry', drop_multipolygons = True, account_method = None,
+                        horiz = 1, vert = 1):
+    """
+
+    Get averages of features from data_source by area. Data_source and other_geometries should have the
+    same crs initially. This is a wrapper for polygons_intersect_single_polygon and is therefore quite accurate.
+
+    :param data_source: The data source, usually block data. Must have polygon geometry.
+    :type data_source: GeoDataFrame
+    :param other_geometries:  Will calculate features each row of this gdf from the data source. Must have polygon
+        geometry.
+    :param features: The feature in question. Can also be a list of features, i.e. ['B01001e1', 'B01001e2']
+    :type features: str or list
+    :param density_flag: Default False. If True, will assume that the 'feature' is already units per area and will not
+        divide the feature by the area of the data source polygons.
+    :type density_flag: Boolean
+    :param data_source_geometry_column: geometry column for data_source
+    :param other_geometries_column: geometry column for other_geometries
+    :param account_method: The method by which to account for the % of an area which is not residential (this prevents
+        population-related estimates from being too low). Can either be None, 'percent_residential', or 'percent_land'
+        Defaults to None (although wrappers of this function may have different defaults).
+    :param horiz: When fragmenting polygons, number of horizontal fragments to make. Defaults to 1.
+    :param vert: When fragmenting polygons, number of vertical fragments to make. Defaults to 1.
+    :return: other_geometries but with a new column, feature, which has the averages by area.
+    """
+
+    # Process features and make sure we won't be overwriting anything
+    if isinstance(features, str):
+        features = [features]
+    overwritten_features = [feature for feature in features if feature in other_geometries.columns]
+
+    if len(overwritten_features) != 0:
+        raise AttributeError("""Some features are already present in other_geometries and would be overwritten by 
+        get_averages_by_area: they are {}.""".format(overwritten_features))
+
+    # Process crs
+    if data_source.crs != other_geometries.crs:
+        raise AttributeError("""The crs for data_source ({}) and other_geometries ({}) disagree.""".format(data_source.crs, other_geometries.crs))
+
+    # Process data for convenience (just to prevent multipolygons/invalid polygons from messing things up)
+    data_source = simple.process_geometry(data_source, drop_multipolygons=drop_multipolygons)
+    data_source.reset_index(drop = True)
+    data_source.index = [str(ind) for ind in data_source.index]
+
+    # Start to rename the features to prevent global side effects
+    old_columns_dictionary = {str(feature) + '_density':feature for feature in features}
+    new_columns_dictionary = {feature:str(feature) + '_density' for feature in features}
+    new_columns = [new_columns_dictionary[key] for key in new_columns_dictionary]
+
+    if density_flag == False:
+        # If the features are not per area (i.e. population), then divide them to get feature densities (ie. population density)
+
+        # Account for the percent of land in block groups that may not be populated. Default to None. This is mostly useful
+        # for calculating populations of very small regions, i.e. population of municipal zones.
+
+        if account_method == 'percent_residential':
+            # Using percent_residential accounting method
+            data_source = data_source.loc[data_source['percent_residential'] >= 0.01] # Ignore blocks which are < .5% resid
+            densities = data_source[features].divide(data_source['percent_residential'], axis = 0)
+            densities = densities.divide(data_source[data_source_geometry_column].area, axis = 0)
+        elif account_method == 'water':
+            # Using water accounting method
+            data_source.loc[:, 'percent_land'] = data_source['ALAND'].divide(data_source["ALAND"] + data_source['AWATER'])
+            densities = data_source[features].multiply(data_source['percent_land'], axis = 0)
+            densities = densities.divide(data_source[data_source_geometry_column].area, axis = 0)
+        else:
+            # Not using any accounting method
+            densities = data_source[features].divide(data_source[data_source_geometry_column].area, axis = 0)
+
+    else:
+        # If the features are already in units per area, then don't divide them.
+        densities = data_source[features].copy()
+
+    densities = densities.rename(columns = new_columns_dictionary)
+    data_source = data_source.join(densities)
+
+    other_geometries = simple.process_geometry(other_geometries, drop_multipolygons = drop_multipolygons)
+
+    # Get spatial index
+    data_spatial_index = data_source.sindex
+
+    # Quick function to apply to geometry column for other_geometries
+    def get_avg(polygon):
+        result = polygons_intersect_single_polygon(data_source, polygon, data_spatial_index, factors = new_columns,
+                                                   categorical = False, account_for_area = True, divide_area_by = None,
+                                                   by = 'mean', horiz = horiz, vert = vert)
+        return result
+
+    # Get averages by area - this takes a while.
+    final_values = other_geometries[other_geometries_column].apply(get_avg)
+
+    # If the features were provided as densities, return them as densities
+    if density_flag:
+        final_values = final_values.divide(other_geometries[other_geometries_column].area, axis = 0)
+
+    # Rename columns
+    final_values = final_values.rename(columns = old_columns_dictionary)
+
+    # Join and return
+    if isinstance(final_values, pd.Series):
+        assert len(features) == 1
+        final_values.name = features[0]
+
+    other_geometries = other_geometries.join(final_values)
+
+    return other_geometries

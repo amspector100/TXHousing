@@ -1,7 +1,8 @@
 import time
 import pandas as pd
 import geopandas as gpd
-from ..utilities import simple
+from ..utilities import simple, spatial_joins
+from . import boundaries
 
 # Globals ------------------------------------------------------------------------------------------------------------
 austin_parcel_path = "data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
@@ -96,7 +97,7 @@ def join_dallas_parcel_data():
     return parcel_data
 
 def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path_2018],
-                                feature_columns_list = [houston_building_res_columns]):
+                                feature_columns_list = [houston_building_res_columns], county_level = False):
     """ Merge houston or harris parcel data with harris county data.
 
     :param feature_files: A list of paths of feature files to merge with the data. Defaults to
@@ -126,8 +127,16 @@ def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path
             data.columns = feature_header
             data = data.rename(columns = {'ACCOUNT':'HCAD_NUM'})
             data = data.drop_duplicates(subset=['HCAD_NUM'], keep='first')
-            print('Starting to merge, geodata shape is {}, data shape is {}'.format(geodata.shape, data.shape))
+            data['HCAD_NUM'] = data['HCAD_NUM'].astype(float)
             geodata = geodata.merge(data, how = "left", on = "HCAD_NUM")
+
+    # Subset to only include houston if indicated
+    if county_level == False:
+        place_shapes = gpd.read_file(boundaries.texas_places_path)
+        place_shapes = place_shapes.loc[place_shapes['NAME'] == 'Houston']
+        mapper = spatial_joins.fast_polygon_intersection(geodata, place_shapes, large_name_column='NAME')
+        geodata['place'] = geodata.index.map(mapper)
+        geodata = geodata.loc[geodata['place'].notnull()]
 
     # Return
     return geodata

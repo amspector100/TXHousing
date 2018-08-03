@@ -177,6 +177,32 @@ class TestSpatialJoins(unittest.TestCase):
         self.assertAlmostEqual(continuous_result['value'], expected_result,
                                msg = 'spatial_joins.polygons_intersect_single_polygon incorrectly calculates area-weighted means')
 
+    def test_average_by_area(self):
+
+        # Set up the test with four small polygons and two small ones. data_source look like this
+        #  _ _ _ _
+        # |p3 | p4|
+        # |_ _|_ _|  where the entire outline (p1) is the unit square
+        # |   p2  |
+        # |_ _ _ _|
+
+        p1 = self.p1 # This is the unit square
+        p2 = shapely.affinity.scale(p1, yfact = 0.5, origin = (0,0))
+        p3 = shapely.affinity.translate(shapely.affinity.scale(p1, xfact = 0.5, yfact = 0.5, origin = (0,0)), xoff = 0, yoff = 0.5)
+        p4 = shapely.affinity.translate(shapely.affinity.scale(p1, xfact = 0.5, yfact = 0.5, origin = (0,0)), xoff = 0.5, yoff = 0.5)
+        data_source = gpd.GeoDataFrame(data = pd.DataFrame(np.arange(6).reshape(3, 2), columns = ['value', 'value2']), geometry = [p2, p3, p4])
+
+        other_geometries = gpd.GeoDataFrame(geometry = [p1, p2])
+        result = spatial_joins.get_averages_by_area(data_source = data_source, other_geometries = other_geometries,
+                                                    features = ['value', 'value2'], density_flag = True, horiz = 2, vert = 2)
+
+        expected_value1_result = [0*p2.area + 2*p3.area + 4*p4.area, 0]
+        expected_value2_result = [1*p2.area + 3*p3.area + 5*p4.area, 1]
+
+        self.assertEqual(result['value'].values.tolist(), expected_value1_result, 'get_averages_by_area fails to properly calculate area-weighted averages')
+        self.assertEqual(result['value2'].values.tolist(), expected_value2_result, 'get_averages_by_area fails to properly calculate area-weighted averages')
+
+        # Now test to make sure it raises errors properly
 
 
 

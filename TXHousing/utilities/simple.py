@@ -5,6 +5,7 @@ import shapely
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+import warnings
 
 # Misc --------------------------------------------------------------
 def will_it_float(text):
@@ -37,10 +38,16 @@ def convert_to_hex(rgba_color):
 
 def process_geometry(gdf, geometry_column = 'geometry', drop_multipolygons = True):
     """Processing for polygon-based gdfs: makes geometries valid and possibly drops multipolygons."""
+
     gdf.loc[:, geometry_column] = gdf[geometry_column].apply(lambda poly: poly if poly.is_valid else poly.buffer(0))
     gdf = gdf.loc[gdf[geometry_column].apply(lambda x: x is not None)]
+
+    # Drop multipolygons and warn user if this is a bad idea
     if drop_multipolygons:
         gdf = gdf.loc[gdf[geometry_column].apply(lambda x: isinstance(x, shapely.geometry.polygon.Polygon))]
+        if gdf.shape[0] == 0:
+            warnings.warn('In process_geometry call, dropping polygons may have eliminated all the data')
+
     return gdf
 
 def process_points(points, geometry_column = 'geometry'):

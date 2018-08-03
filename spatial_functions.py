@@ -319,7 +319,7 @@ def get_average_by_area(data_source, spatial_index, polygon, density_features = 
 def get_all_averages_by_area(data_source, other_geometries, features = 'B01001e1', data_source_geometry_column = 'geometry',
                              other_geometries_column = 'geometry', drop_multipolygons = True, fillna = None, account_method = 'percent_residential'):
     """
-    Get averages of a 'feature' from 'data_source' by area. Note: data_source and other_geometries should have the
+    Get averages of features from data_source by area. Note: data_source and other_geometries should have the
     same crs initially.
     :param data_source: The data source, usually block data. Geodataframe. Must have a column specifying total population.
     :param other_geometries: Geodataframe, where the geometry column is filled with polygons. Will calculate the feature

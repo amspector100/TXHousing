@@ -342,7 +342,7 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
         # Call intersection function
         result.loc[radius] = spatial_joins.polygons_intersect_single_polygon(gdf, circle, spatial_index,
                                                                              factors = factor, categorical = categorical,
-                                                                             account_for_area = True, ignore_empty_space = True,
+                                                                             account_for_area = True, divide_area_by = 'nonempty',
                                                                              by = 'mean', horiz = horiz, vert = vert)
 
         # And adjust to sum to 1 for categorical calls
@@ -361,7 +361,7 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
 
         result.loc[label] = spatial_joins.polygons_intersect_single_polygon(gdf, circle, spatial_index,
                                                                              factors = factor, categorical = categorical,
-                                                                             account_for_area = True, ignore_empty_space = True,
+                                                                             account_for_area = True, divide_area_by = 'nonempty',
                                                                              by = 'mean', horiz = horiz, vert = vert)
 
     result = order_radii(result)
