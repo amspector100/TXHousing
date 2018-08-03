@@ -1,7 +1,7 @@
 """Tests the data_processing package."""
 
 import os
-from TXHousing.data_processing import zoning, property, parcel, boundaries
+from TXHousing.data_processing import zoning, property, parcel, permit, boundaries
 import TXHousing.chdir # This changes the directory to the parent directory
 
 import unittest
@@ -146,6 +146,49 @@ class TestBoundariesProcessing(unittest.TestCase):
         zipdata.pull_features(blockdata.data, features = 'B01001e1', account_method = 'percent_residential')
         zipdata.data = blockdata.push_features(zipdata.data, features=['B01002e1'], account_method='water')
 
+class TestPermitProcessing(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_raw_data_existence(self):
+
+        self.assertTrue(os.path.exists(permit.austin_permit_path),
+                        'Austin permit data is not in the data directory; download it from https://data.austintexas.gov/Building-and-Development/Issued-Construction-Permits/3syk-w9eu')
+        self.assertTrue(os.path.exists(permit.dallas_permit_path),
+                        'Dallas permit data is not in the data directory; download it from https://www.dallasopendata.com/City-Services/Building-Inspection-Master-Permits/ks9j-qkj8')
+        self.assertTrue(os.path.exists(permit.houston_structural_permits_path),
+                        'Houston structural permit data is not in the data directory; download it from https://cohgis-mycity.opendata.arcgis.com/datasets/permits-wm-structural')
+        self.assertTrue(os.path.exists(permit.houston_structural_permits_path),
+                        'Houston demolition permit data is not in the data directory; download it from https://cohgis-mycity.opendata.arcgis.com/datasets/demolition-ilms-code-sd-1')
+
+    def test_processed_data_existence(self):
+
+        self.assertTrue(os.path.exists(permit.dpm_save_path),
+                        """Dallas corrected permit data is not in the data directory; pull it from https://github.com/amspector100/TXHousing/tree/reorganization/shared_data, 
+                        or run permit.correct_dallas_permit_data()""")
+        self.assertTrue(os.path.exists(permit.houston_permit_statuses_path),
+                        """Houston permit updated approval statues are not in the data directory; pull them from https://github.com/amspector100/TXHousing/tree/reorganization/shared_data, 
+                        or run permit.scrape_houston_permit_data()""")
+
+
+    def test_basic_processing_functions(self):
+
+        if comprehensive_flag == 'y':
+            pass
+
+        try:
+            data = permit.process_austin_permit_data(searchfor = ['S.F.'])
+        except Exception as e:
+            self.fail('permit.process_austin_permit_data unexpectedly raised {}'.format(e))
+        try:
+            data = permit.get_corrected_dallas_permit_data()
+        except Exception as e:
+            self.fail('permit.get_corrected_dallas_permit_data unexpectedly raised {}'.format(e))
+        try:
+            data = permit.process_houston_permit_data()
+        except Exception as e:
+            self.fail('permit.get_corrected_dallas_permit_data unexpectedly raised {}'.format(e))
 
 if __name__ == '__main__':
     unittest.main()

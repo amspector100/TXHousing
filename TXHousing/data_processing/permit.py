@@ -5,12 +5,11 @@ import geopandas as gpd
 import warnings
 import shapely.geometry
 
-
 # Filepaths
 austin_permit_path = 'data/austin_construction_permits.csv'
 
 dallas_permit_path = 'data/dallas_construction_permits.csv'
-dpm_save_path = "data/Zoning Shapefiles/Dallas Corrected Permits/dallas_permits_corrected.shp"
+dpm_save_path = "shared_data/dallas_corrected_permits/dallas_permits_corrected.shp"
 
 houston_structural_permits_path = "data/Houston_Structural_Permits/Permits_wm_Structural.shp"
 houston_demolition_permits_path = "data/Houston_Demolition_Permits/Demolition_ILMS_Code_SD.shp"
@@ -31,10 +30,7 @@ def process_austin_permit_data(searchfor, permittypedesc=None, workclass=None,
     :return: GeoDataFrame of subsetted permit data.
     """
 
-    time0 = time.time()
-    print('Reading Austin permit data')
     permit_data = pd.read_csv(austin_permit_path)
-    print('Finished reading Austin permit data, took {}. Now subsetting.'.format(time.time() - time0))
 
     # Initial subset
     construction = permit_data
@@ -71,7 +67,6 @@ def process_austin_permit_data(searchfor, permittypedesc=None, workclass=None,
     construction = gpd.GeoDataFrame(data=construction, geometry=points)
     construction.crs = {'init': 'epsg:4326'}
 
-    print('Finished processing Austin permit data, took {}.'.format(time.time() - time0))
     return construction
 
 # Dallas -----------------------------------------------
@@ -135,7 +130,7 @@ def process_dallas_permit_data(permit_types, earliest=None, latest=None):
     return construction
 
 
-def correct_dallas_permit_data(address_cache_path = None, dpm_save_path = None, re_geocode = True):
+def correct_dallas_permit_data(api_key = None, address_cache_path = None, dpm_save_path = None, re_geocode = True):
     """
 
     Corrects and caches dallas construction permit data. This function worked the first time but is a untested
@@ -156,9 +151,13 @@ def correct_dallas_permit_data(address_cache_path = None, dpm_save_path = None, 
     from tqdm import tqdm
 
     # Retrieve api key - to get one, follow the directions listed at https://github.com/googlemaps/google-maps-services-python
-    api_key_path = "C:/Users/amspe/Desktop/gmaps_apikey.txt"
-    with open(api_key_path, 'r') as file:
-        api_key = file.read()
+    if api_key is None:
+        try:
+            api_key_path = "C:/Users/amspe/Desktop/gmaps_apikey.txt"
+            with open(api_key_path, 'r') as file:
+                api_key = file.read()
+        except FileNotFoundError as e:
+            raise TypeError('You need to register with google to receive a geocoding API key - see directions at https://github.com/googlemaps/google-maps-services-python')
 
     # Instantiate gmaps client
     gmaps = googlemaps.Client(key=api_key)
@@ -453,8 +452,6 @@ def scrape_houston_permit_data(target_path = houston_permit_statuses_path, kind 
 
     if __name__ == '__main__':
 
-        from helpers import process_houston_permit_data
-
         # Step 1: Get all the unique project numbers
         if kind == 'structural':
             searchfor = ['NEW S.F.', 'NEW SF', 'NEW SINGLE', 'NEW TOWNHOUSE', 'NEW AP', 'NEW HI-'] # All residential buildings
@@ -466,7 +463,6 @@ def scrape_houston_permit_data(target_path = houston_permit_statuses_path, kind 
         earliest = 2010
         latest = None
 
-        print('Processing permit data')
         houston_permit_data = process_houston_permit_data(searchfor=searchfor,
                                                           searchin=searchin,
                                                           kind=kind,
