@@ -36,14 +36,15 @@ class Property_Input():
     :param path: Path of the dataset of property data. Data should be in a csv.
     :param source: Source of the data; can either be "Zillow" or "Realtor"
     :param feature: Name of the feature. In the case of Realtor data, this must be the column of the data.
-    :param geo_filter_parameters: A list of City classes which are used to subset the data.
     :param geo_filter: A kwarg. This is the geography level (i.e. city, state, county) by which to filter data,
         and it should be a column of the dataset. Default depends on the source.
+    :param geo_filter_values: A list of values to subset the data to (by geo_filter). Defaults to some flavor of
+        ['Austin', 'Houston', 'Dallas'] - but the specific strings are set to the source. If geo_filter_values == 'all',
+        then the data will not be filtered.
     :param index_col: A kwarg. The column to use as the index. Default depends on the source.
-    :param name: an alternate name for graphical display of the feature. Defaults to the feature string.
     """
 
-    def __init__(self, path, source, geo_filter = None, geo_filter_values = None, index_col = None, name = None):
+    def __init__(self, path, source, geo_filter = None, geo_filter_values = None, index_col = None):
 
         self.path = path
         if source not in ['Zillow', 'Realtor']:
@@ -70,9 +71,11 @@ class Property_Input():
                 self.index_col = 'ZipCode'
 
 
-    def process_property_data(self, features = None):
+    def process_property_data(self, features = None, geo_filter_values = None):
         """
         :param features: For realtor data, subset to only include these features. Defaults to None.
+        :param geo_filter_values: For convenience, you have the opportunity to override the self.geo_filter_values value
+            with a new value, e.g. 'all' if you don't want to subset the data.
         :return: Two pandas dataframes, data and metadata (in that order). For Zillow inputs, data will have geographies
             in the index and a time series on the column, and metadata will have a variety of information about zip codes.
             For Realtor data, the data will have geographies in the index and a variety of features in the columns.
@@ -90,7 +93,8 @@ class Property_Input():
         raw_data = pd.read_csv(self.path, index_col = self.index_col)
 
         # Only consider specific geographic subset
-        raw_data = raw_data.loc[raw_data[self.geo_filter].isin(self.geo_filter_values), :]
+        if self.geo_filter_values != 'all':
+            raw_data = raw_data.loc[raw_data[self.geo_filter].isin(self.geo_filter_values), :]
 
         # Separate metadata and data
         if self.source == 'Zillow':
@@ -100,6 +104,9 @@ class Property_Input():
             data = raw_data[data_cols].transpose()
             data.index = [quiet_to_datetime(astring) for astring in data.index]
         elif self.source == 'Realtor':
+
+            # Get rid of NaNs in index
+            raw_data = raw_data.loc[raw_data.index.notnull()]
 
             # Subset if desired
             if features is not None:
@@ -112,15 +119,19 @@ class Property_Input():
 
         return data, metadata
 
-    def graph(self, style = 'line', date = dt.date(year = 2018, month = 4, day = 1)):
+    def graph(self, style = 'line', date = dt.date(year = 2018, month = 4, day = 1), **kwargs):
         """
         :param style: Either 'bar' or 'line'. Note that line graphs are not supported for Realtor data.
         :param date: If doing a bar graph of Zillow data, the date to graph.
         :param plot: If false, do not actually show the plot of the data.
+        :param kwargs: kwargs to pass to the process_property_data function.
         :return: None
         """
 
-        data, metadata = self.process_property_data()
+        if self.geo_filter_values != 'all':
+            raise TypeError('Cannot graph when data is not filtered (i.e. when self.geo_filter_values = "all"')
+
+        data, metadata = self.process_property_data(**kwargs)
 
         xtick_rotation = 90
         xtick_size = 8
@@ -150,18 +161,16 @@ class Property_Input():
 
 # Zillow inputs --
 sfhomes_nbhd = Property_Input(path = 'data/Zillow Data/sfhomes_neighborhood.csv',
-                        source = 'Zillow',
-                        name = 'Single Family Homes Median Value')
+                        source = 'Zillow')
 
 inventoryraw = Property_Input(path = "data/Zillow Data/inventoryraw_zip.csv",
-                            source = 'Zillow',
-                            name = 'Raw Inventory')
+                            source = 'Zillow')
 
 medpricecuts = Property_Input(path = "data/Zillow Data/medpricecut_zip.csv",
-                            source = 'Zillow', name = 'Median Price Cuts')
+                            source = 'Zillow')
 
 allhomeprices = Property_Input(path = 'data/Zillow Data/allhomeprice_zip.csv',
-                             source = 'Zillow', name = 'All Home Prices')
+                             source = 'Zillow')
 
 # Realtor inputs --
 realtor_hotness_data = Property_Input(path = "data/RDC_MarketHotness_Monthly_Zip.csv",

@@ -5,3 +5,8 @@ Choropleth Module
 ------------------------
 .. automodule:: TXHousing.analysis.choropleth
   :members:
+
+Mastermaps Module
+-------------------------
+.. automodule:: TXHousing.analysis.mastermaps
+  :members:

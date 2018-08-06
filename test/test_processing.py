@@ -33,6 +33,19 @@ class TestZoningProcessing(unittest.TestCase):
         self.assertTrue(os.path.exists(zoning.dallas_regulations_path),
                         'Dallas regulations data is not in the shared_data directory. Pull it from https://github.com/amspector100/TXHousing/tree/master/shared_data')
 
+    def test_historic_district_data_existence(self):
+        self.assertTrue(os.path.exists(zoning.austin_landmark_path),
+                        'Austin historic landmarks data is not in the data directory. Download it from https://data.austintexas.gov/Locations-and-Maps/Historical-Landmarks/vvuz-m3y4')
+        self.assertTrue(os.path.exists(zoning.dallas_historic_overlay_path),
+                        'Dallas historic overlay data is not in the data directory. Download it from https://gis.dallascityhall.com/shapefileDownload.aspx')
+        self.assertTrue(os.path.exists(zoning.dallas_historic_subdistricts_path),
+                        'Dallas historic subdistricts data is not in the data directory. Download it from https://gis.dallascityhall.com/shapefileDownload.aspx')
+        self.assertTrue(os.path.exists(zoning.houston_historic_districts_path),
+                        'Houston historic districts data is not in the data directory. It is currently unavailable online. Email the package maintainer to get it.')
+        self.assertTrue(os.path.exists(zoning.houston_historic_landmarks_path),
+                        'Houston historic landmarks data is not in the data directory. It is currently unavailable online. Email the package maintainer to get it.')
+
+
     # Test processing function
     def test_processing(self):
         try:
@@ -114,7 +127,7 @@ class TestBoundariesProcessing(unittest.TestCase):
     def test_boundaries_class(self):
 
 
-        # This actually has remarkably high code coverage for __init__ although it might not seem like it initially
+        # This actually has remarkably high code coverage for __init__
         try:
             zipdata = boundaries.ZipBoundaries(ziplist = None, bounding_counties = ['Travis'])
         except Exception as e:
@@ -142,9 +155,11 @@ class TestBoundariesProcessing(unittest.TestCase):
             self.fail('BlockBoundaries class initialization unexpectedly raised {}'.format(e))
 
         # Test pull and pushing data
-        zipdata.data = zipdata.data.sample(15)
-        zipdata.pull_features(blockdata.data, features = 'B01001e1', account_method = 'percent_residential')
-        zipdata.data = blockdata.push_features(zipdata.data, features=['B01002e1'], account_method='water')
+        if comprehensive_flag == 'y':
+
+            zipdata.data = zipdata.data.sample(15)
+            zipdata.pull_features(blockdata.data, features = 'B01001e1', account_method = 'percent_residential')
+            zipdata.data = blockdata.push_features(zipdata.data, features=['B01002e1'], account_method='water')
 
 class TestPermitProcessing(unittest.TestCase):
 

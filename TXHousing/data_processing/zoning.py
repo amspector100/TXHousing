@@ -169,3 +169,15 @@ houston_inputs = Zoning_Input(path = None,
                                long = -95.3698,
                                zoom = 9,
                                title = 'Houston Texas')
+
+
+# Paths for historic districts - thankfully do not require much processing
+tx_hd_path = "data/Zoning Shapefiles/NationalRegisterPY_shp/NationalRegisterPY.shp"
+
+austin_landmark_path = "data/Zoning Shapefiles/Historical Landmarks/geo_export_ce453b58-d8ca-47d4-8934-76d636d24ca3.shp"
+
+dallas_historic_overlay_path = "data/Zoning Shapefiles/HistoricOverlay_Dallas/HistoricOverlay.shp"
+dallas_historic_subdistricts_path = "data/Zoning Shapefiles/HistoricSubdistricts_Dallas/HistoricSubdistricts.shp"
+
+houston_historic_districts_path = "data/Houston_Historic_Protections/HISTORIC_DISTRICTS_CITY.shp"
+houston_historic_landmarks_path = "data/Houston_Historic_Protections/HISTORICAL_SITES.shp"

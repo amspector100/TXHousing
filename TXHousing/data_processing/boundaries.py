@@ -205,7 +205,7 @@ class ZipBoundaries(Boundaries):
         :return: None, but changes self.data
         """
 
-        property_data, metadata = property_input.process_property_data(features = features)
+        property_data, metadata = property_input.process_property_data(features = features, geo_filter_values = 'all')
         property_data.index = list(property_data.index.map(str))
         self.data = self.data.join(property_data, how = 'left', **kwargs)
 
