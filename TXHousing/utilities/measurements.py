@@ -238,8 +238,9 @@ def points_intersect_rings(gdf, lat, long, factor = None, step = 1, categorical 
         else:
             result = result.divide(areas)
 
-    # Return result
-    result = order_radii(result)
+        # Return result
+        result = order_radii(result)
+
     return result
 
 
@@ -262,13 +263,12 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
         fine for Texas. Note units in this are in feet.
     :param step: Number of miles where the ring radiates outwards.
     :param maximum: Max radius (miles)
-    :param points: Boolean. If true, assumes geometry of gdf is a point geometry.
     :param geometry_column: name of geometry column. Default geometry.
     :param categorical: If true, will only calculate percent land (or % of points) in the radius. Else will calculate
         mean by area.
-    :param city: If not "none", if factor is "none", will read the shapefile of the boundaries of the city to ensure
-        more accurate calculations. (Otherwise, for a radius of size 12, the area of the circle might be greater than the
-        area of the city).
+    :param city: If city is notnot "none", if factor is "none", will read the shapefile of the boundaries of the city
+        to ensure more accurate calculations. (Otherwise, for a ring of size 12, the area of the circle might be
+        greater than the area of the city inside the circle).
     :param group_outliers: Boolean, defaults to true. If true, group everything with a distance greater than the maximum
         into one group (of maximum size).
     :param outlier_maximum: Float, defaults to 35. For computational efficiency, this function will not consider outliers
@@ -364,5 +364,6 @@ def polygons_intersect_rings(gdf, lat, long, factor = None, newproj = 'epsg:2277
                                                                              account_for_area = True, divide_area_by = 'nonempty',
                                                                              by = 'mean', horiz = horiz, vert = vert)
 
-    result = order_radii(result)
+        result = order_radii(result)
+
     return result

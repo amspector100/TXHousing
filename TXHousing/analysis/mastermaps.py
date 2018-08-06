@@ -230,7 +230,7 @@ def create_houston_mastermap(save_path = 'Figures/Mastermaps/Houston_Mastermap_v
 
     # Local historic districts
     local_hd_data = gpd.read_file(data_processing.zoning.houston_historic_districts_path).to_crs({'init':'epsg:4326'})
-    choropleth.polygon_layer(tx_hd_data, name = 'Local Historic Districts', color = 'Blue', basemap = basemap)
+    choropleth.polygon_layer(local_hd_data, name = 'Local Historic Districts', color = 'Blue', basemap = basemap)
 
     # Local historic landmarks
     local_landmarks_data = gpd.read_file(data_processing.zoning.houston_historic_landmarks_path).to_crs({'init':'epsg:4326'})

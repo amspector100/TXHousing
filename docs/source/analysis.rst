@@ -10,3 +10,9 @@ Mastermaps Module
 -------------------------
 .. automodule:: TXHousing.analysis.mastermaps
   :members:
+
+
+Zoning_Graphs Module
+-------------------------
+.. automodule:: TXHousing.analysis.zoning_graphs
+  :members:

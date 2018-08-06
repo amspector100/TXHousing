@@ -81,10 +81,10 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
         dot product of the mean and the area of each small_polygon that intersects the large_polygon divided by the area
         of the large polygon (happens if categorical is False, by = 'mean', and account_for_area = True). Also,
         if factor = None, divides answer by area of polygon.
-    :param divide_area_by: Defaults to 'polygon'. If account_for_area = True and by = 'mean', this parameter determines
-        what to divide the dot product of the mean and area of each small polygon by. If divide_area_by = 'polygon',
-        then this divides by the area of the polygon. If divide_area_by = 'nonempty', it will divide by the total area
-        of the intersection between the polygon/small_polygons. Else, it will simply return the dot product without dividing.
+    :param divide_area_by: Defaults to 'polygon'. This parameter determines what to divide the result by.
+        If divide_area_by = 'polygon', then this divides by the area of the polygon. If divide_area_by = 'nonempty', it
+        will divide by the total area of the intersection between the polygon and small_polygons. Else, it will simply
+        return without dividing.
     :param **kwargs: Kwargs to pass to the "fragment" function in the TXHousing.utilities.simple module. Fragmenting polygons
         speeds up the computation for all but very small polygons. If you do not want to fragment the polygons (the
         only reason to do this is speed, it will not affect the results), pass in horiz = 1 and vert = 1 as kwargs.
@@ -115,14 +115,21 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
 
     # Calculate answers
     if factors is None:
-        if account_for_area:
+        if account_for_area and divide_area_by == 'polygon':
             return precise_matches['area'].sum()/polygon.area
+        elif divide_area_by == 'nonempty':
+            raise ValueError('Cannot divide_area_by by the total area of the nonempty intersections when factor is None')
         else:
             return precise_matches['area'].sum()
 
     # Group by categorical
-    if categorical == True:
-        return precise_matches.groupby(factors)['area'].sum().divide(polygon.area)
+    elif categorical == True:
+        if account_for_area and divide_area_by == 'nonempty':
+            return precise_matches.groupby(factors)['area'].sum()/(precise_matches['area'].sum())
+        elif account_for_area and divide_area_by == 'polygon':
+            return precise_matches.groupby(factors)['area'].sum()/(polygon.area)
+        else:
+            return precise_matches.groupby(factors)['area'].sum()
     else:
         factor_data = precise_matches[factors]
 

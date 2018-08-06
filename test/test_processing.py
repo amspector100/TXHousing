@@ -34,6 +34,8 @@ class TestZoningProcessing(unittest.TestCase):
                         'Dallas regulations data is not in the shared_data directory. Pull it from https://github.com/amspector100/TXHousing/tree/master/shared_data')
 
     def test_historic_district_data_existence(self):
+        self.assertTrue(os.path.exists(zoning.tx_hd_path),
+                        'Texas national historic landmarks data is not in the data directory. Download it from https://atlas.thc.state.tx.us/Data/GISData')
         self.assertTrue(os.path.exists(zoning.austin_landmark_path),
                         'Austin historic landmarks data is not in the data directory. Download it from https://data.austintexas.gov/Locations-and-Maps/Historical-Landmarks/vvuz-m3y4')
         self.assertTrue(os.path.exists(zoning.dallas_historic_overlay_path),
