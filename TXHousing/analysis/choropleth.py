@@ -63,10 +63,48 @@ def make_marker_cluster(gdf, make_centroids = True, points_column = 'geometry', 
             marker.add_to(basemap)
         return marker
 
+def polygon_layer(gdf, color = 'blue', weight = 1, alpha = 0.6, name = None, show = False, basemap = None):
+    """
+
+    :param gdf:
+    :param factor:
+    :param color:
+    :param weight:
+    :param alpha:
+    :param str name: Defaults to None. If not None, will generate a FeatureGroup with this name and return that instead of
+        the GeoJson object.
+    :param bool show: Defaults to False. The show parameter for the FeatureGroup that the GeoJson will be added to.
+    :param folium.Map basemap: Defaults to None. If not none, will add the GeoJson or FeatureGroup to the supplied basemap.
+    :return:
+    """
+
+    gjson = folium.GeoJson(
+                gdf,
+                style_function=lambda feature: {
+                    'fillColor': color,
+                    'color': color,
+                    'weight': weight,
+                    'fillOpacity': alpha,
+                }
+            )
+
+    if name is not None:
+        feature_group = folium.FeatureGroup(name, show = show)
+        gjson.add_to(feature_group)
+        if basemap is not None:
+            feature_group.add_to(basemap)
+        return feature_group
+    else:
+        if basemap is not None:
+            gjson.add_to(basemap)
+        return gjson
+
+
 def categorical_choropleth(gdf, factor, colors = None, quietly = False, weight = 1, alpha = 0.6,
                            geometry_column = 'geometry', name = None, show = False, basemap = None):
     """
     Creates categorical choropleth using tab10 spectrum
+
 
     :param gdf: A geopandas geodataframe.
     :param factor: The feature you want to plot (should be categorical).
@@ -125,8 +163,10 @@ def categorical_choropleth(gdf, factor, colors = None, quietly = False, weight =
             gjson.add_to(basemap)
         return gjson
 
-def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = 1, alpha = 0.6, colors = None,
-                          start_color = 'white', mid_color = '#00ccff', end_color = '#000066', method = 'log', round_method = None,
+def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = 1, alpha = 0.6,
+                          colors = ['blue', 'green', 'yellow', 'orange', 'red'],
+                          quants = [1/6, 2/6, 3/6, 4/6, 5/6],
+                          method = 'log', round_method = None,
                           show = False, geometry_column = 'geometry', basemap = None):
     """
     :param gdf: Geodataframe
@@ -135,11 +175,11 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = 1
     :param scale_name: Name of scale
     :param weight: Weight
     :param alpha: Alpha of polygons
-    :param colors: A list of colors to use in the colormap, defaults to None.
-    :param start_color: I.e. white, for min data. Overridden by the "colors" parameter.
-    :param mid_color: I.e. gray, for middle of data. Overridden by the "colors" parameter.
-    :param end_color: I.e. black, for max data. Overridden by the "colors" parameter.
-    :param method: The method by which the color scale is generated. Defaults to 'log', can also be 'quant' or 'linear'
+    :param colors: A list of colors to use in the colormap, defaults to ['blue', 'green', 'yellow', 'orange', 'red'].
+    :param quants: The quantiles to use to 'switch' colors in the colormap. Defaults to [1/6, 2/6, 3/6, 4/6, 5/6].
+        If you want a log-based or linear colorscale, adjust the 'method' parameter and set quants to None.
+    :param method: The method by which the color scale is generated. Defaults to 'log', can also be 'quant' or 'linear'.
+        This parameter is overridden by the "quantiles" parameter.
     :param round_method: If you want to round the color scale to integer values, supply round_method = 'int'
     :param show: Show by default on start
     :param geometry_column: 'geometry'
@@ -153,11 +193,13 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = 1
     # Create colormap with caption
     min_data = gdf[factor].min()
     max_data = gdf[factor].max()
-
-    if colors is not None:
-        colormap =  cm.LinearColormap(colors = colors, vmin = min_data, vmax = max_data).to_step(12, method = method, round_method = round_method)
+    if quants is not None:
+        index = gdf[factor].quantile(quants)
+        colormap =  cm.LinearColormap(colors = colors, vmin = min_data, vmax = max_data, index = index)
     else:
-        colormap =  cm.LinearColormap(colors = [start_color, mid_color, end_color], vmin = min_data, vmax = max_data).to_step(12, method = method, round_method = round_method)
+        colormap =  cm.LinearColormap(colors = colors, vmin = min_data, vmax = max_data).to_step(12, method = method, round_method = round_method)
+
+
     if scale_name is None:
         colormap.caption = layer_name
     else:

@@ -175,20 +175,19 @@ class TestPermitProcessing(unittest.TestCase):
     def test_basic_processing_functions(self):
 
         if comprehensive_flag == 'y':
-            pass
 
-        try:
-            data = permit.process_austin_permit_data(searchfor = ['S.F.'])
-        except Exception as e:
-            self.fail('permit.process_austin_permit_data unexpectedly raised {}'.format(e))
-        try:
-            data = permit.get_corrected_dallas_permit_data()
-        except Exception as e:
-            self.fail('permit.get_corrected_dallas_permit_data unexpectedly raised {}'.format(e))
-        try:
-            data = permit.process_houston_permit_data()
-        except Exception as e:
-            self.fail('permit.get_corrected_dallas_permit_data unexpectedly raised {}'.format(e))
+            try:
+                data = permit.process_austin_permit_data(searchfor = ['S.F.'])
+            except Exception as e:
+                self.fail('permit.process_austin_permit_data unexpectedly raised {}'.format(e))
+            try:
+                data = permit.get_corrected_dallas_permit_data()
+            except Exception as e:
+                self.fail('permit.get_corrected_dallas_permit_data unexpectedly raised {}'.format(e))
+            try:
+                data = permit.process_houston_permit_data()
+            except Exception as e:
+                self.fail('permit.get_corrected_dallas_permit_data unexpectedly raised {}'.format(e))
 
 if __name__ == '__main__':
     unittest.main()

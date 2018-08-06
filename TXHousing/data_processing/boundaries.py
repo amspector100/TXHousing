@@ -196,6 +196,22 @@ class ZipBoundaries(Boundaries):
         super().__init__(path = zip_boundaries_path, index_col = 'ZCTA5CE10', index_type = 'str', subset_by = subset_by,
                          subset_to = self.ziplist, bounding_counties=bounding_counties, bounding_polygon=bounding_polygon)
 
+    def add_property_data(self, property_input, features = None, **kwargs):
+        """ Add demand features from realtor/zillow inputs
+
+        :param demand_input: A property_input class
+        :param features: Optional features to subset to
+        :param kwargs: **kwargs to pass to the .join method. Often useful to pass a rsuffix to prevent ValueErrors.
+        :return: None, but changes self.data
+        """
+
+        property_data, metadata = property_input.process_property_data(features = features)
+        property_data.index = list(property_data.index.map(str))
+        self.data = self.data.join(property_data, how = 'left', **kwargs)
+
+
+
+
 class BlockBoundaries(Boundaries):
     """ Class for block data, wraps Boundaries class, with a substantially different init method. After initialization,
     self.data is a gdf with a 'geometry' column, a variety of block data columns, and if cities is not None, it has a

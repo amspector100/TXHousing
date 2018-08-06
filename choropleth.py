@@ -22,7 +22,6 @@ import helpers
 from helpers import *
 from zipcode_scrape import *
 import spatial_functions as sf
-import nonspatialgraphing as nsg
 from BindColorMap import *
 
 # To do

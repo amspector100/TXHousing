@@ -12,6 +12,7 @@ Welcome to TXHousing's documentation!
 
    utilities
    data_processing
+   analysis
 
 
 Indices and tables
