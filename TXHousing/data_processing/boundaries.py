@@ -265,6 +265,9 @@ class BlockBoundaries(Boundaries):
 
         if cities is not None:
 
+            if isinstance(cities, str):
+                cities = [cities]
+
             # Only consider blocks in cities
             place_shapes = gpd.read_file(texas_places_path)
             place_shapes = place_shapes.loc[place_shapes['NAME'].isin(cities)]

@@ -181,3 +181,7 @@ dallas_historic_subdistricts_path = "data/Zoning Shapefiles/HistoricSubdistricts
 
 houston_historic_districts_path = "data/Houston_Historic_Protections/HISTORIC_DISTRICTS_CITY.shp"
 houston_historic_landmarks_path = "data/Houston_Historic_Protections/HISTORICAL_SITES.shp"
+
+# Houston special setbacks and lots
+houston_spec_min_lot_path = "data/Zoning Shapefiles/Houston_Special_Minimum_Building_Lines/Special_Minimum_Building_Lines.shp"
+houston_spec_setbacks_path = "data/Zoning Shapefiles/Houston_Spec_Minimum_Lot/Minimum_Lot_Size.shp"

@@ -7,6 +7,8 @@ from ..data_processing import permit, boundaries, property, zoning
 from plotnine import *
 
 def plot_permit_scatterplot():
+    """Scatterplots of the number of construction of permits in a variety of zipcodes against the median housing price
+     of the zipcode."""
 
     time0 = time.time()
 
@@ -107,6 +109,7 @@ def plot_permit_scatterplot():
 
 def plot_permit_locations(save_path = 'Figures/Bucket 2/all_cities_permit_rings.svg', width = 10, height = 8, step = 1,
                           maximum = 10):
+    """ Plots the number of permits issued per square mile, conditional on from city center & broad_zone"""
 
     time0 = time.time()
 

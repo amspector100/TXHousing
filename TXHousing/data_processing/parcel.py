@@ -1,6 +1,7 @@
 import time
 import pandas as pd
 import geopandas as gpd
+import re
 from ..utilities import simple, spatial_joins
 from . import boundaries
 
@@ -97,7 +98,9 @@ def join_dallas_parcel_data():
     return parcel_data
 
 def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path_2018],
-                                feature_columns_list = [houston_building_res_columns], county_level = False):
+                                feature_columns_list = [houston_building_res_columns],
+                                process_crs = True,
+                                county_level = False):
     """ Merge houston or harris parcel data with harris county data.
 
     :param feature_files: A list of paths of feature files to merge with the data. Defaults to
@@ -105,6 +108,9 @@ def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path
         to None, it will just return the parcel shape data with no other data attached.
     :param feature_columns_list: A list of column headers for each file - you can find these in the
         Harris_Parcel_Feature_Columns microsoft database under data.
+    :param bool process_crs: Default True. If True, transform parcel data to latlong. This is very expensive.
+    :param county_level: Default False. If False, subset the data to only consider the parcels within the Houston
+        municipal boundaries.
     :return: GeoDataFrame with the parcel shapes and the merged data.
 
     """
@@ -133,10 +139,44 @@ def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path
     # Subset to only include houston if indicated
     if county_level == False:
         place_shapes = gpd.read_file(boundaries.texas_places_path)
-        place_shapes = place_shapes.loc[place_shapes['NAME'] == 'Houston']
-        mapper = spatial_joins.fast_polygon_intersection(geodata, place_shapes, large_name_column='NAME')
+        place_shapes = gpd.GeoDataFrame(geometry = place_shapes.loc[place_shapes['NAME'] == 'Houston'].to_crs(geodata.crs).simplify(tolerance = 0.005))
+        mapper = spatial_joins.fast_polygon_intersection(geodata, place_shapes, horiz = 25, vert = 25)
         geodata['place'] = geodata.index.map(mapper)
         geodata = geodata.loc[geodata['place'].notnull()]
 
+    # Transform to lat long
+    if process_crs:
+        geodata = geodata.to_crs({'init':'epsg:4326'})
+
     # Return
     return geodata
+
+# Parse descriptions of lots and turn them into SF/MF/Other/Other Residential classifications
+def process_lot_descriptions(gdf, description_column, broad_zone_dictionary):
+    """
+    Processes lot descriptions for zoning data
+
+    :param gdf: A geodataframe, presumably of parcel data, but it could honestly be of anything.
+    :param description_column: The column of descriptions to parse
+    :param broad_zone_dictionary: A dictionary mapping base zones (i.e. 'Single Family') to a list of strings
+        which signal that a description means that base zone. Ex: {'Single Family':['sf', 'single f'], 'Multifamily':['mf']}
+        Note that the order of this dictionary DOES matter - the function will return the FIRST key which has a match.
+    :return: A pandas series of the base zones.
+    """
+
+    # Create helper function
+    def process_broad_zone(text):
+        for key in broad_zone_dictionary:
+            # This checks whether any of the strings in the broad_zone_dictionary[key] list appear in the text
+            if bool(re.search(('|').join(broad_zone_dictionary[key]), text)):
+                return key
+        return "Other"
+
+    broad_zones = gdf[description_column].apply(process_broad_zone)
+    return broad_zones
+
+# These are dictionaries for parsing the broad_zone of individual parcels that are rather handy
+dallas_sptb_dictionary = {'Single Family':['A11'], 'Multifamily':['B11', 'B12', 'A12', 'A13']}
+
+# State code dictionary is used for a lot of different counties, mostly around Houston
+state_sptbcode_dictionary = {'Single Family':['A1', 'A2'], 'Multifamily':['A3', 'A4', 'B1', 'B2', 'B3', 'B4']}

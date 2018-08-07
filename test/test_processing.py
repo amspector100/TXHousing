@@ -32,6 +32,10 @@ class TestZoningProcessing(unittest.TestCase):
                         'Austin regulations data is not in the shared_data directory. Pull it from https://github.com/amspector100/TXHousing/tree/master/shared_data')
         self.assertTrue(os.path.exists(zoning.dallas_regulations_path),
                         'Dallas regulations data is not in the shared_data directory. Pull it from https://github.com/amspector100/TXHousing/tree/master/shared_data')
+        self.assertTrue(os.path.exists(zoning.houston_spec_min_lot_path),
+                        'Houston special minimum lot zone shapefile is not in the data directory. Download it from https://cohgis-mycity.opendata.arcgis.com/datasets/minimum-lot-size')
+        self.assertTrue(os.path.exists(zoning.houston_spec_min_lot_path),
+                        'Houston special setback zone shapefile is not in the data directory. Download it from https://cohgis-mycity.opendata.arcgis.com/datasets/special-minimum-building-lines')
 
     def test_historic_district_data_existence(self):
         self.assertTrue(os.path.exists(zoning.tx_hd_path),

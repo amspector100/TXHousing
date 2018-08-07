@@ -15,16 +15,10 @@ Almost all of the Python code lives inside the TXHousing python package, which i
 help streamline the code in the analysis package. For documentation of every function in the TXHousing package, see
  {} (to be inserted).
 
- TXHousing
- |
- |----utilities
- |        |
- |        |-----simple.py
- |
- |
- |
- |
- |
-
+R code lives in the larger repository.
 
 ## Use
+
+Because the TXHousing package is structured into subpackages which rely on each other, trying to run any module from
+any of the subpackages will probably raise ImportErrors. Instead, you should import the TXHousing pacakge from outside
+the

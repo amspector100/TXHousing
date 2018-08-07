@@ -1,5 +1,5 @@
-# This will eventually be in folium - I don't believe it currently is however. I don't have any clue how this works,
-# it's copied from here: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
+""" Template which binds a colormap to a layer on a folium map. This will eventually be in folium, but is currently
+ not implemented. It's copied from here: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e"""
 
 import numpy as np
 import sys
