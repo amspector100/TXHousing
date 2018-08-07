@@ -1,10 +1,9 @@
-import time
+"""Miscellaneous calculations"""
+
 import numpy as np
-import pandas as pd
 import geopandas as gpd
 from .. import utilities
 from ..data_processing import boundaries, zoning
-from functools import reduce
 
 # Special setback and minimum lot zone calculations ----------------------------- (Houston) ----------------------------------------------------- Special setback and minimum lot zone calculations
 def calculate_special_zoning_areas_and_populations():

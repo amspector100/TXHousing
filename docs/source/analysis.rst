@@ -31,3 +31,8 @@ parcel_graphs module
 -------------------------
 .. automodule:: TXHousing.analysis.parcel_graphs
   :members:
+
+misc_calcs module
+-------------------------
+.. automodule:: TXHousing.analysis.parcel_graphs
+  :members:

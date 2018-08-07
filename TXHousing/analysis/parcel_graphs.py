@@ -106,10 +106,10 @@ def plot_singlefamily_lotsizes(calculate = False, cache_path = 'data/caches/Cach
     all_results['City'] = all_results['Zone'].apply(lambda x: x.split('-')[0])
     all_results['Zone'] = all_results['Zone'].apply(lambda x: x.split('-')[1])
 
-    all_results = utilities.measurements.order_radii(all_results)
-
     # Subset and graph
-    sf_results = all_results.loc[all_results['Zone'] == 'Single Family']
+    all_results.index = all_results['dist_to_center']
+    sf_results = utilities.measurements.order_radii(all_results.loc[all_results['Zone'] == 'Single Family'])
+    sf_results['dist_to_center'] = sf_results.index
     sflotplot = (ggplot(sf_results, aes(x = 'dist_to_center', y = 'avg_lot_size', fill = 'City'))
                     + geom_col(position = 'dodge', width = 0.7)
                     + labs(x = 'Distance from Center of City (Miles', y = 'Average Lot Size (Square Feet)',

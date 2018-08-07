@@ -106,7 +106,10 @@ class Zoning_Input():
         # Manually set CRS if necessary, then transform
         if raw_data.crs is not None:
             raw_data.crs = self.crs
-        raw_data = raw_data.to_crs({'init': 'epsg:4326'})
+        try:
+            raw_data = raw_data.to_crs({'init': 'epsg:4326'})
+        except ValueError as e:
+            warnings.warn('Could not transform data to lat/long')
 
         if quietly is not True:
             print('Finished processing zones, mixed use overlay, and crs, took {}'.format(time.time() - time0))

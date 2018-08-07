@@ -81,7 +81,7 @@ class Boundaries():
             self.data = self.spatial_subset(county_shape)
 
     def type_of_external_gdf(self, gdf, geometry_column = 'geometry'):
-        """Figures out the type of geometry (point or polygon) of a gdf and raises and error if it's mixed"""
+        """Figures out the type of geometry (point or polygon) of a gdf and raises an error if it's mixed"""
 
         geom_types = set(gdf[geometry_column].geom_type.unique().tolist())
         if len(geom_types) != 1:

@@ -5,6 +5,7 @@ import geopandas as gpd
 from .. import utilities
 from ..data_processing import zoning
 from plotnine import *
+import matplotlib.pyplot as plt
 
 # Minimum lot size graph -------------------------------------
 def plot_minimum_lot_size(savepath = 'Figures/Bucket 2/Minimum_Lot_Size_Residential_No_Agriculture.svg',
@@ -144,7 +145,7 @@ def plot_hd_locations(save_path = 'Figures/Bucket 2/HDLocations.svg', width = 8,
                      + theme_bw())
     histlocations.save(save_path, width=width, height=height)
 
-def plot_broad_zones():
+def plot_broad_zones_proportion():
     """Plot proportion of broad_zones by distance from city center, excluding nonresidential and agricultural land."""
 
     # Get zoning data and subset to exclude agricultural zones and nonresidential zones
@@ -196,3 +197,16 @@ def plot_broad_zones():
                           x = 'Distance from the city center (Miles)',
                           y = 'Percentage of Residential Land Zoned'))
     mfringsplot.save('Figures/Bucket 2/MFZoningRings.svg', width = 8, height = 5)
+
+
+def plot_broad_zones_dallas(number_zones = 100000):
+    """Plots an actual map of the closest broad_zones to the Dallas core"""
+
+    north_texas_data = zoning.north_texas_inputs.process_zoning_shapefile()
+    north_texas_data['geometry'] = north_texas_data['geometry'].simplify(tolerance = 0.005)
+    spatial_index = north_texas_data.sindex
+    ids = list(spatial_index.nearest([zoning.dallas_inputs.long, zoning.dallas_inputs.lat], num_results = number_zones))
+    subset = north_texas_data.iloc[ids]
+    subset.plot(column = 'broad_zone', legend = True, cmap = 'tab10')
+    plt.show()
+
