@@ -63,6 +63,8 @@ class Property_Input():
                 self.geo_filter_values = ['Austin', 'Dallas', 'Houston']
             elif self.source == 'Realtor':
                 self.geo_filter_values = ['Austin, TX', 'Dallas, TX', 'Houston, TX']
+        else:
+            self.geo_filter_values = geo_filter_values
 
         if index_col is None:
             if source == 'Zillow':
@@ -110,6 +112,7 @@ class Property_Input():
 
             # Subset if desired
             if features is not None:
+                features.append(self.geo_filter)
                 data = raw_data[features]
             else:
                 data = raw_data
@@ -177,10 +180,10 @@ realtor_hotness_data = Property_Input(path = "data/RDC_MarketHotness_Monthly_Zip
                                       source = 'Realtor')
 
 realtor_core_inventory = Property_Input(path = 'data/RDC_InventoryCoreMetrics_Zip.csv',
-                                 source = 'Realtor')
+                                 source = 'Realtor', geo_filter_values = 'all')
 
 realtor_core_inventory_sf = Property_Input(path = "data/RDC_InventoryCoreMetrics_Zip_sfh.csv",
-                                 source = 'Realtor')
+                                 source = 'Realtor', geo_filter_values = 'all')
 
 realtor_core_inventory_mf = Property_Input(path = "data/RDC_InventoryCoreMetrics_Zip_cth.csv",
-                                 source = 'Realtor')
+                                 source = 'Realtor', geo_filter_values = 'all')

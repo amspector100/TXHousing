@@ -278,6 +278,3 @@ def create_houston_mastermap(save_path = 'Figures/Mastermaps/Houston_Mastermap_v
     folium.TileLayer('cartodbdark_matter').add_to(basemap)
     LayerControl().add_to(basemap)
     basemap.save(save_path)
-
-#create_austin_mastermap()
-#create_dallas_mastermap()

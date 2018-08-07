@@ -4,9 +4,6 @@ import pandas as pd
 import geopandas as gpd
 from .. import utilities
 from ..data_processing import zoning
-
-
-import matplotlib.pyplot as plt
 from plotnine import *
 
 # Minimum lot size graph -------------------------------------
@@ -62,8 +59,6 @@ def plot_minimum_lot_size(savepath = 'Figures/Bucket 2/Minimum_Lot_Size_Resident
                          x = 'Distance from the City Center (Miles',
                          y = 'Average Lot Size (Square Feet)'))
     minlotplot.save(savepath, width = width, height = height)
-
-# Locations of historic districts -------------------------------------
 
 def plot_hd_locations(save_path = 'Figures/Bucket 2/HDLocations.svg', width = 8, height = 5):
     """Graphs locations of historic districts in Austin, Dallas, Houston"""
@@ -149,7 +144,6 @@ def plot_hd_locations(save_path = 'Figures/Bucket 2/HDLocations.svg', width = 8,
                      + theme_bw())
     histlocations.save(save_path, width=width, height=height)
 
-
 def plot_broad_zones():
     """Plot proportion of broad_zones by distance from city center, excluding nonresidential and agricultural land."""
 
@@ -162,30 +156,24 @@ def plot_broad_zones():
     dallas_zones = dallas_zones.loc[(~dallas_zones['base_zone'].str.contains('A(A)', regex = False)) &
                                     (dallas_zones['broad_zone'] != 'Other')]
 
-    maximum = 10
-
-
     dallas_zone_rings = utilities.measurements.polygons_intersect_rings(dallas_zones, factor = 'broad_zone',
                                                                         lat = zoning.dallas_inputs.lat,
                                                                         long = zoning.dallas_inputs.long,
                                                                         categorical = True,
-                                                                        newproj='epsg:2276', step=1, maximum = maximum)
+                                                                        newproj='epsg:2276', step=1, maximum = 10)
     dallas_zone_rings['City'] = "Dallas"
-
 
     austin_zone_rings = utilities.measurements.polygons_intersect_rings(austin_zones, factor = 'broad_zone',
                                                                         lat = zoning.austin_inputs.lat,
                                                                         long = zoning.austin_inputs.long,
                                                                         categorical = True,
-                                                                        newproj='epsg:2277', step=1, maximum = maximum)
+                                                                        newproj='epsg:2277', step=1, maximum = 10)
     austin_zone_rings['City'] = 'Austin'
-
 
     # Combine and divide by totals
     zone_rings = pd.concat([dallas_zone_rings, austin_zone_rings], axis = 0)
     zone_rings['dist_to_center'] = zone_rings.index
     zone_rings = zone_rings.melt(id_vars = ['City', 'dist_to_center'], var_name = 'broad_zone', value_name = 'percent')
-
 
     # Plot Single Family
     sfrings = zone_rings.loc[zone_rings['broad_zone'] == 'Single Family']
@@ -197,7 +185,6 @@ def plot_broad_zones():
                           x = 'Distance from the city center (Miles)',
                           y = 'Percentage of Residential Land Zoned'))
     sfringsplot.save('Figures/Bucket 2/SFZoningRings.svg', width = 8, height = 5)
-
 
     # Plot Multifamily
     mfrings = zone_rings.loc[zone_rings['broad_zone'] == 'Multifamily']

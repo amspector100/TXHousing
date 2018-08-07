@@ -80,14 +80,31 @@ class Boundaries():
             county_shape = counties.loc[(counties['NAME'].isin(bounding_counties)) & (counties['STATEFP'] == '48')].simplify(tolerance = 0.005).unary_union
             self.data = self.spatial_subset(county_shape)
 
+    def type_of_external_gdf(self, gdf, geometry_column = 'geometry'):
+        """Figures out the type of geometry (point or polygon) of a gdf and raises and error if it's mixed"""
 
-    def process_external_gdf(self, gdf, **kwargs):
+        geom_types = set(gdf[geometry_column].geom_type.unique().tolist())
+        if len(geom_types) != 1:
+            if geom_types != set(['Polygon', 'MultiPolygon']) and geom_types != set(['Point', 'MultiPoint']):
+                raise ValueError('Cannot handle mixed geometry types of {}'.format(geom_types))
+        if 'Polygon' in geom_types:
+            return 'Polygon'
+        if 'Point' in geom_types:
+            return 'Point'
+
+    def process_external_gdf(self, gdf, geometry_column = 'geometry', **kwargs):
         """
-        Processes external gdf's geometry. Passes kwargs to process_geometry call.
+        Processes external gdf's geometry/crs. Passes kwargs to process_geometry or process_points call.
         """
 
-        gdf = simple.process_geometry(gdf, **kwargs)
+        # Get rid of invalid geometries
+        geometry_type = self.type_of_external_gdf(gdf)
+        if geometry_type == 'Polygon':
+            gdf = simple.process_geometry(gdf, geometry_column = geometry_column, **kwargs)
+        elif geometry_type == 'Point':
+            gdf = simple.process_points(gdf, geometry_column = geometry_column, **kwargs)
 
+        # Process crs
         if gdf.crs is None:
             warnings.warn('Boundaries object assuming external gdf data is in {} because no crs is given'.format(self.data.crs))
         elif gdf.crs != self.data.crs and self.data.crs is not None:
@@ -113,18 +130,18 @@ class Boundaries():
         """
 
         gdf = self.process_external_gdf(gdf, geometry_column = geometry_column)
+        geometry_type = self.type_of_external_gdf(gdf)
 
-        sample_geometry = gdf.loc[gdf.index[0], geometry_column]
-        if isinstance(sample_geometry, shapely.geometry.polygon.Polygon):
+        if geometry_type == 'Polygon':
             result = spatial_joins.fast_polygon_intersection(small_polygon_gdf = gdf, large_polygon_gdf = self.data,
                                                              small_geometry_column = geometry_column, **kwargs)
             return result
-        elif isinstance(sample_geometry, shapely.geometry.point.Point):
-            result = spatial_joins.points_intersect_multiple_polygons(points_gdf = gdf, polygon_gdf = self.data,
+        elif geometry_type == 'Point':
+            result = spatial_joins.points_intersect_multiple_polygons(points_gdf = gdf, polygons_gdf = self.data,
                                                                       points_geometry_column = geometry_column, **kwargs)
             return result
         else:
-            raise TypeError('gdf geometry must be a Shapely point or polygon, not {}'.format(type(sample_geometry)))
+            raise TypeError('gdf geometry must be a shapely point or polygon')
 
     def push_features(self, gdf, features, geometry_column = 'geometry', **kwargs):
 
@@ -208,8 +225,6 @@ class ZipBoundaries(Boundaries):
         property_data, metadata = property_input.process_property_data(features = features, geo_filter_values = 'all')
         property_data.index = list(property_data.index.map(str))
         self.data = self.data.join(property_data, how = 'left', **kwargs)
-
-
 
 
 class BlockBoundaries(Boundaries):
@@ -298,6 +313,7 @@ austin_zips = [73301, 73344, 78704, 78705, 78708, 78713, 78714, 78715, 78701, 78
 78732, 78733, 78735, 78736, 78739, 78741, 78745, 78746, 78749, 78750, 78751, 78752, 78755, 78756, 78757, 78758, 78759,
 78737, 78738, 78742, 78744, 78747, 78748, 78753, 78754, 78760, 78761, 78762, 78763, 78769, 78772, 78773, 78780, 78781,
 78799, 78764, 78765, 78766, 78767, 78768, 78774, 78778, 78779, 78783, 78785, 78789]
+austin_zips = [str(z) for z in austin_zips]
 dallas_zips = [75203, 75204, 75205, 75208, 75209, 75210, 75211, 75212, 75214, 75201, 75202, 75206, 75207, 75215, 75216,
 75217, 75218, 75222, 75223, 75224, 75225, 75230, 75231, 75232, 75233, 75236, 75237, 75238, 75240, 75246, 75251, 75252,
 75253, 75219, 75220, 75221, 75226, 75227, 75228, 75229, 75234, 75235, 75241, 75242, 75243, 75244, 75247, 75248, 75249,
@@ -305,6 +321,7 @@ dallas_zips = [75203, 75204, 75205, 75208, 75209, 75210, 75211, 75212, 75214, 75
 75301, 75315, 75320, 75326, 75355, 75356, 75357, 75358, 75370, 75371, 75372, 75373, 75381, 75382, 75389, 75390, 75393,
 75394, 75395, 75303, 75312, 75313, 75336, 75339, 75342, 75354, 75359, 75360, 75367, 75368, 75374, 75376, 75378, 75379,
 75380, 75391, 75392, 75397, 75398]
+dallas_zips = [str(z) for z in dallas_zips]
 houston_zips = [77002, 77003, 77004, 77005, 77006, 77007, 77008, 77009, 77010, 77011, 77012, 77013, 77014, 77015, 77016,
                 77017, 77018, 77019, 77020, 77021, 77022, 77023, 77024, 77025, 77026, 77027, 77028, 77029, 77030, 77031,
                 77032, 77033, 77034, 77035, 77036, 77037, 77038, 77039, 77040, 77041, 77042, 77043, 77044, 77045, 77046,
@@ -315,3 +332,4 @@ houston_zips = [77002, 77003, 77004, 77005, 77006, 77007, 77008, 77009, 77010, 7
                 77375, 77377, 77379, 77386, 77388, 77396, 77401, 77406, 77407, 77429, 77433, 77447, 77449, 77450, 77477,
                 77478, 77484, 77489, 77493, 77494, 77498, 77503, 77504, 77506, 77520, 77530, 77532, 77536, 77546, 77547,
                 77571, 77587, 77598]
+houston_zips = [str(z) for z in houston_zips]

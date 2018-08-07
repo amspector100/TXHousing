@@ -145,7 +145,7 @@ class TestBoundariesProcessing(unittest.TestCase):
                 self.fail('Boundaries.fast_intersection unexpectedly raised {}'.format(e))
 
             try:
-                self.assertEqual(result.unique().tolist(), [227, 233, 670, 684, 692, 695, 697, 981, 1027, 2240, 2242, 2273, 2294, 2325, 2504],
+                self.assertEqual(result.unique().tolist(), [227, 692, 697, 2240, 2273, 2294, 2504],
                                  'boundaries.Boundaries.fast_intersection does not calculate correct intersections')
             except NameError:
                 pass
