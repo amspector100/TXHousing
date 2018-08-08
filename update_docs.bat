@@ -1,3 +1,7 @@
+
+# Make sure we're on master branch
+git checkout master
+
 # build docs
 cd docs
 make clean
