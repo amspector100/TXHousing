@@ -3,10 +3,11 @@ import pandas as pd
 import geopandas as gpd
 import re
 import warnings
+import os
 from ..utilities import simple, spatial_joins, measurements
 from . import boundaries, zoning
 
-# Globals ------------------------------------------------------------------------------------------------------------
+# Globals for municipalities -----------------------------------------------------------------------------------------
 austin_parcel_path = "data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
 
 dallas_parcel_data_path_2013 = "data/Zoning Shapefiles/Dallas County Parcels 2013/geo_export_9b090abf-d5d9-4c74-a6be-4486e75ee147.shp"
@@ -135,7 +136,7 @@ class Parcel(boundaries.Boundaries):
             Note that the order of this dictionary DOES matter - the function will return the FIRST key which has a match.
         """
 
-        self.data[description_column] = self.data[description_column].fillna('').astype(str)
+        self.data['zone_feature'] = self.data[description_column].fillna('').astype(str)
 
         # Create helper function
         def process_broad_zone(text):
@@ -146,7 +147,7 @@ class Parcel(boundaries.Boundaries):
             return "Other"
 
         # Apply
-        self.data['broad_zone'] = self.data[description_column].apply(process_broad_zone)
+        self.data['broad_zone'] = self.data['zone_feature'].apply(process_broad_zone)
 
     def merge_multiple(self, merge_paths, right_keys, left_keys = None, **kwargs):
         """A wrapper of the geopandas.merge function, quickly merge with multiple other csvs
@@ -186,7 +187,7 @@ class Parcel(boundaries.Boundaries):
 
     def measure_parcels(self, lat, long, area_feature = None):
         """ Calculates the distance to center of the city as well as the area and centroid of each parcel. In effect,
-        it adds six new columns to self.data: lat, long, centroids, area_sqft, and dist_to_center. This also
+        it adds four new columns to self.data: lat, long, centroids, area_sqft, and dist_to_center. This also
         transforms the parcels to lat long.
 
         """
@@ -245,10 +246,35 @@ class Parcel(boundaries.Boundaries):
 
     def process_parcel_data(self, broad_zone_feature, broad_zone_dictionary, zoning_input, bounding_counties,
                             area_feature = None, merge_paths = None, left_keys = None, right_keys = None,
-                            save_path = None):
+                            save_path = None, geo_save_path = None):
         """Wrapper which calls self.merge_multiple, self.parse_broad_zone, self.measure_parcels,
         and self.pull_geographic_information in that order. Basically, after initializing the parcel data and calling
         this function, it should have the following features:
+
+        account, broad_zone, zone_feature, dist_to_center, area_sqft, lat, long, county, zipcode, place, ua (urban area)
+
+        as well as a host of other features that may have been joined with/initially part of the data.
+
+        :param broad_zone_feature: The feature used to parse broad_zones. State cds codes are preferred for consistency.
+        :param broad_zone_dictionary: Dictionary mapping broad zones to keywords that we will use to parse the
+            broad_zone_feature and obtain broad zones.
+        :param zoning_input: The zoning input for the city of interest; used to calculate distance from city center.
+        :param bounding_counties: A list of counties which might intersect the data. It's computationally relatively
+            inexpensive to add extra counties to this list, by the way.
+        :param area_feature: Default None. If the data already lists its area in square feet, then we won't bother
+            recalculating it (this saves a ton of time because crs transformations are very expensive for parcel data).
+        :param merge_paths: If the geodata must be merged with another datasource, this should be an iterable containing the
+            paths of the data to merge it with.
+        :param left_keys: If the geodata must be merged with another datasource, this should be an iterable containing the
+            left keys used to merge the data, in the same order of as the 'merge_paths'. Defaults to None, in which case
+             the merge is performed using 'account', which is parsed by the init function, as the merge key.
+        :param right_keys: If the geodata must be merged with another datasource, this should be an iterable containing the
+            right keys used to merge the data, in the same order of as the 'merge_paths'
+        :param save_path: A csv path at which to save the data. Defaults to None, in which case it will not save the
+            data.
+        :param geo_save_path: A .shp path at which to save the data. Defaults to None, in which case it will not save
+            the data.
+        :return: None, but modifies parcel data in place.
         """
 
         # Merge with external data
@@ -267,19 +293,25 @@ class Parcel(boundaries.Boundaries):
         print('Starting to pull geographic info at time {} for {} parcels'.format(time.time() - self.time0, self.name))
         self.pull_geographic_information(bounding_counties)
 
-        # Save if save_path is not None:
+        # Save to csv if save_path is not None:
         if save_path is not None:
-            print('Saving parcel data at time {} for {} parcels'.format(time.time() - self.time0, self.name))
+            print('Saving parcel data to csv at time {} for {} parcels'.format(time.time() - self.time0, self.name))
             csv_data = self.data[[c for c in self.data.columns if c not in ['centroids', 'geometry']]]
             csv_data.to_csv(save_path)
 
+        # Save to .shp if geo_save_path is not None:
+        if geo_save_path is not None:
+            print('Saving parcel data to .shp at time {} for {} parcels'.format(time.time() - self.time0, self.name))
+            shp_data = self.data[[c for c in self.data.columns if c not in ['centroids']]]
+            shp_data.to_file(geo_save_path)
 
         # Print success!
         print('Finished processing {} parcel shapefile; took {} since initialization'.format(self.name,
                                                                                              time.time() - self.time0))
 
 
-    # Basic processing functions -----------------------------------------------------------------------------------------
+# Specific processing functions --------------------------------------------------------------------------------------
+
 def process_austin_parcel_data():
     """Reads Austin parcel data and processes base zones."""
 
@@ -377,12 +409,23 @@ def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path
     # Return
     return geodata
 
+# Cache parcel data --------------------------------------------------------------------------------------------------
+
+def get_cached_municipal_parcel_path(cityname):
+    return 'data/caches/municipal_parcel/{}_municipal_parcel.csv'.format(cityname)
+
+def get_cached_all_parcel_path_csv(cityname):
+    return 'data/caches/all_parcel/{}_all_parcel.csv'.format(cityname)
+
+def get_cached_all_parcel_path_shp(cityname):
+    return 'data/caches/all_parcel/{}_all_parcel.shp'.format(cityname)
+
 # State code dictionary is used for a lot of different counties, mostly around Houston
 state_sptbcode_dictionary = {'Single Family':['A1', 'A2'], 'Multifamily':['A3', 'A4', 'B1', 'B2', 'B3', 'B4']}
 
 # Create caches of parcel data to make reading/working with it easier
 def cache_municipal_parcel_data():
-    """Creates csvs which store the centroids, area, and other relevant features about each parcel."""
+    """Creates csvs which store the centroids, area, and other relevant features about each parcel for municipalities."""
     time0 = time.time()
 
     # Calling the processing functions, then saving as csvs.
@@ -447,8 +490,133 @@ def cache_municipal_parcel_data():
                                        right_keys=['ACCOUNT_NUM', 'ACCOUNT_NUM'],
                                        save_path = get_cached_municipal_parcel_path('dallas'))
 
-def get_cached_municipal_parcel_path(cityname):
-    return 'data/caches/municipal_parcel/{}_municipal_parcel.csv'.format(cityname)
+
+def cache_all_parcel_data():
+    """Creates csvs which store the centroids, area, and other relevant features about each parcel for all of the
+    surrounding counties of each core municipality."""
+
+
+    time0 = time.time()
+    final_columns = ['account', 'broad_zone', 'zone_feature', 'dist_to_center', 'area_sqft', 'lat', 'long', 'county',
+                     'zipcode', 'place', 'ua', 'geometry']
+
+    # Dallas -----------------------------------------------------------------------------------------------
+
+    # Extra paths for the others. Make sure they exist or raise errors otherwise.
+    collin_county_parcel_path = "data/parcels/collin_county_2018/parcels.shp"  # 2018
+    if os.path.exists(collin_county_parcel_path) == False:        
+        raise FileNotFoundError("""Collin County Parcel not in the data directory - use cached data instead or 
+            download the raw data from https://www.collincad.org/downloads.""")
+
+    denton_county_parcel_path = "data/parcels/denton_county_parcels_2018/County_Parcels.shp"  # 2018
+    if os.path.exists(denton_county_parcel_path) == False:
+        raise FileNotFoundError("""Denton County Parcel not in the data directory - use cached data instead or 
+            download the raw data from https://www.dentoncad.com/forms-and-downloads.""")
+
+    processed_tarrant_county_parcel_path = "data/parcels/processed_tarrant_county_parcels_2018/TADData.shp"
+    if os.path.exists(processed_tarrant_county_parcel_path) == False:
+        raise FileNotFoundError("""Processed Tarrant County Parcel data not in the data directory. Use the cached
+            data or download the raw data from https://www.tad.org/data-download/ and run the 
+            tarrant-parcel-processing.R script (this last step is necessary to avoid a bug in GeoPandas).""")
+
+    print('Starting to process Tarrant parcel data at global time {}'.format(time.time() - time0))
+    tarrant_parcels = Parcel(path = processed_tarrant_county_parcel_path,
+                             account_col = 'TAXPIN', county = 'Tarrant', name = 'Tarrant')
+    tarrant_parcels.process_parcel_data(broad_zone_feature = 'Prprt_C',
+                                        broad_zone_dictionary = state_sptbcode_dictionary,
+                                        zoning_input = zoning.dallas_inputs,
+                                        bounding_counties = ['Tarrant'],
+                                        area_feature='Lnd_SqF',
+                                        merge_paths=None,
+                                        left_keys = None,
+                                        right_keys=None)
+    tarrant_parcels.data = tarrant_parcels.data[final_columns]
+
+    # A3 refers to Condos, A4 refers to townhomes. Note I have not included property improvements (classes A6, A9, B6, B9)
+    # - see the data dictionary in the data/parcels directory.
+    print('Starting to process Collin parcel data at global time {}'.format(time.time() - time0))
+    collin_parcels = Parcel(path = collin_county_parcel_path, account_col = 'PROP_ID',
+                            county = 'Collin', name = 'Collin')
+    collin_dictionary = {'Single Family': ['A1'], 'Multifamily': ['A3', 'A4', 'B1', 'B2', 'B3', 'B4']}
+    collin_parcels.process_parcel_data(broad_zone_feature = 'state_cd',
+                                       broad_zone_dictionary = collin_dictionary,
+                                       zoning_input = zoning.dallas_inputs,
+                                       bounding_counties = ['Collin'],
+                                       area_feature=None,
+                                       merge_paths=None,
+                                       left_keys = None,
+                                       right_keys=None)
+    collin_parcels.data = collin_parcels.data[final_columns]
+
+
+    print('Starting to process Denton parcel data at global time {}'.format(time.time() - time0))
+    denton_parcels = Parcel(path = denton_county_parcel_path, account_col = 'PROP_ID',
+                            county = 'Denton', name = 'Denton')
+    denton_dictionary = {'Single Family': ['Single Family', 'Duplexes'],
+                         'Multifamily': ['Apartment', 'Townhomes', ', Condos'],
+                         'Other Residential': ['Residential']}
+    denton_parcels.process_parcel_data(broad_zone_feature = 'CD_DESCRIP',
+                                       broad_zone_dictionary = denton_dictionary,
+                                       zoning_input = zoning.dallas_inputs,
+                                       bounding_counties = ['Denton'],
+                                       area_feature = 'Shape__Are',
+                                       merge_paths = None,
+                                       left_keys = None,
+                                       right_keys= None)
+    denton_parcels.data = denton_parcels.data[final_columns]
+
+
+    print('Starting to process Dallas parcel data at global time {}'.format(time.time() - time0))
+    dallas_parcels = Parcel(path = dallas_county_parcel_path, account_col = 'Acct', county = 'Dallas', name = 'Dallas')
+    dallas_sptb_dictionary = {'Single Family': ['A11'], 'Multifamily': ['B11', 'B12', 'A12', 'A13']}
+    dallas_parcels.process_parcel_data(broad_zone_feature = 'SPTD_CODE',
+                                       broad_zone_dictionary = dallas_sptb_dictionary,
+                                       zoning_input = zoning.dallas_inputs,
+                                       bounding_counties = ['Dallas'],
+                                       area_feature='Shape_area',
+                                       merge_paths=[dallas_county_appraisal_path, dallas_county_res_path],
+                                       left_keys = None,
+                                       right_keys=['ACCOUNT_NUM', 'ACCOUNT_NUM'])
+    dallas_parcels.data = dallas_parcels.data[final_columns]
+
+    print('Combining and saving for Dallas, time is {}'.format(time.time() - time0))
+    all_dallas_parcels = pd.concat([collin_parcels.data, dallas_parcels.data, denton_parcels.data, tarrant_parcels.data],
+                                   axis=0,
+                                   ignore_index=True)
+    all_dallas_parcels.to_file(get_cached_all_parcel_path_shp('dallas'))
+    all_dallas_parcels_csv = all_dallas_parcels[[col for col in all_dallas_parcels.columns if col != 'geometry']]
+    all_dallas_parcels_csv.to_csv(get_cached_all_parcel_path_csv('dallas'))
+    print('Finished with Dallas, global time is {}'.format(time.time() - time0))
+
+    # Austin  --------------------------------------------------------------------------------------------
+    travis_county_parcel_path = "data/parcels/travis_county_parcels_2016/Parcels_Travis_2016.shp"  # 2016
+    travis_county_data_path = 'data/parcels/travis_county_parcel_data/land_det.csv'
+    if (os.path.exists(travis_county_parcel_path) and os.path.exists(travis_county_data_path)) == False:        
+        raise FileNotFoundError("""Travis County Parcel Shapes/Data not in the data directory - use cached data 
+            instead or download the raw data from https://www.traviscad.org/reports-request/""")
+
+    williamson_county_parcel_path = "data/parcels/williamson_parcels_2016/Parcel_Poly.shp"  # 2017
+    williamson_county_real_improvement_path = "data/parcels/williamson_data_2016b/Improvement.txt"  # 2018
+    if (os.path.exists(williamson_county_parcel_path) and 
+        os.path.exists(williamson_county_real_improvement_path)) == False:        
+        raise FileNotFoundError("""Williamson County Parcel Shapes/Data not in the data directory - use cached data 
+            instead or download the raw data from https://www.wcad.org/data-downloads/""")
+
+
+    williamson_parcels = Parcel(path = williamson_county_parcel_path, account_col = 'PIN',
+                                county = 'Williamson', name = 'Williamson')
+    williamson_dictionary = {'Single Family':['A1', 'A9'], 'Multifamily':['A8', 'B1', 'B2', 'B4']}
+    williamson_parcels.process_parcel_data(broad_zone_feature = 'StateCode',
+                                           broad_zone_dictionary = williamson_dictionary,
+                                           zoning_input = zoning.austin_inputs,
+                                           bounding_counties = ['Williamson'],
+                                           area_feature='Shape_area',
+                                           merge_paths=[williamson_county_real_improvement_path],
+                                           left_keys=['PIN'],
+                                           right_keys=['QuickRefID'])
+    williamson_parcels.data = williamson_parcels.data[final_columns]
+
+
 
 
 
