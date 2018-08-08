@@ -5,16 +5,20 @@ make html
 cd ..
 
 # commit and push
-git add -A
+git add .
 git commit -m "building and pushing docs"
 git push origin master
 
 # switch branches and pull the data we want
 git checkout gh-pages
-rm -rf . # (Clear gh-pages branch)
+git rm -rf . # (Clear gh-pages branch)
 touch .nojekyll
 git checkout master docs/build/html
 
-git add -A
-git commit -m "publishing updated docs..."
+# Move it to the project root and also get rid of the docs file
+xcopy '.\docs\build\html' '.\'
+git rm -rf docs\.
+
+git add .
+git commit -m "publishing updated docs"
 git push origin gh-pages
