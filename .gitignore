@@ -6,10 +6,6 @@ data/
 # Don't track any large figures
 Figures/Large Files/
 
-# Don't track unnecessary docs
-_static/
-_templates/
-
 # The .idea folder isn't necessary yet
 .idea/
 
