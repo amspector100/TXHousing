@@ -129,7 +129,10 @@ class Boundaries():
 
         """
 
-        gdf = self.process_external_gdf(gdf, geometry_column = geometry_column)
+        # If the user is passing in a spatial index, do not process the data because this will cause index errors
+        if 'points_spatial_index' in kwargs or 'small_points_spatial_index' in kwargs:
+            gdf = self.process_external_gdf(gdf, geometry_column = geometry_column)
+
         geometry_type = self.type_of_external_gdf(gdf)
 
         if geometry_type == 'Polygon':
@@ -192,11 +195,12 @@ class Boundaries():
 
 
 class ZipBoundaries(Boundaries):
-    """ Class for Zipcode Boundaries Data, wraps Boundaries class.
+    """ Class for Zipcode Boundaries Data, wraps Boundaries class. You cannot pass subset_by or subset if you pass the
+    ziplist parameter, but otherwise all the init parameters are the same.
 
      :param ziplist: A list of zipcodes to subset to."""
 
-    def __init__(self, ziplist = None, bounding_counties = None, bounding_polygon = None):
+    def __init__(self, ziplist = None, bounding_counties = None, bounding_polygon = None, **kwargs):
 
         # Put zips as strings
         if ziplist is not None:

@@ -2,8 +2,9 @@ import time
 import pandas as pd
 import geopandas as gpd
 import re
-from ..utilities import simple, spatial_joins
-from . import boundaries
+import warnings
+from ..utilities import simple, spatial_joins, measurements
+from . import boundaries, zoning
 
 # Globals ------------------------------------------------------------------------------------------------------------
 austin_parcel_path = "data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
@@ -53,7 +54,232 @@ houston_building_other_columns = ["ACCOUNT", "USE_CODE", "BLD_NUM", "IMPRV_TYPE"
                                 "CATEGORY_DSCR", "PROPERTY_NAME", "UNITS", "NET_RENT_AREA", "LEASE_RATE",
                                 "OCCUPANCY_RATE", "TOTAL_INCOME"]
 
-# Basic processing functions -----------------------------------------------------------------------------------------
+
+class Parcel(boundaries.Boundaries):
+    """ Class for Parcel Data.
+
+    :param path: The path of the data.
+    :param account_col: The name of a column containing unique ids for each property.
+    :param county: The county that the parcel data is in. Can also be a column of the data which lists the county of
+        each parcel. Defaults to None but this param is highly recommended.
+    :param processing_function: A custom processing function used to set as self.data
+    :param geometry_column: The geometry column of the data, defaults to 'geometry'
+    :param crs: If necessary, set the crs
+    :param name: A name for the entire dataset, used to identify when printing. Defaults to None, at which point it
+        uses the path of the dataset as its name (if this is also None then the name is just None).
+    :param kwargs: kwargs to pass to the processing_function
+
+    """
+
+    def __init__(self, path, account_col, county = None, processing_function = None, geometry_column = 'geometry',
+                 crs = None, name = None, **kwargs):
+
+        # Record geometry column and initialization time
+        self.time0 = time.time()
+        self.geometry_column = geometry_column
+        if name is not None:
+            self.name = name
+        else:
+            self.name = path
+        print('Staring to initialize at time {} for parcel {}'.format(time.time() - self.time0, self.name))
+
+
+        # Custom processing function
+        if processing_function is not None:
+            self.data = processing_function(**kwargs)
+        else:
+            self.data = gpd.read_file(path)
+
+        # Deal with crs
+        if self.data.crs is None and crs is not None:
+            self.data.crs = crs
+        elif self.data.crs is None:
+            warnings.warn('No crs set for this instance of parcel data')
+
+        # Ensure validity of geometry
+        self.data = self.data.loc[self.data[geometry_column].apply(lambda x: x is not None)]
+        self.data = self.data.loc[self.data[geometry_column].is_valid]
+
+        # Get the county of the data
+        # County of the data
+        if county is not None and county in self.data.columns:
+            self.data = self.data.rename(columns = {county: 'county'})
+        elif county is not None:
+            self.data['county'] = county
+
+        # Prop id column
+        try:
+            self.data['account'] = self.data[account_col].apply(lambda x: str(int(float((x)))))
+        except ValueError:
+            self.data = self.data.rename(columns = {account_col: 'account'})
+
+        # Drop duplicates by centroids and also by account number. Centroid operations are very cheap so it's actually
+        # more efficient to do this before transforming to lat long and then dropping centroids/centroids string and
+        # doing it again.
+        self.data = self.data.drop_duplicates(subset = 'account', keep = 'first')
+
+        if 'centroids' not in self.data.columns:
+            self.data['centroids'] = self.data[geometry_column].centroid
+        self.data['centroids_string'] = self.data['centroids'].astype(str)
+        self.data = self.data.drop_duplicates(subset = ['centroids_string'], keep = 'first')
+        self.data = self.data.drop(['centroids', 'centroids_string'], axis = 1)
+        print('Finished initializing at time {} for parcel {}'.format(time.time() - self.time0, self.name))
+
+    def parse_broad_zone(self, description_column, broad_zone_dictionary):
+        """
+        Parses broad zones of parcel data. Updates the self.data attribute to include a 'broad_zone' column.
+
+        :param description_column: The column of descriptions to parse
+        :param broad_zone_dictionary: A dictionary mapping base zones (i.e. 'Single Family') to a list of strings
+            which signal that a description means that base zone. Ex: {'Single Family':['sf', 'single f'], 'Multifamily':['mf']}
+            Note that the order of this dictionary DOES matter - the function will return the FIRST key which has a match.
+        """
+
+        self.data[description_column] = self.data[description_column].fillna('').astype(str)
+
+        # Create helper function
+        def process_broad_zone(text):
+            for key in broad_zone_dictionary:
+                # This checks whether any of the strings in the broad_zone_dictionary[key] list appear in the text
+                if bool(re.search(('|').join(broad_zone_dictionary[key]), text)):
+                    return key
+            return "Other"
+
+        # Apply
+        self.data['broad_zone'] = self.data[description_column].apply(process_broad_zone)
+
+    def merge_multiple(self, merge_paths, right_keys, left_keys = None, **kwargs):
+        """A wrapper of the geopandas.merge function, quickly merge with multiple other csvs
+
+        :param merge_paths: If the geodata must be merged with another datasource, this should be an iterable containing
+            the aths of the data to merge it with.
+        :param left_keys: If the geodata must be merged with another datasource, this should be an iterable containing the
+            left keys used to merge the data, in the same order of as the 'merge_paths'. Defaults to None, in which case
+            the merge is performed using the account_feature as the merge key.
+        :param right_keys: If the geodata must be merged with another datasource, this should be an iterable containing the
+            right keys used to merge the data, in the same order of as the 'merge_paths'
+        :param kwargs: kwargs to pass to the .merge call
+
+        """
+
+        #  Start by ensuring that the left_keys, right_keys, merge_paths are iterables
+        if isinstance(merge_paths, str):
+            merge_paths = [merge_paths]
+        if isinstance(left_keys, str):
+            left_keys = [left_keys]
+        elif left_keys is None:
+            left_keys = ['account'] * len(merge_paths)
+        if isinstance(right_keys, str):
+            right_keys = [right_keys]
+        if len(merge_paths) != len(right_keys) or len(merge_paths) != len(left_keys):
+            raise ValueError('The lengths of left_keys ({}), right_keys ({}), and merge_paths ({}) must be equal'.format(
+                len(left_keys),
+                len(right_keys),
+                len(merge_paths)))
+
+        # Read data and merge
+        for merge_path, left_key, right_key in zip(merge_paths, left_keys, right_keys):
+            extra_data = pd.read_csv(merge_path, **kwargs)
+            extra_data = extra_data.loc[(extra_data[right_key].notnull())]
+            extra_data = extra_data.drop_duplicates(subset=right_key, keep='first')
+            self.data = self.data.merge(extra_data, left_on=left_key, right_on=right_key, how='left')
+
+    def measure_parcels(self, lat, long, area_feature = None):
+        """ Calculates the distance to center of the city as well as the area and centroid of each parcel. In effect,
+        it adds six new columns to self.data: lat, long, centroids, area_sqft, and dist_to_center. This also
+        transforms the parcels to lat long.
+
+        """
+
+        # If we can, just use the area feature
+        if area_feature is not None:
+            self.data = self.data.rename(columns = {area_feature: 'area_sqft'})
+
+            if self.data.crs != {'init':'epsg:4326'}:
+                self.data = self.data.to_crs({'init':'epsg:4326'})
+
+        # Else we have to transform to lat long.
+        else:
+            self.data = measurements.get_area_in_units(self.data, scale = 1, name = 'area_sqft',
+                                                       final_projection = {'init':'epsg:4326'})
+
+        # This generates centroids, lat, long, and dist to center.
+        self.data['dist_to_center'] = measurements.calculate_dist_to_center(self.data, lat, long, drop_centroids=False)
+
+    def pull_geographic_information(self, bounding_counties):
+
+        # Actually calculate spatial index for efficiency
+        self.data = simple.process_geometry(self.data, geometry_column = self.geometry_column)
+        if 'centroids' not in self.data.index:
+            self.data['centroids'] = self.data[self.geometry_column].centroid
+        self.data = self.data.set_geometry('centroids')
+        self.centroid_spatial_index = self.data.sindex
+        self.data = self.data.set_geometry(self.geometry_column)
+
+        # Pull ua, and place information
+        for path, colname, fill in zip([boundaries.ua_path, boundaries.texas_places_path],
+                                       ['ua', 'place'],
+                                       ['None', 'Unincorporated']):
+
+            # Automatically converts to lat/long
+            boundary_class = boundaries.Boundaries(path, bounding_counties = bounding_counties, to_latlong = True)
+            boundary_class.data = boundary_class.data.rename(columns = {'NAME10':'NAME'})
+
+            # Get intersections
+            print('Taking intersections for {}'.format(colname))
+            mapper = boundary_class.fast_intersection(self.data, geometry_column = self.geometry_column,
+                                                      small_points_spatial_index = self.centroid_spatial_index,
+                                                      horiz = 20, vert = 20)
+            self.data[colname] = self.data.index.map(mapper)
+            self.data[colname] = self.data[colname].map(boundary_class.data['NAME']).fillna(fill).astype(str)
+
+
+        # Do zip separately because it has its own class
+        zipdata = boundaries.ZipBoundaries(bounding_counties = bounding_counties, to_latlong = True)
+        print('Taking intersections for zipcode')
+        mapper = zipdata.fast_intersection(self.data, geometry_column=self.geometry_column,
+                                           small_points_spatial_index=self.centroid_spatial_index,
+                                           horiz=20, vert=20)
+        self.data['zipcode'] = self.data.index.map(mapper)
+        self.data['zipcode'] = self.data['zipcode'].fillna('Other').astype(str)
+
+    def process_parcel_data(self, broad_zone_feature, broad_zone_dictionary, zoning_input, bounding_counties,
+                            area_feature = None, merge_paths = None, left_keys = None, right_keys = None,
+                            save_path = None):
+        """Wrapper which calls self.merge_multiple, self.parse_broad_zone, self.measure_parcels,
+        and self.pull_geographic_information in that order. Basically, after initializing the parcel data and calling
+        this function, it should have the following features:
+        """
+
+        # Merge with external data
+        print('Starting to merge and parse at time {} for {} parcels'.format(time.time() - self.time0, self.name))
+        if merge_paths is not None:
+            self.merge_multiple(merge_paths = merge_paths, left_keys = left_keys, right_keys = right_keys)
+
+        # Process broad_zone
+        self.parse_broad_zone(description_column = broad_zone_feature, broad_zone_dictionary = broad_zone_dictionary)
+
+        # Get centroids, dist to center, lat, long, etc
+        print('Starting to measure distances and areas at time {} for {} parcels'.format(time.time() - self.time0, self.name))
+        self.measure_parcels(lat = zoning_input.lat, long = zoning_input.long, area_feature = area_feature)
+
+        # Get geographic information
+        print('Starting to pull geographic info at time {} for {} parcels'.format(time.time() - self.time0, self.name))
+        self.pull_geographic_information(bounding_counties)
+
+        # Save if save_path is not None:
+        if save_path is not None:
+            print('Saving parcel data at time {} for {} parcels'.format(time.time() - self.time0, self.name))
+            csv_data = self.data[[c for c in self.data.columns if c not in ['centroids', 'geometry']]]
+            csv_data.to_csv(save_path)
+
+
+        # Print success!
+        print('Finished processing {} parcel shapefile; took {} since initialization'.format(self.name,
+                                                                                             time.time() - self.time0))
+
+
+    # Basic processing functions -----------------------------------------------------------------------------------------
 def process_austin_parcel_data():
     """Reads Austin parcel data and processes base zones."""
 
@@ -151,32 +377,82 @@ def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path
     # Return
     return geodata
 
-# Parse descriptions of lots and turn them into SF/MF/Other/Other Residential classifications
-def process_lot_descriptions(gdf, description_column, broad_zone_dictionary):
-    """
-    Processes lot descriptions for zoning data
-
-    :param gdf: A geodataframe, presumably of parcel data, but it could honestly be of anything.
-    :param description_column: The column of descriptions to parse
-    :param broad_zone_dictionary: A dictionary mapping base zones (i.e. 'Single Family') to a list of strings
-        which signal that a description means that base zone. Ex: {'Single Family':['sf', 'single f'], 'Multifamily':['mf']}
-        Note that the order of this dictionary DOES matter - the function will return the FIRST key which has a match.
-    :return: A pandas series of the base zones.
-    """
-
-    # Create helper function
-    def process_broad_zone(text):
-        for key in broad_zone_dictionary:
-            # This checks whether any of the strings in the broad_zone_dictionary[key] list appear in the text
-            if bool(re.search(('|').join(broad_zone_dictionary[key]), text)):
-                return key
-        return "Other"
-
-    broad_zones = gdf[description_column].apply(process_broad_zone)
-    return broad_zones
-
-# These are dictionaries for parsing the broad_zone of individual parcels that are rather handy
-dallas_sptb_dictionary = {'Single Family':['A11'], 'Multifamily':['B11', 'B12', 'A12', 'A13']}
-
 # State code dictionary is used for a lot of different counties, mostly around Houston
 state_sptbcode_dictionary = {'Single Family':['A1', 'A2'], 'Multifamily':['A3', 'A4', 'B1', 'B2', 'B3', 'B4']}
+
+# Create caches of parcel data to make reading/working with it easier
+def cache_municipal_parcel_data():
+    """Creates csvs which store the centroids, area, and other relevant features about each parcel."""
+    time0 = time.time()
+
+    # Calling the processing functions, then saving as csvs.
+
+
+    # Houston -----
+    houston_parcels = Parcel(path = None,
+                             account_col = 'HCAD_NUM',
+                             county = 'Harris',
+                             name = 'Houston',
+                             processing_function = process_houston_parcel_data,
+                             feature_files=[harris_parcel_land_path_2018,
+                                            harris_parcel_appraisal_path_2018,
+                                            harris_parcel_building_res_path_2018],
+                             feature_columns_list=[houston_land_columns, houston_appraisal_columns,
+                                                   houston_building_res_columns],
+                             county_level=False)
+
+    houston_parcels.process_parcel_data(broad_zone_feature = 'STATE_CLASS',
+                                       broad_zone_dictionary = state_sptbcode_dictionary,
+                                       zoning_input = zoning.houston_inputs,
+                                       bounding_counties = ['Harris'],
+                                       area_feature = None,
+                                       merge_paths = None,
+                                       left_keys = None,
+                                       right_keys = None,
+                                       save_path = get_cached_municipal_parcel_path('houston'))
+
+    # Austin -----
+    print('Starting to process Austin parcel data at global time {}'.format(time.time() - time0))
+    # Read data and process base zone
+    austin_parcels = Parcel(path = None,
+                            account_col = 'prop_id',
+                            county = 'Travis',
+                            name = 'Austin',
+                            processing_function = process_austin_parcel_data)
+
+    # Note SF-4B refers to condominium, and SF-6 refers to 'townhouse and condominium'
+    austin_dictionary = {'Single Family': ['SF-1', 'SF-2', 'SF-3', 'SF-4A', 'SF-5'],
+                         'Multifamily': ['SF-4B', 'SF-6', 'MF-1', 'MF-2', 'MF-3', 'MF-4', 'MF-5', 'MF-6']}
+    austin_parcels.process_parcel_data(broad_zone_feature = 'basezone',
+                                       broad_zone_dictionary = austin_dictionary,
+                                       zoning_input = zoning.austin_inputs,
+                                       bounding_counties = ['Travis'],
+                                       area_feature='shape_area',
+                                       merge_paths = None,
+                                       left_keys = None,
+                                       right_keys = None,
+                                       save_path = get_cached_municipal_parcel_path('austin'))
+
+    # Dallas --
+    print('Starting to process Dallas parcel data at global time {}'.format(time.time() - time0))
+    dallas_parcels = Parcel(path = dallas_county_parcel_path, account_col = 'Acct', county = 'Dallas', name = 'Dallas')
+    dallas_sptb_dictionary = {'Single Family': ['A11'], 'Multifamily': ['B11', 'B12', 'A12', 'A13']}
+    dallas_parcels.process_parcel_data(broad_zone_feature = 'SPTD_CODE',
+                                       broad_zone_dictionary = dallas_sptb_dictionary,
+                                       zoning_input = zoning.dallas_inputs,
+                                       bounding_counties = ['Dallas'],
+                                       area_feature='Shape_area',
+                                       merge_paths=[dallas_county_appraisal_path, dallas_county_res_path],
+                                       left_keys = None,
+                                       right_keys=['ACCOUNT_NUM', 'ACCOUNT_NUM'],
+                                       save_path = get_cached_municipal_parcel_path('dallas'))
+
+def get_cached_municipal_parcel_path(cityname):
+    return 'data/caches/municipal_parcel/{}_municipal_parcel.csv'.format(cityname)
+
+
+
+dallas_county_parcel_path = "data/parcels/dalllas_county_2018/PARCEL/PARCEL.shp"# 2018
+dallas_county_land_path = "data/parcels/dallas_county_parcel_data/land.csv"
+dallas_county_appraisal_path = 'data/parcels/dallas_county_parcel_data/ACCOUNT_APPRL_YEAR.csv'
+dallas_county_res_path = 'data/parcels/dallas_county_parcel_data/res_detail.csv'

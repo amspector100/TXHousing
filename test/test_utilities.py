@@ -40,6 +40,7 @@ class TestSimpleUtilities(unittest.TestCase):
     def test_point_grid(self):
         # Test that point_grid works and that its precision is decent
         gdf = gpd.GeoDataFrame(data = pd.DataFrame(pd.Series(self.features), columns = ['value']), geometry = self.points)
+        gdf.crs = {'init':'epsg:4326'}
         try:
             result = simple.make_point_grid(gdf, factor = 'value', by = 'mean')
             gdf_area = shapely.geometry.multipoint.MultiPoint(gdf['geometry'].values).convex_hull.area

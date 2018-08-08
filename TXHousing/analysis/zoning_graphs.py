@@ -1,9 +1,10 @@
 """Graphs which mostly rely on zoning data"""
-
+import time
+import shapely
 import pandas as pd
 import geopandas as gpd
 from .. import utilities
-from ..data_processing import zoning
+from ..data_processing import zoning, boundaries
 from plotnine import *
 import matplotlib.pyplot as plt
 
@@ -199,14 +200,34 @@ def plot_broad_zones_proportion():
     mfringsplot.save('Figures/Bucket 2/MFZoningRings.svg', width = 8, height = 5)
 
 
-def plot_broad_zones_dallas(number_zones = 100000):
+def plot_broad_zones_dallas(save_path = 'Figures/Zoning/north_texas_base_zones.png',
+                            minlat = 32.49, maxlat = 33.51, minlong = -97.71, maxlong = -96.29):
     """Plots an actual map of the closest broad_zones to the Dallas core"""
+    time0 = time.time()
 
+    # Plot and label counties
+    counties = gpd.read_file(boundaries.county_boundaries_path)
+    counties = counties.loc[(counties['NAME'].isin(['Dallas', 'Denton', 'Tarrant', 'Collin'])) & (counties['STATEFP'] == '48')]
+    counties['coords'] = counties['geometry'].apply(lambda x: x.representative_point().coords[:][0])
+    counties['geometry'] = counties['geometry'].apply(lambda x: x.boundary)
+    base = counties.plot(facecolor = 'none', alpha = 0.5, edgecolor = 'black')
+    for idx, row in counties.iterrows():
+        plt.annotate(s=row['NAME'], xy=row['coords'], horizontalalignment='center')
+
+    # Get subset of north texas data and plot
     north_texas_data = zoning.north_texas_inputs.process_zoning_shapefile()
-    north_texas_data['geometry'] = north_texas_data['geometry'].simplify(tolerance = 0.005)
+    north_texas_data['geometry'] = north_texas_data['geometry'].simplify(tolerance = 0.001)
     spatial_index = north_texas_data.sindex
-    ids = list(spatial_index.nearest([zoning.dallas_inputs.long, zoning.dallas_inputs.lat], num_results = number_zones))
+    print('Subsetting')
+    bounding_polygon = shapely.geometry.box(minlong, minlat, maxlong, maxlat)
+    ids = list(spatial_index.intersection(bounding_polygon.bounds))
     subset = north_texas_data.iloc[ids]
-    subset.plot(column = 'broad_zone', legend = True, cmap = 'tab10')
-    plt.show()
+    base = subset.plot(ax = base, column = 'broad_zone', legend = True, legend_kwds = {'fontsize':6}, cmap = 'Set1')
 
+    # Adjust legend location
+    #legend = base.get_legend()
+    #legend.set_bbox_to_anchor((0.96, 0.96, 0.04, 0.04))
+
+    print('Saving')
+    plt.savefig(save_path, dpi = 300)
+    print('Finished, took {}'.format(time.time() - time0))

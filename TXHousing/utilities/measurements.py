@@ -44,7 +44,7 @@ def haversine(point1, point2, lon1 = None, lat1 = None, lon2 = None, lat2 = None
     r = 3956  # Radius of earth in miles. Use 6371 for km
     return c * r
 
-def calculate_dist_to_center(gdf, lat, long, drop_centroids = True):
+def calculate_dist_to_center(gdf, lat, long, drop_centroids = True, geometry_column = 'geometry'):
     """
 
     Calculates distance to the center of the city using haversine on the centroids of objects
@@ -56,19 +56,23 @@ def calculate_dist_to_center(gdf, lat, long, drop_centroids = True):
     :return: Pandas Series of floats (distances from center).
     """
 
-    center = shapely.geometry.point.Point(long, lat)
-
-    def dist_to_center(point):
-        dist = haversine(point, center)
-        return dist
+    if gdf.crs != {'init':'epsg:4326'}:
+        raise AttributeError('gdf must be in lat/long coordinates for calculate_dist_to_center')
 
     if 'centroids' not in gdf.columns:
         gdf['centroids'] = gdf['geometry'].centroid
 
-    distances = gdf['centroids'].apply(dist_to_center)
+    # Get lats and longs for gdf and center respectively
+    lat = lat * np.ones((gdf.shape[0]))
+    long = long * np.ones((gdf.shape[0]))
+    gdf['long'] = gdf['centroids'].apply(lambda x: x.coords[:][0][0])
+    gdf['lat'] = gdf['centroids'].apply(lambda x: x.coords[:][0][1])
 
+    distances = haversine(point1 = None, point2 = None,
+                          lat1 = lat, lon1 = long,
+                          lat2 = gdf['lat'], lon2 = gdf['long'])
     if drop_centroids:
-        gdf.drop('centroids', inplace=True, axis=1)
+        gdf.drop(['centroids', 'lat', 'long'], inplace=True, axis=1)
     return distances
 
 def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', scale = 3.58701*10**(-8), name = 'area', final_projection = None, reproject = True):

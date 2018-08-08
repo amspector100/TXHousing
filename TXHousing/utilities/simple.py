@@ -104,7 +104,7 @@ def get_urban_core(lat, long, radius, scale = 5280, newproj = 'epsg:2277'):
     :param long: The longitude of the center of the city.
     :param radius: The radius in units of your choice; see the scale and newproj parameters.
     :param scale: Defaults to 5280, feet per mile.
-    :param newproj: The new projection to use to calculate this distance (by default epsg:2277, which is in feat).
+    :param newproj: The new projection to use to calculate this distance (by default epsg:2277, which is in feet).
     :return: a geopandas geodataframe with a single column (geometry) of length one (polygon) which represents the
         urban core.
 
@@ -137,22 +137,23 @@ def make_point_grid(gdf, horiz=20, vert=20, factor=None, by='mean', geometry_col
     :param vert: Number of vertical boxes
     :param factor: The (continuous) value with which to take the mean/median of the points. Defaults to None.
     :param by: 'mean' or 'median'. Meaningless unless you have the factor column.
-    :param geometry_column: The column the points are contained in. These should be shapely points in lat/long form.
+    :param geometry_column: The column the points are contained in (these should be shapely points).
     :return: geodataframe with grid geometry and a 'value' column
     """
 
-    # Work with crs's for a sec
+    # Work with crs
     if gdf.crs is None:
+        warnings.warn('Assuming crs is lat/long')
         gdf.crs = {'init': 'epsg:4326'}
 
-    # Adapted from snorfalorpagus - could make this a helper function in the future if necessary
+    # Fragment
     points = shapely.geometry.multipoint.MultiPoint(gdf[geometry_column].tolist())
     hull = points.convex_hull
     grid = fragment(hull, horiz = horiz, vert = vert)
 
     # Now initialize result
     result = gpd.GeoSeries(grid)
-    result.index = [str(ind) for ind in result.index]  # prevent ugliness and silent errors arising from spatial index
+    result.index = [str(ind) for ind in result.index]  # prevent weirds errors arising from spatial index
     value = pd.Series(index=result.index)
 
     # Get intersections and fill values
