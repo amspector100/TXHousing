@@ -1,13 +1,15 @@
 """ This file contains most of the graphing for the suburbs analysis. It does not rely on raw parcel data, but the
 cached versions instead."""
 
-import geopandas as gpd
+import numpy as np
 import pandas as pd
+import geopandas as gpd
+import folium
+from plotnine import *
+
 from ..utilities import measurements
 from ..data_processing import boundaries, zoning, parcel
 from . import choropleth
-import folium
-from plotnine import *
 
 # Functions which find paths - their names say it all
 def get_municipality_choropleth_path(name):
@@ -224,3 +226,81 @@ def suburbs_scatterplot():
                     y='Average Single Family Lotsize'))
     lplot.save('Figures/Suburbs/sf_lotsize_scatterplot.svg', width = 8.5, height = 11)
 
+
+
+# Commuting ------------------------------------------------------------------------------------------------------
+def analyze_transportation_networks(names, zoning_inputs, num_blocks = 5000, step = 2.5, maximum = 60):
+
+    block_data = boundaries.BlockBoundaries(['X08_COMMUTING', 'X01_AGE_AND_SEX'], cities = None)
+
+    # Get total/local workers
+
+    # Female and male workers working in their place of residence
+    block_data.data['local_workers'] = block_data.data['B08008e3'] + block_data.data['B08008e8']
+    # Total number of male and female workers in the block group
+    block_data.data['total_workers'] = block_data.data['B08008e2'] + block_data.data['B08008e7']
+
+    # Create spatial indexes and subset
+    spatial_index = block_data.data.sindex
+    all_data = gpd.GeoDataFrame()
+    for name, zoning_input in zip(names, zoning_inputs):
+
+        # Query and find nearest neighbors, subset
+        nearest_index = list(spatial_index.nearest((zoning_input.long, zoning_input.lat), num_results=num_blocks))
+        city_data = block_data.data.iloc[nearest_index]
+        city_data['dist_to_center'] = measurements.calculate_dist_to_center(city_data,
+                                                                            lat = zoning_input.lat,
+                                                                            long = zoning_input.long)
+        city_data['City'] = name
+        all_data = pd.concat([all_data, city_data])
+
+    # Average commute time
+
+    all_data['smoothed_dist_to_center'] =  all_data['dist_to_center'].apply(lambda x: step*(np.round(x/step)))
+    commute_brackets = {'B08303e2':2.5,
+                        'B08303e3':7.5,
+                        'B08303e4':12.5,
+                        'B08303e5':17.5,
+                        'B08303e6':22.5,
+                        'B08303e7':27.5,
+                        'B08303e8':32.5,
+                        'B08303e9':37.5,
+                        'B08303e10':42.5,
+                        'B08303e11':52.5,
+                        'B08303e12':75,
+                        'B08303e13':90}
+    all_data['total_commute_time'] = 0
+    for key in commute_brackets:
+        all_data['total_commute_time'] += all_data[key]*commute_brackets[key]
+    print(all_data[['total_commute_time', 'B08135e1']])
+
+    # Calculate averages in rings
+    total_commuters = all_data.groupby(['smoothed_dist_to_center', 'City'])['B08303e1'].sum()
+    total_commute_time = all_data.groupby(['smoothed_dist_to_center', 'City'])['total_commute_time'].sum()
+    result = pd.DataFrame(total_commute_time.divide(total_commuters))
+    result.reset_index(inplace = True)
+    result = result.rename(columns = {0:'avg_commute_time'})
+    result = result.loc[result['smoothed_dist_to_center'] <= maximum]
+
+    plot = (ggplot(result, aes(x = 'smoothed_dist_to_center', y = 'avg_commute_time', fill = 'City'))
+                   + geom_col(position = 'dodge')
+                   + facet_wrap('~City')
+                   + theme_bw()
+                   + labs(title = 'Commute Times by Distance from the City Center in Austin, Dallas, and Houston',
+                          x = 'Distance from City Center (Miles)', y = 'Average Commute Time (Minutes)'))
+    plot.save('Figures/Suburbs/travel_times.svg', width = 12, height = 10)
+
+    total_workers = all_data.groupby(['smoothed_dist_to_center', 'City'])['total_workers'].sum()
+    total_local_workers = all_data.groupby(['smoothed_dist_to_center', 'City'])['local_workers'].sum()
+    workers_pct = 100*pd.DataFrame(total_local_workers.divide(total_workers))
+    workers_pct.reset_index(inplace = True)
+    workers_pct = workers_pct.rename(columns = {0:'local_workers_pct'})
+    workers_pct = workers_pct.loc[workers_pct['smoothed_dist_to_center'] <= maximum]
+
+    plot = (ggplot(workers_pct, aes(x = 'smoothed_dist_to_center', y = 'local_workers_pct', fill = 'City'))
+                   + geom_col(position = 'dodge')
+                   + facet_wrap('~City')
+                   + theme_bw()
+                   + labs(title = 'Percent of Workers Working in Place of Residence by Distance from City Center',
+                          x = 'Distance from City Center (Miles)', y = 'Percent of Workers Working in Place of Residence'))
+    plot.save('Figures/Suburbs/local_workers.svg', width = 12, height = 10)
