@@ -16,7 +16,6 @@ mastermaps module
 .. automodule:: TXHousing.analysis.mastermaps
   :members:
 
-
 zoning_graphs module
 -------------------------
 .. automodule:: TXHousing.analysis.zoning_graphs
@@ -36,3 +35,9 @@ misc_calcs module
 -------------------------
 .. automodule:: TXHousing.analysis.parcel_graphs
   :members:
+
+suburbs module
+-----------------------
+.. automodule:: TXHousing.analysis.suburbs
+  :members:
+
