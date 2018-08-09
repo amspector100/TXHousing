@@ -9,9 +9,6 @@ from ..data_processing import zoning, parcel
 from plotnine import *
 from functools import reduce
 
-
-
-
 def plot_singlefamily_lotsizes(save_path = 'Figures/Zoning/sf_lotsizes.svg', width = 10, height = 8):
     """ Plots average lotsizes of single family homes in Houston conditional on distance from city center. This uses
     cached municipal parcel data. """
@@ -109,7 +106,7 @@ def plot_percent_undeveloped(save_path = 'Figures/Zoning/percent_undeveloped.svg
                                                      how='outer', 
                                                      sort=False),
                         [weighted_means, means, medians])
-    all_results.to_csv('shared_data/percent_undeveloped.csv')
+    all_results.to_csv('shared_data/calculations/percent_undeveloped.csv')
 
         # Now graph
     all_results = all_results.loc[all_results['broad_zone'] == 'Single Family']
@@ -121,3 +118,61 @@ def plot_percent_undeveloped(save_path = 'Figures/Zoning/percent_undeveloped.svg
                 x='Distance from City Center',
                 y='Simple Mean of Undeveloped Percentage of SF Lots'))
     p.save(save_path, width=10, height=8)
+
+def calc_parking_costs(save_path = 'Figures/property_value_histogram.svg'):
+    """Calculates average land costs within 1 mile of the city center in Austin, Dallas, Houston. Relies on cached
+    municipal parcel data. These are a bit conservative figures because they use lot size instead of base area of the
+    actual building."""
+
+    # Read data, get value
+    austin_path = parcel.get_cached_municipal_parcel_path('austin')
+    austin_parcels = pd.read_csv(austin_path)[['dist_to_center', 'area_sqft', 'place', 'appraised']]
+    austin_parcels['value'] = austin_parcels['appraised'].astype(float)
+    austin_parcels = austin_parcels.loc[
+        (austin_parcels['place'] == 'Austin') & (austin_parcels['dist_to_center'] <= 1)]
+
+    dallas_path = parcel.get_cached_municipal_parcel_path('dallas')
+    dallas_parcels = pd.read_csv(dallas_path)[['dist_to_center', 'area_sqft', 'place', 'TOT_VAL']]
+    dallas_parcels['value'] = dallas_parcels['TOT_VAL'].astype(float)
+    dallas_parcels = dallas_parcels.loc[
+        (dallas_parcels['place'] == 'Dallas') & (dallas_parcels['dist_to_center'] <= 1)]
+
+    houston_path = parcel.get_cached_municipal_parcel_path('houston')
+    houston_parcels = pd.read_csv(houston_path)[['dist_to_center', 'area_sqft', 'place', 'TOTAL_APPRAISED_VALUE']]
+    houston_parcels['value'] = houston_parcels['TOTAL_APPRAISED_VALUE'].astype(float)
+    houston_parcels = houston_parcels.loc[
+        (houston_parcels['place'] == 'Houston') & (houston_parcels['dist_to_center'] <= 1)]
+
+    # Join, calculate value_per_sqft, group
+    all_data = pd.concat([austin_parcels, dallas_parcels, houston_parcels], axis=0)
+    all_data['value_per_sqft'] = all_data['value'].divide(all_data['area_sqft'])
+    grouped_data = all_data.groupby(['place'])
+
+    # Calculate
+    median = grouped_data['value_per_sqft'].median().reset_index()
+    median = median.rename(columns={'value_per_sqft': 'value_per_sqft_median'})
+
+    simple_mean = grouped_data['value_per_sqft'].mean().reset_index()
+    simple_mean = simple_mean.rename(columns={'value_per_sqft': 'value_per_sqft_simple_mean'})
+
+    weighted_mean = grouped_data['value'].sum().divide(grouped_data['area_sqft'].sum()).reset_index()
+    weighted_mean = weighted_mean.rename(columns={0: 'value_per_sqft_mean'})
+
+    all_results = reduce(lambda left, right: pd.merge(left, right, on=['place'], how='outer', sort=False),
+                         [weighted_mean, simple_mean, median])
+    all_results.to_csv('shared_data/calculations/values_per_sqft.csv')
+
+    # Graph histogram --
+    # Get rid of the outliers
+    maximum = all_data['value_per_sqft'].quantile(.95)
+    all_data.loc[all_data['value_per_sqft'] > maximum, 'value_per_sqft'] = maximum
+    all_data = all_data.loc[(all_data['place'].notnull()) & (all_data['value_per_sqft'].notnull())]
+
+    p = (ggplot(all_data, aes(x = 'value_per_sqft', fill = 'place', group = 'place'))
+          + geom_histogram()
+          + labs(title = 'Property Values within 1 Mile of City Center in Texas Triangle',
+                 x = 'Value per Square Foot',
+                 y = 'Number of Parcels')
+          + theme_bw()
+          + facet_wrap('~place'))
+    p.save(save_path, width = 10, height = 8)
