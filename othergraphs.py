@@ -36,8 +36,8 @@ construction_heatmap = False
 plot_parcels = False
 
 # Read data --------------------------------------------------
-#dallas_zones = process_zoning_shapefile(dallas_inputs, broaden = True)
-#austin_zones = process_zoning_shapefile(austin_inputs, broaden = True)
+dallas_zones = process_zoning_shapefile(dallas_inputs, broaden = True)
+austin_zones = process_zoning_shapefile(austin_inputs, broaden = True)
 time0 = time.time()
 
 # Minimum lot size graph -------------------------------------

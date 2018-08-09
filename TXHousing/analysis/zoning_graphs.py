@@ -3,7 +3,6 @@ import time
 import shapely
 import pandas as pd
 import geopandas as gpd
-from geopandas import plotting
 from .. import utilities
 from ..data_processing import zoning, boundaries
 from plotnine import *
@@ -291,3 +290,70 @@ def map_broad_zones_dallas_austin(plot_austin = True, plot_dallas = True):
                         minlat=32.49, maxlat=33.51, minlong=-97.71, maxlong=-96.29,
                         name = 'Dallas',
                         save_path = 'Figures/Zoning/north_texas_base_zones.png')
+
+
+
+def plot_zone_income_histogram(save_path = 'Figures/Zoning/income_housing_typology.svg',
+                               cache_path = 'shared_data/calculations/zoning_income_data.csv'):
+    """ Plots the distribution of incomes conditional on broad zones in Austin and Dallas"""
+
+    # Get block data with income brackets
+    block_data = boundaries.BlockBoundaries(['X19_INCOME'], cities = ['Austin', 'Dallas'])
+    factor_dictionary =   {'B19001e2':0, # Start values, the next value is the end of the bracket
+                           'B19001e3':10000,
+                           'B19001e4':15000,
+                           'B19001e5':20000,
+                           'B19001e6':25000,
+                           'B19001e7':30000,
+                           'B19001e8':35000,
+                           'B19001e9':40000,
+                           'B19001e10':45000,
+                           'B19001e11':50000,
+                           'B19001e12':60000,
+                           'B19001e13':75000,
+                           'B19001e14':100000,
+                           'B19001e15':125000,
+                           'B19001e16':150000,
+                           'B19001e17':200000}
+
+    data_features = [factor_dictionary[key] for key in factor_dictionary]
+    block_data.data = block_data.data.rename(columns = factor_dictionary)
+
+    # Austin/Dallas Zones
+    dallas_zones = zoning.dallas_inputs.process_zoning_shapefile()
+    dallas_zones = dallas_zones.loc[dallas_zones['broad_zone'].isin(['Single Family', 'Multifamily'])]
+    austin_zones = zoning.austin_inputs.process_zoning_shapefile()
+    austin_zones = austin_zones.loc[austin_zones['broad_zone'].isin(['Single Family', 'Multifamily'])]
+
+    # Pull income statistics
+    austin_zones = block_data.push_features(austin_zones, data_features)
+    dallas_zones = block_data.push_features(dallas_zones, data_features)
+
+    # Plot
+    austin_zones['City'] = 'Austin'
+    dallas_zones['City'] = 'Dallas'
+    selected_columns = data_features
+    selected_columns.extend(['broad_zone', 'City']) # We don't need geometry anymore
+    all_zones = pd.concat([austin_zones[selected_columns], dallas_zones[selected_columns]], axis = 0)
+    final_data = all_zones.groupby(['City', 'broad_zone']).sum()
+    final_data.to_csv(cache_path)
+
+    # Read in data just to get it in a consistent format - this is very fast anyways, it's like a 1 kb file
+    final_data = pd.read_csv(cache_path)
+    final_data = final_data.melt(var_name = 'Household_Income', value_name = 'Count', id_vars = ['City', 'broad_zone'])
+
+    final_data = utilities.measurements.order_radii(final_data, feature = 'Household_Income')
+
+    # Normalize by the total
+    conditional_sums = final_data.groupby(['Household_Income', 'broad_zone', 'City']).agg({'Count': 'sum'})
+    final_data = conditional_sums.groupby(level = [1,2]).apply(lambda x: 100*x / x.sum()).reset_index()
+
+    incomeplot = (ggplot(final_data, aes(x = 'Household_Income', y = "Count", group = 'broad_zone', fill = 'broad_zone'))
+               + geom_bar(stat="identity", position=position_dodge())
+               + facet_wrap('~ City')
+               + theme_bw()
+               + labs(title = 'Income by Base Residential Zone, Austin and Dallas',
+                      x = 'Household Income Bracket',
+                      y = 'Percent of SF/MF Households in Income Bracket Given Income')
+               + theme(axis_text_x = element_text(rotation = 20, size = 8)))
+    incomeplot.save(filename=save_path, width=15, height=8, bbox_inches='tight')
