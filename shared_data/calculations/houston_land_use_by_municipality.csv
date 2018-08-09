@@ -1,0 +1,253 @@
+,broad_zone,place,Percent of Land Used
+0,Multifamily,Aldine,2.588021015911217
+1,Multifamily,Arcola,0.8173785428471988
+2,Multifamily,Atascocita,1.0869365484475375
+3,Multifamily,Barrett,15.865409279938936
+4,Multifamily,Baytown,4.375086023582123
+5,Multifamily,Beasley,0.6778966032691528
+6,Multifamily,Bellaire,0.6050950781326143
+7,Multifamily,Channelview,2.4346199627292067
+8,Multifamily,Cinco Ranch,2.7537739517948183
+9,Multifamily,Cloverleaf,4.5722729528390955
+10,Multifamily,Conroe,1.9499065368243425
+11,Multifamily,Crosby,5.091042352889772
+12,Multifamily,Cumings,1.3756819737493768
+13,Multifamily,Deer Park,2.5428163983318135
+14,Multifamily,El Lago,3.29565510340531
+15,Multifamily,Fairchilds,2.04883298622358
+16,Multifamily,Fifth Street,0.6126939816910693
+17,Multifamily,Four Corners,1.4066542361641299
+18,Multifamily,Fresno,2.2925474660085117
+19,Multifamily,Friendswood,1.9880523255726983
+20,Multifamily,Fulshear,0.2558858068321203
+21,Multifamily,Galena Park,1.0477536137419714
+22,Multifamily,Greatwood,0.903055465871922
+23,Multifamily,Hedwig Village,1.6134531696298329
+24,Multifamily,Highlands,3.5266104470261537
+25,Multifamily,Houston,4.673377706926863
+26,Multifamily,Humble,2.441973154529326
+27,Multifamily,Hunters Creek Village,0.13371537906090208
+28,Multifamily,Jacinto City,2.933318686513235
+29,Multifamily,Jersey Village,2.001234106665206
+30,Multifamily,Katy,0.8116755056711823
+31,Multifamily,Kendleton,0.8029054512243875
+32,Multifamily,La Porte,1.8887198168796995
+33,Multifamily,League City,1.7941371659971745
+34,Multifamily,Magnolia,1.0355870705663222
+35,Multifamily,Meadows Place,0.26894389695435006
+36,Multifamily,Mission Bend,0.8243078297960909
+37,Multifamily,Missouri City,0.7691560145138286
+38,Multifamily,Montgomery,1.078723969190855
+39,Multifamily,Morgan's Point,1.6348371651923475
+40,Multifamily,Nassau Bay,4.952301186305926
+41,Multifamily,Needville,1.345180204058495
+42,Multifamily,New Territory,1.803569028460605
+43,Multifamily,Orchard,1.7052667888331166
+44,Multifamily,Panorama Village,0.9171466328744391
+45,Multifamily,Pasadena,4.558111614472814
+46,Multifamily,Patton Village,0.07703367182178435
+47,Multifamily,Pearland,0.5739488473907195
+48,Multifamily,Pecan Grove,0.8355763530358371
+49,Multifamily,Piney Point Village,0.11727030143288243
+50,Multifamily,Pleak,3.337182931429297
+51,Multifamily,Richmond,3.789765118395014
+52,Multifamily,Roman Forest,0.21279834023529123
+53,Multifamily,Rosenberg,1.1042643649958044
+54,Multifamily,Seabrook,3.631781937459865
+55,Multifamily,Sheldon,1.3293992870365734
+56,Multifamily,Shenandoah,3.234792285431615
+57,Multifamily,Shoreacres,1.946099291277211
+58,Multifamily,Sienna Plantation,0.3367992148176545
+59,Multifamily,Simonton,2.3729813103225705
+60,Multifamily,South Houston,5.577446685440439
+61,Multifamily,Southside Place,4.309241708577635
+62,Multifamily,Spring,1.4080491335931256
+63,Multifamily,Spring Valley Village,0.23198412470501928
+64,Multifamily,Stafford,3.0105025817497
+65,Multifamily,Sugar Land,0.6812508524163522
+66,Multifamily,Taylor Lake Village,0.5240328224391128
+67,Multifamily,The Woodlands,1.7540832762337841
+68,Multifamily,Thompsons,0.10744712262668318
+69,Multifamily,Tomball,2.0156659740076326
+70,Multifamily,Unincorporated,0.9459552925946654
+71,Multifamily,Waller,3.405508952762195
+72,Multifamily,Webster,6.926505490854957
+73,Multifamily,West University Place,0.5586545141275409
+74,Multifamily,Weston Lakes,0.30240335099103643
+75,Multifamily,Willis,0.7039187730790838
+76,Other,Aldine,63.61874747320585
+77,Other,Alvin,100.0
+78,Other,Arcola,75.58665611652395
+79,Other,Atascocita,61.51665025683416
+80,Other,Barrett,61.993850151885546
+81,Other,Baytown,67.40820271693163
+82,Other,Beasley,85.84375357686156
+83,Other,Bellaire,24.09934528670248
+84,Other,Bunker Hill Village,10.876554404929607
+85,Other,Channelview,62.20083323276573
+86,Other,Cinco Ranch,56.26815531639321
+87,Other,Cleveland,94.01752838602428
+88,Other,Cloverleaf,30.032075923848634
+89,Other,Conroe,73.73492527937194
+90,Other,Crosby,63.72724509566772
+91,Other,Cumings,79.45096051432203
+92,Other,Cut and Shoot,44.872727528164766
+93,Other,Deer Park,55.77639581909705
+94,Other,El Lago,21.306337317951073
+95,Other,Fairchilds,55.99306794248831
+96,Other,Fifth Street,79.08902334652545
+97,Other,Four Corners,52.90148167620599
+98,Other,Fresno,56.14519419019432
+99,Other,Friendswood,69.83678766890867
+100,Other,Fulshear,78.15724983584455
+101,Other,Galena Park,74.10660895794882
+102,Other,Greatwood,44.720414805099864
+103,Other,Hedwig Village,43.52058817795169
+104,Other,Highlands,49.88686657807241
+105,Other,Hilshire Village,18.764498735206455
+106,Other,Houston,68.23672374018692
+107,Other,Humble,84.15907534289306
+108,Other,Hunters Creek Village,9.92974145060125
+109,Other,Jacinto City,47.14517117740394
+110,Other,Jersey Village,56.24936884478713
+111,Other,Katy,72.95433618128042
+112,Other,Kendleton,85.11239906566944
+113,Other,La Porte,64.56058586693972
+114,Other,League City,84.02903795427484
+115,Other,Magnolia,71.53319521108365
+116,Other,Meadows Place,48.4943589364103
+117,Other,Mission Bend,34.708203513794594
+118,Other,Missouri City,69.13226504906285
+119,Other,Mont Belvieu,100.0
+120,Other,Montgomery,87.77787566828512
+121,Other,Morgan's Point,70.3871652115208
+122,Other,Nassau Bay,50.560283255864725
+123,Other,Needville,60.779640530172166
+124,Other,New Territory,51.047027225649025
+125,Other,Oak Ridge North,43.997646996547815
+126,Other,Orchard,54.04390952542377
+127,Other,Panorama Village,22.763499812658655
+128,Other,Pasadena,63.01452424087965
+129,Other,Patton Village,43.634330564511394
+130,Other,Pearland,72.78763273299123
+131,Other,Pecan Grove,65.49420440180634
+132,Other,Pinehurst,57.56485054837429
+133,Other,Piney Point Village,14.41490889561905
+134,Other,Pleak,44.03863351296247
+135,Other,Porter Heights,66.5865572659617
+136,Other,Richmond,65.57325183473424
+137,Other,Roman Forest,62.355297108556016
+138,Other,Rosenberg,86.3184837865957
+139,Other,Seabrook,63.82513646248435
+140,Other,Sheldon,87.62082842119463
+141,Other,Shenandoah,73.99653904218209
+142,Other,Shoreacres,27.74206208047511
+143,Other,Sienna Plantation,72.26259504232647
+144,Other,Simonton,59.2628398539993
+145,Other,South Houston,46.91849934118256
+146,Other,Southside Place,25.987893021637014
+147,Other,Splendora,55.14781301163497
+148,Other,Spring,65.04901709990322
+149,Other,Spring Valley Village,24.551515604904804
+150,Other,Stafford,80.05508162685511
+151,Other,Stagecoach,35.66552294948703
+152,Other,Sugar Land,71.00852447836316
+153,Other,Taylor Lake Village,18.303968201109715
+154,Other,The Woodlands,54.798315438251386
+155,Other,Thompsons,96.51697385048674
+156,Other,Tomball,78.70314179873789
+157,Other,Unincorporated,75.92467576836448
+158,Other,Waller,84.61730779183728
+159,Other,Webster,87.08369191862212
+160,Other,West University Place,9.93760750621915
+161,Other,Weston Lakes,45.17123716183647
+162,Other,Willis,74.52301835139411
+163,Other,Woodbranch,38.487613930411385
+164,Other,Woodloch,37.9986702008059
+165,Single Family,Aldine,33.79323151088304
+166,Single Family,Arcola,23.59596534062887
+167,Single Family,Atascocita,37.39641319471787
+168,Single Family,Barrett,22.140740568175538
+169,Single Family,Baytown,28.216711259486665
+170,Single Family,Beasley,13.478349819869276
+171,Single Family,Bellaire,75.29555963516488
+172,Single Family,Bunker Hill Village,89.12344559507036
+173,Single Family,Channelview,35.36454680450524
+174,Single Family,Cinco Ranch,40.97807073181193
+175,Single Family,Cleveland,5.982471613975713
+176,Single Family,Cloverleaf,65.39565112331212
+177,Single Family,Conroe,24.315168183803777
+178,Single Family,Crosby,31.181712551442374
+179,Single Family,Cumings,19.1733575119285
+180,Single Family,Cut and Shoot,55.127272471834985
+181,Single Family,Deer Park,41.680787782571684
+182,Single Family,El Lago,75.39800757864367
+183,Single Family,Fairchilds,41.95809907128809
+184,Single Family,Fifth Street,20.298282671783582
+185,Single Family,Four Corners,45.691864087630215
+186,Single Family,Fresno,41.56225834379763
+187,Single Family,Friendswood,28.175160005518613
+188,Single Family,Fulshear,21.58686435732316
+189,Single Family,Galena Park,24.845637428309153
+190,Single Family,Greatwood,54.376529729028256
+191,Single Family,Hedwig Village,54.86595865241839
+192,Single Family,Highlands,46.58652297490175
+193,Single Family,Hilshire Village,81.23550126479354
+194,Single Family,Houston,27.08989855289002
+195,Single Family,Humble,13.398951502577622
+196,Single Family,Hunters Creek Village,89.93654317033788
+197,Single Family,Jacinto City,49.921510136082894
+198,Single Family,Jersey Village,41.749397048547685
+199,Single Family,Katy,26.233988313048318
+200,Single Family,Kendleton,14.084695483106167
+201,Single Family,La Porte,33.550694316180554
+202,Single Family,League City,14.176824879728034
+203,Single Family,Magnolia,27.43121771835001
+204,Single Family,Meadows Place,51.23669716663555
+205,Single Family,Mission Bend,64.46748865640895
+206,Single Family,Missouri City,30.098578936424303
+207,Single Family,Montgomery,11.143400362524007
+208,Single Family,Morgan's Point,27.97799762328684
+209,Single Family,Nassau Bay,44.487415557829365
+210,Single Family,Needville,37.87517926576927
+211,Single Family,New Territory,47.14940374589078
+212,Single Family,Oak Ridge North,56.00235300345222
+213,Single Family,Orchard,44.25082368574305
+214,Single Family,Panorama Village,76.3193535544669
+215,Single Family,Pasadena,32.427364144646496
+216,Single Family,Patton Village,56.2886357636667
+217,Single Family,Pearland,26.638418419617977
+218,Single Family,Pecan Grove,33.67021924515827
+219,Single Family,Pinehurst,42.43514945162592
+220,Single Family,Piney Point Village,85.46782080294807
+221,Single Family,Pleak,52.62418355560826
+222,Single Family,Porter Heights,33.41344273403822
+223,Single Family,Richmond,30.636983046870697
+224,Single Family,Roman Forest,37.43190455120852
+225,Single Family,Rosenberg,12.577251848407887
+226,Single Family,Seabrook,32.543081600055416
+227,Single Family,Sheldon,11.049772291768807
+228,Single Family,Shenandoah,22.76866867238627
+229,Single Family,Shoreacres,70.31183862824767
+230,Single Family,Sienna Plantation,27.400605742856126
+231,Single Family,Simonton,38.36417883567806
+232,Single Family,South Houston,47.50405397337724
+233,Single Family,Southside Place,69.70286526978533
+234,Single Family,Splendora,44.85218698836512
+235,Single Family,Spring,33.54293376650375
+236,Single Family,Spring Valley Village,75.21650027039013
+237,Single Family,Stafford,16.93441579139528
+238,Single Family,Stagecoach,64.33447705051309
+239,Single Family,Sugar Land,28.310224669220318
+240,Single Family,Taylor Lake Village,81.17199897645105
+241,Single Family,The Woodlands,43.44760128551574
+242,Single Family,Thompsons,3.3755790268866104
+243,Single Family,Tomball,19.281192227254735
+244,Single Family,Unincorporated,23.1293689390413
+245,Single Family,Waller,11.977183255400515
+246,Single Family,Webster,5.989802590522832
+247,Single Family,West University Place,89.50373797965318
+248,Single Family,Weston Lakes,54.52635948717245
+249,Single Family,Willis,24.77306287552694
+250,Single Family,Woodbranch,61.512386069588565
+251,Single Family,Woodloch,62.0013297991941

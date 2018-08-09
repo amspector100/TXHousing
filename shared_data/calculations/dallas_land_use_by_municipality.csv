@@ -1,0 +1,400 @@
+,broad_zone,place,Percent of Land Used
+0,Multifamily,Addison,9.705830035254639
+1,Multifamily,Allen,2.6512656866102944
+2,Multifamily,Anna,0.0781425848491302
+3,Multifamily,Arlington,0.9144464310561835
+4,Multifamily,Aubrey,0.8646037148582999
+5,Multifamily,Azle,0.48819144625648114
+6,Multifamily,Balch Springs,3.250929825857491
+7,Multifamily,Bedford,2.4668808382566834
+8,Multifamily,Benbrook,1.2492264372122142
+9,Multifamily,Blue Ridge,1.4565649137011636
+10,Multifamily,Briar,0.04918645784122841
+11,Multifamily,Burleson,0.826611450958731
+12,Multifamily,Carrollton,5.944212691265959
+13,Multifamily,Cedar Hill,0.9595693331368459
+14,Multifamily,Celina,0.10171345884832557
+15,Multifamily,Cockrell Hill,6.820566477059733
+16,Multifamily,Colleyville,0.13360086666813253
+17,Multifamily,Coppell,3.420027993919894
+18,Multifamily,Corinth,1.412731308640441
+19,Multifamily,Crowley,0.8659836966452474
+20,Multifamily,Dallas,6.265120142309696
+21,Multifamily,Dalworthington Gardens,1.246972264450802
+22,Multifamily,DeSoto,3.0425960637387024
+23,Multifamily,Denton,1.8485876490111224
+24,Multifamily,Duncanville,3.3788656828516643
+25,Multifamily,Euless,1.317310413029638
+26,Multifamily,Everman,0.4162427697052391
+27,Multifamily,Fairview,1.6322239226276642
+28,Multifamily,Farmers Branch,4.608769027926004
+29,Multifamily,Farmersville,0.5523790260644355
+30,Multifamily,Flower Mound,0.36970491332869815
+31,Multifamily,Forest Hill,0.7229108189812175
+32,Multifamily,Fort Worth,0.5127989669185459
+33,Multifamily,Frisco,1.8263519955224201
+34,Multifamily,Garland,4.708961878191259
+35,Multifamily,Glenn Heights,0.831891871971532
+36,Multifamily,Grand Prairie,1.5716396347905097
+37,Multifamily,Grapevine,0.6692604275845984
+38,Multifamily,Haltom City,0.37456852371780347
+39,Multifamily,Hebron,0.8344845892037103
+40,Multifamily,Hickory Creek,0.8416549790516169
+41,Multifamily,Highland Park,2.535272267104469
+42,Multifamily,Highland Village,0.12154543889811734
+43,Multifamily,Hurst,1.2583170691565442
+44,Multifamily,Hutchins,0.3391127898039091
+45,Multifamily,Irving,8.450292324526451
+46,Multifamily,Josephine,0.018171344681097247
+47,Multifamily,Justin,0.4593266743546775
+48,Multifamily,Keller,0.32061744486548216
+49,Multifamily,Kennedale,1.0154403116030841
+50,Multifamily,Krum,1.0495309241370714
+51,Multifamily,Lake Dallas,1.7413985437790305
+52,Multifamily,Lake Worth,0.06738541564394834
+53,Multifamily,Lancaster,1.096916870680103
+54,Multifamily,Lavon,0.5428012435535344
+55,Multifamily,Lewisville,5.812062978144546
+56,Multifamily,Little Elm,1.1010138244551997
+57,Multifamily,Lowry Crossing,0.21376305507974047
+58,Multifamily,Mansfield,0.4727807502475221
+59,Multifamily,McKinney,2.191071370775841
+60,Multifamily,Melissa,0.024578036058759262
+61,Multifamily,Mesquite,3.373484495846607
+62,Multifamily,North Richland Hills,1.6694957302235462
+63,Multifamily,Northlake,0.7335535795667197
+64,Multifamily,Pantego,1.7033874251113221
+65,Multifamily,Pelican Bay,0.6627874201931068
+66,Multifamily,Pilot Point,0.5220780208064194
+67,Multifamily,Plano,6.175764519868238
+68,Multifamily,Ponder,0.21316440668101064
+69,Multifamily,Princeton,0.6641396487371368
+70,Multifamily,Prosper,0.32655803134743305
+71,Multifamily,Rendon,0.016088055093307425
+72,Multifamily,Richardson,6.390707461569503
+73,Multifamily,Richland Hills,0.8635504480795386
+74,Multifamily,River Oaks,0.29328823574033885
+75,Multifamily,Roanoke,2.972181309595361
+76,Multifamily,Rowlett,0.48253364666730825
+77,Multifamily,Sachse,1.1739107567827591
+78,Multifamily,Saginaw,0.5640156760060533
+79,Multifamily,Sanger,0.31532262069640493
+80,Multifamily,Sansom Park,0.8254589283073491
+81,Multifamily,Seagoville,0.4762183229122665
+82,Multifamily,Southlake,0.12096907995661993
+83,Multifamily,Sunnyvale,0.17550908696233836
+84,Multifamily,The Colony,3.034759760791032
+85,Multifamily,Trophy Club,0.2927087332178164
+86,Multifamily,Unincorporated,0.015132314002399555
+87,Multifamily,University Park,6.302920056353527
+88,Multifamily,Westworth Village,0.30715377636307706
+89,Multifamily,White Settlement,1.9124938536180647
+90,Multifamily,Wilmer,0.12801423308012824
+91,Multifamily,Wylie,0.7467352876559568
+92,Other,Addison,79.89880320935595
+93,Other,Allen,55.77374677139003
+94,Other,Anna,88.71687676136382
+95,Other,Argyle,75.58520550875753
+96,Other,Arlington,51.31968909023904
+97,Other,Aubrey,76.99987319866662
+98,Other,Azle,57.158166803428266
+99,Other,Balch Springs,58.34615368846613
+100,Other,Bartonville,77.69418285899185
+101,Other,Bedford,33.01694910464143
+102,Other,Benbrook,54.33160213138047
+103,Other,Blue Mound,37.305021011755166
+104,Other,Blue Ridge,71.13616940922117
+105,Other,Briar,63.164312928932084
+106,Other,Burleson,35.32681272924777
+107,Other,Carrollton,59.53273884698805
+108,Other,Cedar Hill,68.41783459164665
+109,Other,Celina,80.53145264653728
+110,Other,Cockrell Hill,26.55183410671726
+111,Other,Colleyville,26.811813214901097
+112,Other,Combine,93.13002358174063
+113,Other,Coppell,60.68060682887671
+114,Other,Copper Canyon,65.79151130969194
+115,Other,Corinth,52.184847477572404
+116,Other,Corral City,100.0
+117,Other,Cross Roads,82.51915143858959
+118,Other,Crowley,68.52215277365336
+119,Other,DISH,81.77396587471222
+120,Other,Dallas,61.441232587575534
+121,Other,Dalworthington Gardens,28.33876634314278
+122,Other,DeSoto,54.78924451383615
+123,Other,Denton,80.38459613983804
+124,Other,Double Oak,19.81684282221722
+125,Other,Duncanville,37.5738976092344
+126,Other,Edgecliff Village,32.14766514526904
+127,Other,Euless,30.869851946351005
+128,Other,Everman,48.91228733748794
+129,Other,Fairview,52.60979889041953
+130,Other,Farmers Branch,66.16991842897305
+131,Other,Farmersville,77.34011832224043
+132,Other,Ferris,99.72413476529248
+133,Other,Flower Mound,55.62777240128194
+134,Other,Forest Hill,42.016797593977415
+135,Other,Fort Worth,76.26859200043722
+136,Other,Frisco,68.5581242531942
+137,Other,Garland,52.95371176930217
+138,Other,Glenn Heights,69.02145473544262
+139,Other,Grand Prairie,77.32995313175495
+140,Other,Grapevine,69.45813487037069
+141,Other,Hackberry,17.384764270854824
+142,Other,Haltom City,51.517892421503255
+143,Other,Haslet,76.15514805138339
+144,Other,Hebron,94.89733255366839
+145,Other,Hickory Creek,51.721527145252026
+146,Other,Highland Park,23.448301610122492
+147,Other,Highland Village,36.946053257239456
+148,Other,Hurst,34.3526728468771
+149,Other,Hutchins,93.5220085003915
+150,Other,Irving,65.27026442044195
+151,Other,Josephine,70.9825633570329
+152,Other,Justin,65.1396370161457
+153,Other,Keller,33.4991323273898
+154,Other,Kennedale,58.390463281617414
+155,Other,Krugerville,39.1364116616575
+156,Other,Krum,54.62530960346913
+157,Other,Lake Dallas,41.965252330737236
+158,Other,Lake Worth,44.26370567456733
+159,Other,Lakeside,46.93277974961365
+160,Other,Lakewood Village,47.114570294679226
+161,Other,Lancaster,80.9883314425174
+162,Other,Lantana,52.43789156737636
+163,Other,Lavon,59.80089307282165
+164,Other,Lewisville,71.30320523408167
+165,Other,Lincoln Park,100.0
+166,Other,Little Elm,59.82793248238476
+167,Other,Lowry Crossing,51.074623302115604
+168,Other,Lucas,54.13269062876005
+169,Other,Mansfield,58.67703415197413
+170,Other,McKinney,73.00388569939167
+171,Other,Melissa,81.91136618399214
+172,Other,Mesquite,63.940073225872695
+173,Other,Murphy,34.01899222508322
+174,Other,Nevada,71.56661470653194
+175,Other,New Hope,67.41987897742094
+176,Other,North Richland Hills,37.53030410526298
+177,Other,Northlake,95.63457450637296
+178,Other,Oak Point,57.95038642884963
+179,Other,Ovilla,52.44682027774957
+180,Other,Paloma Creek,30.49830518777336
+181,Other,Paloma Creek South,45.873392038148864
+182,Other,Pantego,30.373447247884535
+183,Other,Parker,57.31681841175027
+184,Other,Pecan Acres,87.26156070574719
+185,Other,Pelican Bay,53.04053240273496
+186,Other,Pilot Point,66.99479941929391
+187,Other,Plano,51.84756130212204
+188,Other,Ponder,84.79588784097697
+189,Other,Princeton,80.35144567603827
+190,Other,Prosper,79.89913075608385
+191,Other,Providence Village,43.81840292679287
+192,Other,Rendon,53.98026086052171
+193,Other,Reno,98.33856674656121
+194,Other,Richardson,50.33315708318759
+195,Other,Richland Hills,31.24896411526748
+196,Other,River Oaks,24.855321140069822
+197,Other,Roanoke,68.81136137590569
+198,Other,Rowlett,54.725609771215176
+199,Other,Royse City,94.16023250009637
+200,Other,Sachse,49.778507083205675
+201,Other,Saginaw,59.88504011150339
+202,Other,Sanger,87.79930953075038
+203,Other,Sansom Park,24.941642433865585
+204,Other,Savannah,47.06858971133009
+205,Other,Seagoville,81.53248977559954
+206,Other,Shady Shores,49.9158829344786
+207,Other,Southlake,39.36390747013195
+208,Other,St. Paul,42.777012960125326
+209,Other,Sunnyvale,81.22636975658999
+210,Other,The Colony,58.673046088574424
+211,Other,Trophy Club,33.16428229807077
+212,Other,Unincorporated,93.60002378631485
+213,Other,University Park,24.0571744057131
+214,Other,Van Alstyne,100.0
+215,Other,Watauga,21.36563752240566
+216,Other,Westlake,84.23750162972867
+217,Other,Westminster,85.16506143264425
+218,Other,Weston,95.83373564180381
+219,Other,Westover Hills,14.254041930815669
+220,Other,Westworth Village,73.61536082278293
+221,Other,White Settlement,53.542258850256786
+222,Other,Wilmer,91.59804037817943
+223,Other,Wylie,81.79204867201544
+224,Other Residential,Argyle,3.8051812434281045
+225,Other Residential,Aubrey,2.5158272395313857
+226,Other Residential,Bartonville,2.830553835849515
+227,Other Residential,Carrollton,2.125251574203111
+228,Other Residential,Celina,0.15541784564014016
+229,Other Residential,Coppell,0.4220078805325301
+230,Other Residential,Copper Canyon,4.8372072615657
+231,Other Residential,Corinth,5.564012243595775
+232,Other Residential,Cross Roads,5.105613370102833
+233,Other Residential,DISH,5.102800904369005
+234,Other Residential,Dallas,0.022338955241403738
+235,Other Residential,Denton,2.4958678440547963
+236,Other Residential,Double Oak,3.489195424966528
+237,Other Residential,Flower Mound,8.731102592671686
+238,Other Residential,Fort Worth,0.1461615374926009
+239,Other Residential,Frisco,3.8180465197240823
+240,Other Residential,Hackberry,56.08411123612945
+241,Other Residential,Hebron,0.6986938882864537
+242,Other Residential,Hickory Creek,18.156752649579484
+243,Other Residential,Highland Village,11.090641931519023
+244,Other Residential,Justin,5.347496274460607
+245,Other Residential,Krugerville,4.720571809839832
+246,Other Residential,Krum,4.5478619411065395
+247,Other Residential,Lake Dallas,11.414633630630147
+248,Other Residential,Lakewood Village,29.330292807920234
+249,Other Residential,Lantana,1.059419180323716
+250,Other Residential,Lewisville,4.136105752118355
+251,Other Residential,Little Elm,10.313026239766236
+252,Other Residential,Northlake,0.35401445659672454
+253,Other Residential,Oak Point,14.972867657885832
+254,Other Residential,Paloma Creek,1.9142533038812737
+255,Other Residential,Paloma Creek South,2.631345905922886
+256,Other Residential,Pilot Point,5.917259011729695
+257,Other Residential,Plano,0.7076174121349679
+258,Other Residential,Ponder,1.4986407406628306
+259,Other Residential,Prosper,1.0680785718231798
+260,Other Residential,Providence Village,9.68235210773463
+261,Other Residential,Roanoke,11.982110566117504
+262,Other Residential,Sanger,2.3968168156897396
+263,Other Residential,Savannah,8.536471644735874
+264,Other Residential,Shady Shores,8.308817815943808
+265,Other Residential,Southlake,0.20821522374163026
+266,Other Residential,The Colony,6.357310284525846
+267,Other Residential,Trophy Club,9.504149211734612
+268,Other Residential,Unincorporated,0.7580344610424048
+269,Other Residential,Westlake,0.07083214764372348
+270,Single Family,Addison,10.395366755389377
+271,Single Family,Allen,41.574987542000024
+272,Single Family,Anna,11.204980653786919
+273,Single Family,Argyle,20.60961324781438
+274,Single Family,Arlington,47.76586447870478
+275,Single Family,Aubrey,19.619695846943703
+276,Single Family,Azle,42.35364175031525
+277,Single Family,Balch Springs,38.40291648567661
+278,Single Family,Bartonville,19.47526330515865
+279,Single Family,Bedford,64.5161700571019
+280,Single Family,Benbrook,44.419171431407314
+281,Single Family,Blue Mound,62.694978988244834
+282,Single Family,Blue Ridge,27.407265677077763
+283,Single Family,Briar,36.78650061322669
+284,Single Family,Burleson,63.84657581979351
+285,Single Family,Carrollton,32.397796887543045
+286,Single Family,Cedar Hill,30.622596075216457
+287,Single Family,Celina,19.211416048974154
+288,Single Family,Cockrell Hill,66.62759941622298
+289,Single Family,Colleyville,73.05458591843077
+290,Single Family,Combine,6.8699764182593865
+291,Single Family,Coppell,35.4773572966712
+292,Single Family,Copper Canyon,29.371281428742375
+293,Single Family,Corinth,40.83840897019141
+294,Single Family,Cross Roads,12.375235191307581
+295,Single Family,Crowley,30.611863529701395
+296,Single Family,DISH,13.123233220918781
+297,Single Family,Dallas,32.27130831486964
+298,Single Family,Dalworthington Gardens,70.41426139240642
+299,Single Family,DeSoto,42.16815942242516
+300,Single Family,Denton,15.270948367096043
+301,Single Family,Double Oak,76.69396175281626
+302,Single Family,Duncanville,59.047236707913896
+303,Single Family,Edgecliff Village,67.85233485473097
+304,Single Family,Euless,67.81283764061936
+305,Single Family,Everman,50.67146989280682
+306,Single Family,Fairview,45.757977186952985
+307,Single Family,Farmers Branch,29.221312543100776
+308,Single Family,Farmersville,22.107502651695178
+309,Single Family,Ferris,0.27586523470752883
+310,Single Family,Flower Mound,35.27142009271767
+311,Single Family,Forest Hill,57.260291587041365
+312,Single Family,Fort Worth,23.07244749515163
+313,Single Family,Frisco,25.797477231559306
+314,Single Family,Garland,42.33732635250618
+315,Single Family,Glenn Heights,30.146653392585925
+316,Single Family,Grand Prairie,21.098407233454815
+317,Single Family,Grapevine,29.87260470204472
+318,Single Family,Hackberry,26.531124493015707
+319,Single Family,Haltom City,48.10753905477894
+320,Single Family,Haslet,23.844851948616604
+321,Single Family,Hebron,3.5694889688414437
+322,Single Family,Hickory Creek,29.280065226116868
+323,Single Family,Highland Park,74.01642612277315
+324,Single Family,Highland Village,51.84175937234342
+325,Single Family,Hurst,64.38901008396635
+326,Single Family,Hutchins,6.138878709804642
+327,Single Family,Irving,26.27944325503134
+328,Single Family,Josephine,28.99926529828598
+329,Single Family,Justin,29.053540035039017
+330,Single Family,Keller,66.18025022774471
+331,Single Family,Kennedale,40.5940964067795
+332,Single Family,Krugerville,56.14301652850268
+333,Single Family,Krum,39.77729753128726
+334,Single Family,Lake Dallas,44.8787154948536
+335,Single Family,Lake Worth,55.66890890978872
+336,Single Family,Lakeside,53.06722025038635
+337,Single Family,Lakewood Village,23.555136897400544
+338,Single Family,Lancaster,17.914751686802415
+339,Single Family,Lantana,46.5026892522999
+340,Single Family,Lavon,39.656305683624964
+341,Single Family,Lewisville,18.748626035655462
+342,Single Family,Little Elm,28.75802745339383
+343,Single Family,Lowry Crossing,48.71161364280463
+344,Single Family,Lucas,45.867309371240204
+345,Single Family,Mansfield,40.85018509777834
+346,Single Family,McKinney,24.805042929831757
+347,Single Family,Melissa,18.064055779949168
+348,Single Family,Mesquite,32.6864422782809
+349,Single Family,Murphy,65.98100777491703
+350,Single Family,Nevada,28.433385293468078
+351,Single Family,New Hope,32.580121022579
+352,Single Family,North Richland Hills,60.80020016451348
+353,Single Family,Northlake,3.277857457463582
+354,Single Family,Oak Point,27.07674591326455
+355,Single Family,Ovilla,47.55317972225039
+356,Single Family,Paloma Creek,67.58744150834535
+357,Single Family,Paloma Creek South,51.49526205592828
+358,Single Family,Pantego,67.92316532700414
+359,Single Family,Parker,42.68318158824997
+360,Single Family,Pecan Acres,12.738439294252812
+361,Single Family,Pelican Bay,46.29668017707193
+362,Single Family,Pilot Point,26.565863548169972
+363,Single Family,Plano,41.269056765876364
+364,Single Family,Ponder,13.4923070116792
+365,Single Family,Princeton,18.984414675224727
+366,Single Family,Prosper,18.706232640745213
+367,Single Family,Providence Village,46.49924496547252
+368,Single Family,Rendon,46.00365108438498
+369,Single Family,Reno,1.661433253438784
+370,Single Family,Richardson,43.27613545524366
+371,Single Family,Richland Hills,67.88748543665298
+372,Single Family,River Oaks,74.85139062418983
+373,Single Family,Roanoke,16.234346748381505
+374,Single Family,Rowlett,44.79185658211713
+375,Single Family,Royse City,5.839767499903546
+376,Single Family,Sachse,49.0475821600118
+377,Single Family,Saginaw,39.55094421249055
+378,Single Family,Sanger,9.488551032863464
+379,Single Family,Sansom Park,74.23289863782706
+380,Single Family,Savannah,44.394938643934054
+381,Single Family,Seagoville,17.991291901487607
+382,Single Family,Shady Shores,41.77529924957759
+383,Single Family,Southlake,60.306908226169796
+384,Single Family,St. Paul,57.22298703987471
+385,Single Family,Sunnyvale,18.59812115644745
+386,Single Family,The Colony,31.93488386610871
+387,Single Family,Trophy Club,57.03885975697682
+388,Single Family,Unincorporated,5.626809438640075
+389,Single Family,University Park,69.63990553793332
+390,Single Family,Watauga,78.63436247759435
+391,Single Family,Westlake,15.691666222627616
+392,Single Family,Westminster,14.834938567355756
+393,Single Family,Weston,4.16626435819617
+394,Single Family,Westover Hills,85.74595806918434
+395,Single Family,Westworth Village,26.077485400853995
+396,Single Family,White Settlement,44.545247296125154
+397,Single Family,Wilmer,8.273945388740511
+398,Single Family,Wylie,17.461216040328438

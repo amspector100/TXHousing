@@ -1,0 +1,129 @@
+,broad_zone,place,Percent of Land Used
+0,Multifamily,Austin,6.730781725771101
+1,Multifamily,Bartlett,0.041250283465805844
+2,Multifamily,Barton Creek,0.9466427603983862
+3,Multifamily,Bee Cave,1.8287206622422156
+4,Multifamily,Briarcliff,0.17653317310818517
+5,Multifamily,Brushy Creek,1.9988224517584288
+6,Multifamily,Cedar Park,2.877328605813402
+7,Multifamily,Florence,0.9155237374381491
+8,Multifamily,Garfield,0.02012202593311219
+9,Multifamily,Georgetown,0.9735786713606078
+10,Multifamily,Granger,1.988434806395815
+11,Multifamily,Hornsby Bend,0.15835773805766123
+12,Multifamily,Hudson Bend,0.2656910145615287
+13,Multifamily,Hutto,0.762332387158863
+14,Multifamily,Jarrell,0.42743613956103316
+15,Multifamily,Jonestown,0.04665080084526498
+16,Multifamily,Lago Vista,0.4353202858254972
+17,Multifamily,Lakeway,1.4877808529685503
+18,Multifamily,Leander,0.5651757190843593
+19,Multifamily,Liberty Hill,1.2837547146433825
+20,Multifamily,Lost Creek,0.33488949245679633
+21,Multifamily,Manchaca,0.12301576567418271
+22,Multifamily,Manor,0.07798284415842606
+23,Multifamily,Pflugerville,2.3177482864666574
+24,Multifamily,Point Venture,7.282914690080348
+25,Multifamily,Rollingwood,0.0355154668232936
+26,Multifamily,Round Rock,4.355041557814901
+27,Multifamily,Sonterra,1.6156687531470302
+28,Multifamily,Sunset Valley,0.13422134126329807
+29,Multifamily,Taylor,0.5931837329544054
+30,Multifamily,The Hills,0.2819895955235948
+31,Multifamily,Thrall,0.5519590170489036
+32,Multifamily,Unincorporated,0.1470270612992084
+33,Multifamily,Volente,0.16396071268109733
+34,Multifamily,Wells Branch,17.37605532907145
+35,Multifamily,West Lake Hills,0.9446544710023442
+36,Other,Austin,64.62718159104966
+37,Other,Bartlett,66.47412798781951
+38,Other,Barton Creek,55.525662145884226
+39,Other,Bear Creek,16.332797591628662
+40,Other,Bee Cave,65.28977565403713
+41,Other,Briarcliff,42.42380445138712
+42,Other,Brushy Creek,34.397269679109584
+43,Other,Cedar Park,64.88993683758412
+44,Other,Coupland,91.44335658825466
+45,Other,Creedmoor,88.09040129980133
+46,Other,Elgin,86.78319704997298
+47,Other,Florence,68.84542119159
+48,Other,Garfield,86.73704918676954
+49,Other,Georgetown,82.61106298768529
+50,Other,Granger,56.139049112256366
+51,Other,Hornsby Bend,54.950635815327885
+52,Other,Hudson Bend,48.96499578921071
+53,Other,Hutto,66.31951267641723
+54,Other,Jarrell,79.75629066258468
+55,Other,Jonestown,69.05561641707966
+56,Other,Lago Vista,84.79598550783552
+57,Other,Lakeway,53.27183651949521
+58,Other,Leander,71.29723866343409
+59,Other,Liberty Hill,83.658837410658
+60,Other,Lost Creek,34.50941428069476
+61,Other,Manchaca,53.71088553287464
+62,Other,Manor,83.87279974680871
+63,Other,Mustang Ridge,78.6404673775224
+64,Other,Pflugerville,67.20613746447125
+65,Other,Point Venture,47.6516866770991
+66,Other,Rollingwood,32.917181526667484
+67,Other,Round Rock,64.31658323743095
+68,Other,San Leanna,14.56263798255481
+69,Other,Serenada,41.9222980999067
+70,Other,Shady Hollow,15.590587948141488
+71,Other,Sonterra,72.93803228398531
+72,Other,Sunset Valley,62.285204361457566
+73,Other,Taylor,83.78522083550537
+74,Other,The Hills,46.17248812191066
+75,Other,Thrall,66.81500697181559
+76,Other,Unincorporated,89.61154350483115
+77,Other,Volente,56.778287720984444
+78,Other,Webberville,64.21113653319861
+79,Other,Weir,84.86390596200987
+80,Other,Wells Branch,52.76306976790759
+81,Other,West Lake Hills,31.40071711744323
+82,Single Family,Austin,28.642036683178805
+83,Single Family,Bartlett,33.484621728714664
+84,Single Family,Barton Creek,43.5276950937174
+85,Single Family,Bear Creek,83.66720240837134
+86,Single Family,Bee Cave,32.88150368372066
+87,Single Family,Briarcliff,57.39966237550469
+88,Single Family,Brushy Creek,63.60390786913218
+89,Single Family,Cedar Park,32.232734556602324
+90,Single Family,Coupland,8.556643411745378
+91,Single Family,Creedmoor,11.909598700198668
+92,Single Family,Elgin,13.21680295002702
+93,Single Family,Florence,30.239055070971904
+94,Single Family,Garfield,13.242828787297345
+95,Single Family,Georgetown,16.41535834095412
+96,Single Family,Granger,41.87251608134798
+97,Single Family,Hornsby Bend,44.89100644661445
+98,Single Family,Hudson Bend,50.76931319622776
+99,Single Family,Hutto,32.91815493642352
+100,Single Family,Jarrell,19.81627319785427
+101,Single Family,Jonestown,30.897732782075067
+102,Single Family,Lago Vista,14.768694206338989
+103,Single Family,Lakeway,45.24038262753625
+104,Single Family,Leander,28.13758561748169
+105,Single Family,Liberty Hill,15.05740787469858
+106,Single Family,Lost Creek,65.15569622684845
+107,Single Family,Manchaca,46.166098701451155
+108,Single Family,Manor,16.049217409032856
+109,Single Family,Mustang Ridge,21.3595326224776
+110,Single Family,Pflugerville,30.476114249062036
+111,Single Family,Point Venture,45.06539863282054
+112,Single Family,Rollingwood,67.04730300650922
+113,Single Family,Round Rock,31.32837520475413
+114,Single Family,San Leanna,85.4373620174452
+115,Single Family,Serenada,58.07770190009334
+116,Single Family,Shady Hollow,84.40941205185852
+117,Single Family,Sonterra,25.44629896286745
+118,Single Family,Sunset Valley,37.58057429727914
+119,Single Family,Taylor,15.621595431540241
+120,Single Family,The Hills,53.54552228256574
+121,Single Family,Thrall,32.63303401113545
+122,Single Family,Unincorporated,10.241429433868543
+123,Single Family,Volente,43.057751566334474
+124,Single Family,Webberville,35.78886346680139
+125,Single Family,Weir,15.13609403799011
+126,Single Family,Wells Branch,29.860874903020974
+127,Single Family,West Lake Hills,67.65462841155443
