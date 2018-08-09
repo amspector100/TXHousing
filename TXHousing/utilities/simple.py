@@ -45,8 +45,8 @@ def retrieve_coords(point):
 def process_geometry(gdf, geometry_column = 'geometry', drop_multipolygons = True):
     """Processing for polygon-based gdfs: makes geometries valid and possibly drops multipolygons."""
 
-    gdf.loc[:, geometry_column] = gdf[geometry_column].apply(lambda poly: poly if poly.is_valid else poly.buffer(0))
     gdf = gdf.loc[gdf[geometry_column].apply(lambda x: x is not None)]
+    gdf.loc[:, geometry_column] = gdf[geometry_column].apply(lambda poly: poly if poly.is_valid else poly.buffer(0))
 
     # Drop multipolygons and warn user if this is a bad idea
     if drop_multipolygons:
