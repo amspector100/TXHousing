@@ -195,6 +195,8 @@ def continuous_choropleth(gdf, factor, layer_name, scale_name = None, weight = 1
     max_data = gdf[factor].max()
     if quants is not None:
         index = gdf[factor].quantile(quants)
+        if len(colors) != len(index):
+            raise IndexError('index and colors must be same length')
         colormap =  cm.LinearColormap(colors = colors, vmin = min_data, vmax = max_data, index = index)
     else:
         colormap =  cm.LinearColormap(colors = colors, vmin = min_data, vmax = max_data).to_step(12, method = method, round_method = round_method)
