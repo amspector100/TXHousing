@@ -200,31 +200,52 @@ def plot_broad_zones_proportion():
                           y = 'Percentage of Residential Land Zoned'))
     mfringsplot.save('Figures/Bucket 2/MFZoningRings.svg', width = 8, height = 5)
 
+# Matplotlib helper functions
+def add_counties(ax, county_list):
+    """ Given a matplotlib axis, adds texas county outlines to it"""
 
-def plot_broad_zones_dallas(colordic = {'Single Family':'#ff81c0', # Pink np.array((255, 129, 192), dtype = int)
-                                        'Other Residential':'#c79fef', # Lavender np.array((199, 159, 239)), dtype = int)
-                                        'Multifamily':'#840000', # Dark red np.array((132, 0, 0), dtype = int)
-                                        'Other':'#96f97b'}, # Light green np.array((150, 249, 123), dtype = int)
-                            save_path = 'Figures/Zoning/north_texas_base_zones.png',
-                            minlat = 32.49, maxlat = 33.51, minlong = -97.71, maxlong = -96.29):
-    """Plots an actual map of the closest broad_zones to the Dallas core. Colordic should map broad_zones to colors."""
+    # Plot and label counties
+    counties = gpd.read_file(boundaries.county_boundaries_path)
+    counties = counties.loc[(counties['NAME'].isin(county_list)) & (counties['STATEFP'] == '48')]
+    counties['coords'] = counties['geometry'].apply(lambda x: x.representative_point().coords[:][0])
+    counties['geometry'] = counties['geometry'].apply(lambda x: x.boundary)
+    counties.plot(ax = ax, facecolor = 'none', alpha = 0.5, edgecolor = 'black')
+    for idx, row in counties.iterrows():
+        ax.annotate(s=row['NAME'], xy=row['coords'], horizontalalignment='center')
+
+def map_broad_zones(data, county_list, name, minlat, maxlat, minlong, maxlong, save_path, colordic = None):
+    """Plots an actual map of broad_zones in a data source within the lat/long bounds. If you want to do this for Austin
+    or Dallas, just use the map_broad_zones_dallas_austin wrapper.
+
+    :param data: A gdf including a geometry and base_zone column.
+    :param county_list: A list of county outlines to plot on the data.
+    :param name: A name to be used in titling the egraph.
+    :param minlat, maxlat, minlong, maxlong: Bounds of the graph
+    :param save_path: A path at which to save the map.
+    :param colordic: Dictionary which maps broad_zones to colors."""
+
     time0 = time.time()
 
     # Fig, ax
     fig, ax = plt.subplots()
 
     # Get subset of north texas data
-    north_texas_data = zoning.north_texas_inputs.process_zoning_shapefile()
-    north_texas_data['geometry'] = north_texas_data['geometry'].simplify(tolerance = 0.001)
-    spatial_index = north_texas_data.sindex
+    data['geometry'] = data['geometry'].simplify(tolerance = 0.001)
+    spatial_index = data.sindex
 
     print('Subsetting')
     bounding_polygon = shapely.geometry.box(minlong, minlat, maxlong, maxlat)
     ids = list(spatial_index.intersection(bounding_polygon.bounds))
-    subset = north_texas_data.iloc[ids]
+    subset = data.iloc[ids]
 
     # Plot
-    if colordic is not None:
+    if colordic != 'none':
+
+        if colordic is None:
+            colordic = {'Single Family': '#ff81c0',  # Pink np.array((255, 129, 192), dtype = int)
+                         'Other Residential': '#c79fef',  # Lavender np.array((199, 159, 239)), dtype = int)
+                         'Multifamily': '#840000',  # Dark red np.array((132, 0, 0), dtype = int)
+                         'Other': '#96f97b'}
 
         # Loop through zones with specific colors
         zones = subset['broad_zone'].unique()
@@ -234,27 +255,39 @@ def plot_broad_zones_dallas(colordic = {'Single Family':'#ff81c0', # Pink np.arr
         for zone in zones:
             filtered_subset = subset.loc[subset['broad_zone'] == zone]
             filtered_subset.plot(ax = ax, color = colordic[zone], alpha = 0.6, label = zone)
-            #gpd.plotting.plot_polygon_collection(ax, filtered_polygons, color = colordic[zone], alpha = 0.6, label = zone)
             legend_handlers.append(plt.scatter([], [], color =  colordic[zone]))
 
         ax.set_xlabel('Longitude')
         ax.set_ylabel('Latitude')
-        ax.set_title('Base Zoning Around Dallas, TX')
+        ax.set_ylim(minlat, maxlat)
+        ax.set_xlim(minlong, maxlong)
+        ax.set_title('Base Zoning Around {}, TX'.format(name))
         ax.legend(tuple(legend_handlers), tuple(zones), fontsize = 6)
 
     else:
         subset.plot(ax = ax, column = 'broad_zone', legend = True, legend_kwds = {'fontsize':6}, cmap = 'Set1')
 
-    # Plot and label counties
-    counties = gpd.read_file(boundaries.county_boundaries_path)
-    counties = counties.loc[(counties['NAME'].isin(['Dallas', 'Denton', 'Tarrant', 'Collin'])) & (counties['STATEFP'] == '48')]
-    counties['coords'] = counties['geometry'].apply(lambda x: x.representative_point().coords[:][0])
-    counties['geometry'] = counties['geometry'].apply(lambda x: x.boundary)
-    counties.plot(ax = ax, facecolor = 'none', alpha = 0.5, edgecolor = 'black')
-    for idx, row in counties.iterrows():
-        ax.annotate(s=row['NAME'], xy=row['coords'], horizontalalignment='center')
-
+    add_counties(ax, county_list = county_list)
 
     print('Saving')
     plt.savefig(save_path, dpi = 1000)
     print('Finished, took {}'.format(time.time() - time0))
+
+def map_broad_zones_dallas_austin(plot_austin = True, plot_dallas = True):
+    """ Wrapper for map_broad_zones, just plots them around austin/dallas. """
+
+    if plot_austin:
+        austin_data = zoning.get_austin_surrounding_zones()
+        map_broad_zones(data = austin_data,
+                        county_list = ['Travis', 'Williamson'],
+                        minlat=30.09, maxlat=30.76, minlong=-98.11, maxlong=-97.43,
+                        name = 'Austin',
+                        save_path = 'Figures/Zoning/Austin_base_zones.png')
+
+    if plot_dallas:
+        north_texas_data = zoning.north_texas_inputs.process_zoning_shapefile()
+        map_broad_zones(data = north_texas_data,
+                        county_list = ['Dallas', 'Denton', 'Tarrant', 'Collin'],
+                        minlat=32.49, maxlat=33.51, minlong=-97.71, maxlong=-96.29,
+                        name = 'Dallas',
+                        save_path = 'Figures/Zoning/north_texas_base_zones.png')
