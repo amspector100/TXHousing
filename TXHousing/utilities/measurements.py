@@ -118,13 +118,16 @@ def get_area_in_units(gdf, geometry_column = 'geometry', newproj = 'epsg:2277', 
 
 # Part 5: Create dist from city center graphs, for points and polygons ------------------------------------------------
 
-def order_radii(data, inplace = True):
-    """Helper function which properly orders wacky indexes for pandas dataframes. If inplace = False, works
+def order_radii(data, inplace = True, feature = None ):
+    """Helper function which properly orders wacky indexes/features for pandas dataframes. If inplace = False, works
     with a copy of the data to prevent global effects. """
 
     # Sort all the floatable values (i.e. 1, 2.5, 3, 4, 5).
     if inplace == False:
         data = data.copy()
+
+    if feature is not None:
+        data.set_index(feature, inplace = True)
 
     values = data.index.unique()
 

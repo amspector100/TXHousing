@@ -500,6 +500,127 @@ def cache_all_parcel_data():
     final_columns = ['account', 'broad_zone', 'zone_feature', 'dist_to_center', 'area_sqft', 'lat', 'long', 'county',
                      'zipcode', 'place', 'ua', 'geometry']
 
+    # Houston  --------------------------------------------------------------------------------------------
+    # All of these counties use the state code dictionary - manually checked that this is the right thing to do
+
+    fort_bend_parcel_path = 'data/parcels/fort_bend_parcels_2018/CAMASUMMARY.shp'
+    if os.path.exists(fort_bend_parcel_path) == False:
+        raise FileNotFoundError("""Fort Bend County Parcel not in the data directory - use cached data instead or 
+            download the raw data from  'https://fbcad.org/District-Information/GIS-Data'.""")
+
+    montgomery_county_parcel_path = "data/parcels/montgomery_parcels_2018/Tax_Parcel_View.shp"  # 2018
+    if os.path.exists(montgomery_county_parcel_path) == False:
+        raise FileNotFoundError("""Montgomery County Parcel not in the data directory - use cached data instead or 
+            download the raw data from 'https://data-moco.opendata.arcgis.com/datasets/tax-parcel-view'.""")
+
+    fort_bend_parcels = Parcel(path = fort_bend_parcel_path, account_col = 'UID',
+                               county = 'Fort Bend', name = 'Fort Bend')
+    fort_bend_parcels.process_parcel_data(broad_zone_feature = 'LMainSegSP',
+                                          broad_zone_dictionary = state_sptbcode_dictionary,
+                                          zoning_input = zoning.houston_inputs,
+                                          bounding_counties = ['Fort Bend'],
+                                          area_feature = 'Shape_Area',
+                                          merge_paths = None,
+                                          left_keys = None,
+                                          right_keys = None)
+    fort_bend_parcels.data = fort_bend_parcels.data[final_columns]
+
+    montgomery_parcels = Parcel(path = montgomery_county_parcel_path, account_col = 'PropertyNu',
+                                county = "Montgomery", name = 'Montgomery')
+    montgomery_parcels.process_parcel_data(broad_zone_feature = 'fStateCode',
+                                           broad_zone_dictionary = state_sptbcode_dictionary,
+                                           zoning_input = zoning.houston_inputs,
+                                           bounding_counties = ['Montgomery'],
+                                           merge_paths = None)
+    montgomery_parcels.data = montgomery_parcels.data[final_columns]
+
+
+
+    # And lastly houston, which takes forever
+    houston_parcels = Parcel(path = None,
+                             account_col = 'HCAD_NUM',
+                             county = 'Harris',
+                             name = 'Houston',
+                             processing_function = process_houston_parcel_data,
+                             feature_files=[harris_parcel_land_path_2018,
+                                            harris_parcel_appraisal_path_2018,
+                                            harris_parcel_building_res_path_2018],
+                             feature_columns_list=[houston_land_columns, houston_appraisal_columns,
+                                                   houston_building_res_columns],
+                             county_level=True)
+    houston_parcels.process_parcel_data(broad_zone_feature = 'STATE_CLASS',
+                                       broad_zone_dictionary = state_sptbcode_dictionary,
+                                       zoning_input = zoning.houston_inputs,
+                                       bounding_counties = ['Harris'],
+                                       area_feature = None,
+                                       merge_paths = None,
+                                       left_keys = None,
+                                       right_keys = None)
+    houston_parcels.data = houston_parcels.data[final_columns]
+
+    print('Combining and saving for Houston, time is {}'.format(time.time() - time0))
+    all_houston_parcels = pd.concat([houston_parcels.data, montgomery_parcels.data, fort_bend_parcels.data],
+                                   axis=0,
+                                   ignore_index=True)
+    all_houston_parcels.to_file(get_cached_all_parcel_path_shp('houston'))
+    all_houston_parcels_csv = all_houston_parcels[[col for col in all_houston_parcels.columns if col != 'geometry']]
+    all_houston_parcels_csv.to_csv(get_cached_all_parcel_path_csv('houston'))
+    print('Finished with Houston, global time is {}'.format(time.time() - time0))
+
+    # Austin  --------------------------------------------------------------------------------------------
+    travis_county_parcel_path = "data/parcels/travis_county_parcels_2016/Parcels_Travis_2016.shp"  # 2016
+    travis_county_data_path = 'data/parcels/travis_county_parcel_data/land_det.csv'
+    if (os.path.exists(travis_county_parcel_path) and os.path.exists(travis_county_data_path)) == False:
+        raise FileNotFoundError("""Travis County Parcel Shapes/Data not in the data directory - use cached data 
+            instead or download the raw data from https://www.traviscad.org/reports-request/""")
+
+    williamson_county_parcel_path = "data/parcels/williamson_parcels_2016/Parcel_Poly.shp"  # 2017
+    williamson_county_real_improvement_path = "data/parcels/williamson_data_2016b/Improvement.txt"  # 2018
+    if (os.path.exists(williamson_county_parcel_path) and
+        os.path.exists(williamson_county_real_improvement_path)) == False:
+        raise FileNotFoundError("""Williamson County Parcel Shapes/Data not in the data directory - use cached data 
+            instead or download the raw data from https://www.wcad.org/data-downloads/""")
+
+
+    williamson_parcels = Parcel(path = williamson_county_parcel_path, account_col = 'PIN',
+                                county = 'Williamson', name = 'Williamson')
+    # See https://www.wcad.org/wp-content/uploads/2016/09/2015Report.pdf for the dictionary information
+    williamson_dictionary = {'Single Family':['A1', 'A9'], 'Multifamily':['A8', 'B1', 'B2', 'B4']}
+    williamson_parcels.process_parcel_data(broad_zone_feature = 'StateCode',
+                                           broad_zone_dictionary = williamson_dictionary,
+                                           zoning_input = zoning.austin_inputs,
+                                           bounding_counties = ['Williamson'],
+                                           area_feature='Shape_area',
+                                           merge_paths=[williamson_county_real_improvement_path],
+                                           left_keys=None,
+                                           right_keys=['QuickRefID'])
+    williamson_parcels.data = williamson_parcels.data[final_columns]
+
+    # See https://tax-office.traviscountytx.gov/pages/SPTC.php - A4/A5 refer to condos.
+    travis_parcels = Parcel(path = travis_county_parcel_path, account_col = 'PROP_ID',
+                            county = 'Travis', name = 'Travis')
+    travis_dictionary = {'Single Family':['A1', 'A2', 'A3'], 'Multifamily':['A4', 'A5', 'B1', 'B2', 'B3', 'B4']}
+    travis_parcels.process_parcel_data(broad_zone_feature = 'state_cd',
+                                       broad_zone_dictionary = travis_dictionary,
+                                       zoning_input = zoning.austin_inputs,
+                                       bounding_counties = ['Travis'],
+                                       area_feature = 'Shape__Are',
+                                       merge_paths=[travis_county_data_path],
+                                       left_keys=['PROP_ID'],
+                                       right_keys=['PROP_ID'])
+    travis_parcels.data = travis_parcels.data[final_columns]
+
+    print('Combining and saving for Austin, global time is {}'.format(time.time() - time0))
+    all_austin_parcels = pd.concat([travis_parcels.data, williamson_parcels.data],
+                                   axis=0,
+                                   ignore_index=True)
+    all_austin_parcels.to_file(get_cached_all_parcel_path_shp('austin'))
+    all_austin_parcels_csv = all_austin_parcels[[col for col in all_austin_parcels.columns if col != 'geometry']]
+    all_austin_parcels_csv.to_csv(get_cached_all_parcel_path_csv('austin'))
+    print('Finished with Austin, global time is {}'.format(time.time() - time0))
+
+
+
     # Dallas -----------------------------------------------------------------------------------------------
 
     # Extra paths for the others. Make sure they exist or raise errors otherwise.
@@ -587,34 +708,6 @@ def cache_all_parcel_data():
     all_dallas_parcels_csv = all_dallas_parcels[[col for col in all_dallas_parcels.columns if col != 'geometry']]
     all_dallas_parcels_csv.to_csv(get_cached_all_parcel_path_csv('dallas'))
     print('Finished with Dallas, global time is {}'.format(time.time() - time0))
-
-    # Austin  --------------------------------------------------------------------------------------------
-    travis_county_parcel_path = "data/parcels/travis_county_parcels_2016/Parcels_Travis_2016.shp"  # 2016
-    travis_county_data_path = 'data/parcels/travis_county_parcel_data/land_det.csv'
-    if (os.path.exists(travis_county_parcel_path) and os.path.exists(travis_county_data_path)) == False:        
-        raise FileNotFoundError("""Travis County Parcel Shapes/Data not in the data directory - use cached data 
-            instead or download the raw data from https://www.traviscad.org/reports-request/""")
-
-    williamson_county_parcel_path = "data/parcels/williamson_parcels_2016/Parcel_Poly.shp"  # 2017
-    williamson_county_real_improvement_path = "data/parcels/williamson_data_2016b/Improvement.txt"  # 2018
-    if (os.path.exists(williamson_county_parcel_path) and 
-        os.path.exists(williamson_county_real_improvement_path)) == False:        
-        raise FileNotFoundError("""Williamson County Parcel Shapes/Data not in the data directory - use cached data 
-            instead or download the raw data from https://www.wcad.org/data-downloads/""")
-
-
-    williamson_parcels = Parcel(path = williamson_county_parcel_path, account_col = 'PIN',
-                                county = 'Williamson', name = 'Williamson')
-    williamson_dictionary = {'Single Family':['A1', 'A9'], 'Multifamily':['A8', 'B1', 'B2', 'B4']}
-    williamson_parcels.process_parcel_data(broad_zone_feature = 'StateCode',
-                                           broad_zone_dictionary = williamson_dictionary,
-                                           zoning_input = zoning.austin_inputs,
-                                           bounding_counties = ['Williamson'],
-                                           area_feature='Shape_area',
-                                           merge_paths=[williamson_county_real_improvement_path],
-                                           left_keys=['PIN'],
-                                           right_keys=['QuickRefID'])
-    williamson_parcels.data = williamson_parcels.data[final_columns]
 
 
 

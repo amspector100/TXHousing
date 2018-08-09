@@ -3,6 +3,7 @@ import time
 import shapely
 import pandas as pd
 import geopandas as gpd
+from geopandas import plotting
 from .. import utilities
 from ..data_processing import zoning, boundaries
 from plotnine import *
@@ -140,9 +141,9 @@ def plot_hd_locations(save_path = 'Figures/Bucket 2/HDLocations.svg', width = 8,
     histlocations = (ggplot(all_loc_data, aes(x='dist', y='percent', group='District Type', fill='District Type'))
                      + geom_col(position='dodge')
                      + facet_wrap('~ city')
-                     + labs(title='Locations of Historic Districts in Austin, Dallas, and Houston',
-                            x='Distance from City Center (Miles)',
-                            y='Percent of Land in Historic Districts')
+                     + labs(title = 'Locations of Historic Districts in Austin, Dallas, and Houston',
+                            x = 'Distance from City Center (Miles)',
+                            y = 'Percent of Land in Historic Districts')
                      + theme_bw())
     histlocations.save(save_path, width=width, height=height)
 
@@ -200,34 +201,60 @@ def plot_broad_zones_proportion():
     mfringsplot.save('Figures/Bucket 2/MFZoningRings.svg', width = 8, height = 5)
 
 
-def plot_broad_zones_dallas(save_path = 'Figures/Zoning/north_texas_base_zones.png',
+def plot_broad_zones_dallas(colordic = {'Single Family':'#ff81c0', # Pink np.array((255, 129, 192), dtype = int)
+                                        'Other Residential':'#c79fef', # Lavender np.array((199, 159, 239)), dtype = int)
+                                        'Multifamily':'#840000', # Dark red np.array((132, 0, 0), dtype = int)
+                                        'Other':'#96f97b'}, # Light green np.array((150, 249, 123), dtype = int)
+                            save_path = 'Figures/Zoning/north_texas_base_zones.png',
                             minlat = 32.49, maxlat = 33.51, minlong = -97.71, maxlong = -96.29):
-    """Plots an actual map of the closest broad_zones to the Dallas core"""
+    """Plots an actual map of the closest broad_zones to the Dallas core. Colordic should map broad_zones to colors."""
     time0 = time.time()
+
+    # Fig, ax
+    fig, ax = plt.subplots()
+
+    # Get subset of north texas data
+    north_texas_data = zoning.north_texas_inputs.process_zoning_shapefile()
+    north_texas_data['geometry'] = north_texas_data['geometry'].simplify(tolerance = 0.001)
+    spatial_index = north_texas_data.sindex
+
+    print('Subsetting')
+    bounding_polygon = shapely.geometry.box(minlong, minlat, maxlong, maxlat)
+    ids = list(spatial_index.intersection(bounding_polygon.bounds))
+    subset = north_texas_data.iloc[ids]
+
+    # Plot
+    if colordic is not None:
+
+        # Loop through zones with specific colors
+        zones = subset['broad_zone'].unique()
+        legend_handlers = []
+
+        # Add zones
+        for zone in zones:
+            filtered_subset = subset.loc[subset['broad_zone'] == zone]
+            filtered_subset.plot(ax = ax, color = colordic[zone], alpha = 0.6, label = zone)
+            #gpd.plotting.plot_polygon_collection(ax, filtered_polygons, color = colordic[zone], alpha = 0.6, label = zone)
+            legend_handlers.append(plt.scatter([], [], color =  colordic[zone]))
+
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
+        ax.set_title('Base Zoning Around Dallas, TX')
+        ax.legend(tuple(legend_handlers), tuple(zones), fontsize = 6)
+
+    else:
+        subset.plot(ax = ax, column = 'broad_zone', legend = True, legend_kwds = {'fontsize':6}, cmap = 'Set1')
 
     # Plot and label counties
     counties = gpd.read_file(boundaries.county_boundaries_path)
     counties = counties.loc[(counties['NAME'].isin(['Dallas', 'Denton', 'Tarrant', 'Collin'])) & (counties['STATEFP'] == '48')]
     counties['coords'] = counties['geometry'].apply(lambda x: x.representative_point().coords[:][0])
     counties['geometry'] = counties['geometry'].apply(lambda x: x.boundary)
-    base = counties.plot(facecolor = 'none', alpha = 0.5, edgecolor = 'black')
+    counties.plot(ax = ax, facecolor = 'none', alpha = 0.5, edgecolor = 'black')
     for idx, row in counties.iterrows():
-        plt.annotate(s=row['NAME'], xy=row['coords'], horizontalalignment='center')
+        ax.annotate(s=row['NAME'], xy=row['coords'], horizontalalignment='center')
 
-    # Get subset of north texas data and plot
-    north_texas_data = zoning.north_texas_inputs.process_zoning_shapefile()
-    north_texas_data['geometry'] = north_texas_data['geometry'].simplify(tolerance = 0.001)
-    spatial_index = north_texas_data.sindex
-    print('Subsetting')
-    bounding_polygon = shapely.geometry.box(minlong, minlat, maxlong, maxlat)
-    ids = list(spatial_index.intersection(bounding_polygon.bounds))
-    subset = north_texas_data.iloc[ids]
-    base = subset.plot(ax = base, column = 'broad_zone', legend = True, legend_kwds = {'fontsize':6}, cmap = 'Set1')
-
-    # Adjust legend location
-    #legend = base.get_legend()
-    #legend.set_bbox_to_anchor((0.96, 0.96, 0.04, 0.04))
 
     print('Saving')
-    plt.savefig(save_path, dpi = 300)
+    plt.savefig(save_path, dpi = 1000)
     print('Finished, took {}'.format(time.time() - time0))
