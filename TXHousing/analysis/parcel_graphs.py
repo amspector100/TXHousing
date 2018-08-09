@@ -1,5 +1,5 @@
 """Graphs which mostly rely on municipal parcel data. Note that all of these graphs rely on the cached parcel data in
- csv format, not the actual parcel data, which is processed and cached in the data_processing module."""
+ csv format, not the actual parcel data, which is processed and cached in the data_processing package."""
 
 
 import time

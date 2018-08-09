@@ -89,6 +89,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-TXHousing.analysis.permit_graphs">permit_graphs module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-TXHousing.analysis.parcel_graphs">parcel_graphs module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-TXHousing.analysis.parcel_graphs">misc_calcs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-TXHousing.analysis.suburbs">suburbs module</a></li>
 </ul>
 </li>
 </ul>
@@ -471,7 +472,7 @@ of the zipcode.</p>
 <div class="section" id="module-TXHousing.analysis.parcel_graphs">
 <span id="parcel-graphs-module"></span><h2>parcel_graphs module<a class="headerlink" href="#module-TXHousing.analysis.parcel_graphs" title="Permalink to this headline">¶</a></h2>
 <p>Graphs which mostly rely on municipal parcel data. Note that all of these graphs rely on the cached parcel data in
-csv format, not the actual parcel data, which is processed and cached in the data_processing module.</p>
+csv format, not the actual parcel data, which is processed and cached in the data_processing package.</p>
 <dl class="function">
 <dt id="TXHousing.analysis.parcel_graphs.calc_parking_costs">
 <code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">calc_parking_costs</code><span class="sig-paren">(</span><em>save_path='Figures/property_value_histogram.svg'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#calc_parking_costs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.parcel_graphs.calc_parking_costs" title="Permalink to this definition">¶</a></dt>
@@ -498,7 +499,7 @@ cached municipal parcel data.</p>
 <div class="section" id="module-TXHousing.analysis.parcel_graphs">
 <span id="misc-calcs-module"></span><h2>misc_calcs module<a class="headerlink" href="#module-TXHousing.analysis.parcel_graphs" title="Permalink to this headline">¶</a></h2>
 <p>Graphs which mostly rely on municipal parcel data. Note that all of these graphs rely on the cached parcel data in
-csv format, not the actual parcel data, which is processed and cached in the data_processing module.</p>
+csv format, not the actual parcel data, which is processed and cached in the data_processing package.</p>
 <dl class="function">
 <dt>
 <code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">calc_parking_costs</code><span class="sig-paren">(</span><em>save_path='Figures/property_value_histogram.svg'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#calc_parking_costs"><span class="viewcode-link">[source]</span></a></dt>
@@ -519,6 +520,30 @@ on distance from city center and broad_zone. Based on cached municipal parcel da
 <code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">plot_singlefamily_lotsizes</code><span class="sig-paren">(</span><em>save_path='Figures/Zoning/sf_lotsizes.svg'</em>, <em>width=10</em>, <em>height=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#plot_singlefamily_lotsizes"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Plots average lotsizes of single family homes in Houston conditional on distance from city center. This uses
 cached municipal parcel data.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-TXHousing.analysis.suburbs">
+<span id="suburbs-module"></span><h2>suburbs module<a class="headerlink" href="#module-TXHousing.analysis.suburbs" title="Permalink to this headline">¶</a></h2>
+<p>This file contains most of the graphing for the suburbs analysis. It does not rely on raw parcel data, but the
+cached versions instead.</p>
+<dl class="function">
+<dt id="TXHousing.analysis.suburbs.analyze_land_use_by_metro">
+<code class="descclassname">TXHousing.analysis.suburbs.</code><code class="descname">analyze_land_use_by_metro</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/suburbs.html#analyze_land_use_by_metro"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.suburbs.analyze_land_use_by_metro" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates mean and median lot size as well as the land use by municipality around Austin, Dallas, or Houston,
+then caches them in shared_data/calculations.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.analysis.suburbs.suburbs_choropleth">
+<code class="descclassname">TXHousing.analysis.suburbs.</code><code class="descname">suburbs_choropleth</code><span class="sig-paren">(</span><em>name, zoning_input, colors=['purple', 'red', 'orange', 'yellow', 'white'], method='linear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/suburbs.html#suburbs_choropleth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.suburbs.suburbs_choropleth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Folium choropleths of land use, lotsize, and more by municipality in the suburbs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.analysis.suburbs.texas_job_centers">
+<code class="descclassname">TXHousing.analysis.suburbs.</code><code class="descname">texas_job_centers</code><span class="sig-paren">(</span><em>num_polygons=4000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/suburbs.html#texas_job_centers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.suburbs.texas_job_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Choropleth of the percent of workers who work in their place of residence for Austin, Dallas, Houston</p>
 </dd></dl>
 
 </div>
