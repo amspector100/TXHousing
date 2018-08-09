@@ -4,19 +4,20 @@ import time
 import pandas as pd
 import geopandas as gpd
 import warnings
+from ..utilities import simple
 
 class Zoning_Input():
 
     """ Simple class which binds information about zoning datasets. Also, the lat/long features define the city
         center for each city."""
 
-    def __init__(self, path, feature, separator, proj4string, base_zones, lat = 0, long = 0, zoom = 10,
+    def __init__(self, path, feature, separator, base_zones, proj4string = None, lat = 0, long = 0, zoom = 10,
                  title = '', crs = None, regulations_path = None):
         self.path = path
         self.feature = feature
         self.separator = separator
-        self.proj4string = proj4string
         self.base_zones = base_zones
+        self.proj4string = proj4string
         self.lat = lat
         self.long = long
         self.zoom = zoom
@@ -46,6 +47,7 @@ class Zoning_Input():
         if quietly is not True:
             print('Reading file')
         raw_data = gpd.read_file(self.path)
+        raw_data = simple.process_geometry(raw_data, drop_multipolygons=False)
         if quietly is not True:
             print('Finished reading file, took {}'.format(time.time() - time0))
 
@@ -173,8 +175,83 @@ houston_inputs = Zoning_Input(path = None,
                                zoom = 9,
                                title = 'Houston Texas')
 
+# Selected surrounding cities for Austin ---------------
+# Some notes on methodology, for consistency. I classify:
+# (a) Areas which allow both multifamily and single family dwellings as multifamily.
+# (b) Areas which allow mixed-use development (i.e. commercial + residential) as multifamily in most cases.
+# (c) If multifamily housing is permitted but with some restrictions, the area is classified as multifamily housing.
 
-# Paths for historic districts - thankfully do not require much processing
+
+round_rock_inputs = Zoning_Input(path = "data/Zoning Shapefiles/round_rock_zoning/ZONING_1.shp",
+                                 feature = 'BASE_ZONIN',
+                                 separator = '-',
+                                 base_zones = {'Single Family':['SF', 'TH', 'SF1', 'SF2', 'SF3', 'SF4', 'SF5', 'SF6'],
+                                               'Multifamily': ['MF', 'MU', 'TF'],
+                                               'Other Residential':[],
+                                               'Other':[]},
+                                 lat = austin_inputs.lat,
+                                 long = austin_inputs.long,
+                                 crs = {'init':'epsg:2277'})
+
+pflugerville_inputs = Zoning_Input(path = "data/Zoning Shapefiles/pflugerville_zoning/Zoning_Districts.shp",
+                                   feature = 'ZOINING_TY',
+                                   separator = '-',
+                                   base_zones = {'Single Family':['A', 'SF'],
+                                                 'Multifamily': ['2', 'CL3', 'CL4', 'CL5'],
+                                                 'Other Residential':['MH'],
+                                                 'Other':[]},
+                                   lat = austin_inputs.lat,
+                                   long = austin_inputs.long,
+                                   crs = {'init':'epsg:2277'})
+
+georgetown_inputs = Zoning_Input(path = "data/Zoning Shapefiles/georgetown_zoning/Zoning.shp",
+                                   feature = 'ZONE',
+                                   separator = '-',
+                                   base_zones = {'Single Family':['AG', 'RE', 'RL', 'RS', 'TH'],
+                                                 'Multifamily': ['TF', 'MF', 'MU', 'MU-DT', 'MUDT'],
+                                                 'Other Residential':['MH'],
+                                                 'Other':[]},
+                                   lat = austin_inputs.lat,
+                                   long = austin_inputs.long,
+                                   crs = {'init':'epsg:2277'})
+
+cedar_park_inputs = Zoning_Input(path = "data/Zoning Shapefiles/cedar_park_zoning/Zoning__Zoning_Districts.shp",
+                                   feature = 'ZoningType',
+                                   separator = ' - ',
+                                   base_zones = {'Single Family':['RA', 'SR', 'SU', 'UR'],
+                                                 'Multifamily': ['MU', 'MF'],
+                                                 'Other Residential':[],
+                                                 'Other':[]},
+                                   lat = austin_inputs.lat,
+                                   long = austin_inputs.long,
+                                   crs = {'init':'epsg:2277'})
+
+hutto_inputs = Zoning_Input(path = "data/Zoning Shapefiles/hutto_zoning/Zoning_Districts.shp",
+                            feature = 'ZONING',
+                            separator = 'no_separator',
+                            # Not totally sure about urban residential/residential classifications
+                            base_zones = {'Single Family':['Single Family', 'Residential'],
+                                          'Multifamily': ['Two Family', 'Multi-Family',
+                                                          'Urban Residential', 'Co-op District'],
+                                          'Other Residential':[],
+                                          'Other':[]},
+                            lat = austin_inputs.lat,
+                            long = austin_inputs.long,
+                            crs = {'init':'epsg:2277'})
+
+def get_austin_surrounding_zones():
+    """Based on the zoning inputs in this file, returns a geodataframe of zoning polygons for Austin AND select
+     surrounding areas, with two columns: broad_zone and geometry. This is purely a convenience function which wraps a
+     variety of Zoning_Input.process_zoning_shapefile calls. """
+
+    data = gpd.GeoDataFrame(data = None, geometry = None)
+    inputs = [round_rock_inputs, georgetown_inputs, pflugerville_inputs, hutto_inputs, cedar_park_inputs, austin_inputs]
+    for input in inputs:
+        to_add = input.process_zoning_shapefile()[['broad_zone', 'geometry']]
+        data = pd.concat([data, to_add])
+    return data
+
+# Paths for historic districts - thankfully do not require much processing -----------------------------------------
 tx_hd_path = "data/Zoning Shapefiles/NationalRegisterPY_shp/NationalRegisterPY.shp"
 
 austin_landmark_path = "data/Zoning Shapefiles/Historical Landmarks/geo_export_ce453b58-d8ca-47d4-8934-76d636d24ca3.shp"
