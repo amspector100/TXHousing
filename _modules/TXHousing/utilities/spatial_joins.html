@@ -156,9 +156,9 @@
     <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    Given many points and a polygon, finds one of three things. (1) If factors = None, the number of points inside the</span>
-<span class="sd">    polygon, (2) if factors is not None and categorical = True, the number of points inside the polygon subsetted by a</span>
-<span class="sd">    categorical factors, (3) if factors is not None and categorical = False, the summarized value (mean/median)</span>
-<span class="sd">    of a factors associated with each point of each point inside the polygon.</span>
+<span class="sd">    polygon, (2) if factors is not None and categorical = True, the number of points inside the polygon conditional on</span>
+<span class="sd">    a group of categorical factors, (3) if factors is not None and categorical = False, the summarized value (mean/median)</span>
+<span class="sd">    of factors associated with each point of each point inside the polygon.</span>
 
 <span class="sd">    :param points: A GDF with a points geometry column</span>
 <span class="sd">    :param polygon: The polygon to see whether the points are inside.</span>
@@ -167,7 +167,7 @@
 <span class="sd">        This may be a list or a string.</span>
 <span class="sd">    :param categorical: If True, then the factor should be treated as a categorical variable.</span>
 <span class="sd">    :param by: If categorical is False, can either summarize using by = &#39;mean&#39; or by = &#39;median&#39;</span>
-<span class="sd">    :param **kwargs: Kwargs to pass to the &quot;fragment&quot; function in the TXHousing.utilities.simple module. Fragmenting polygons</span>
+<span class="sd">    :param kwargs: Kwargs to pass to the &quot;fragment&quot; function in the TXHousing.utilities.simple module. Fragmenting polygons</span>
 <span class="sd">        speeds up the computation for all but very small polygons. If you do not want to fragment the polygons (the</span>
 <span class="sd">        only reason to do this is speed, it will not affect the results), pass in horiz = 1 and vert = 1 as kwargs.</span>
 <span class="sd">    :return: Pandas series</span>
@@ -214,7 +214,7 @@
 <span class="sd">    (1) If factor = None, the percent area of the large polygon that is covered by the small polygons</span>
 <span class="sd">    (2) If factor is not None and categorical = True, the percent area of the large polygon that is covered by the small</span>
 <span class="sd">    polygons conditional on the factor</span>
-<span class="sd">    (3) if factor is not None and categorical = False, the summarized value (mean/median) of a factor associated with</span>
+<span class="sd">    (3) if factor is not None and categorical = False, the summarized value (mean/median) of the factors associated with</span>
 <span class="sd">    each polygon inside the polygon.</span>
 
 <span class="sd">    :param small_polygons: A GDF with a polygon geometry column</span>
@@ -231,10 +231,10 @@
 <span class="sd">        If divide_area_by = &#39;polygon&#39;, then this divides by the area of the polygon. If divide_area_by = &#39;nonempty&#39;, it</span>
 <span class="sd">        will divide by the total area of the intersection between the polygon and small_polygons. Else, it will simply</span>
 <span class="sd">        return without dividing.</span>
-<span class="sd">    :param **kwargs: Kwargs to pass to the &quot;fragment&quot; function in the TXHousing.utilities.simple module. Fragmenting polygons</span>
+<span class="sd">    :param kwargs: Kwargs to pass to the &quot;fragment&quot; function in the TXHousing.utilities.simple module. Fragmenting polygons</span>
 <span class="sd">        speeds up the computation for all but very small polygons. If you do not want to fragment the polygons (the</span>
 <span class="sd">        only reason to do this is speed, it will not affect the results), pass in horiz = 1 and vert = 1 as kwargs.</span>
-<span class="sd">    :return: float (if categorical = False or factor is None) or pandas series</span>
+<span class="sd">    :return: Float if factors is None, else Pandas Series</span>
 
 <span class="sd">    Note: it is often useful to apply this function to an entire gdf of polygons.</span>
 
@@ -362,7 +362,8 @@
     <span class="k">return</span> <span class="n">result</span></div>
 
 
-<div class="viewcode-block" id="fast_polygon_intersection"><a class="viewcode-back" href="../../../utilities.html#TXHousing.utilities.spatial_joins.fast_polygon_intersection">[docs]</a><span class="k">def</span> <span class="nf">fast_polygon_intersection</span><span class="p">(</span><span class="n">small_polygon_gdf</span><span class="p">,</span> <span class="n">large_polygon_gdf</span><span class="p">,</span> <span class="n">small_geometry_column</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">large_geometry_column</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">,</span>
+<div class="viewcode-block" id="fast_polygon_intersection"><a class="viewcode-back" href="../../../utilities.html#TXHousing.utilities.spatial_joins.fast_polygon_intersection">[docs]</a><span class="k">def</span> <span class="nf">fast_polygon_intersection</span><span class="p">(</span><span class="n">small_polygon_gdf</span><span class="p">,</span> <span class="n">large_polygon_gdf</span><span class="p">,</span> <span class="n">small_points_spatial_index</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                              <span class="n">small_geometry_column</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">large_geometry_column</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">,</span>
                               <span class="n">large_name_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
@@ -372,6 +373,9 @@
 
 <span class="sd">    :param small_polygon_gdf: A gdf of small polygons (i.e. parcels)</span>
 <span class="sd">    :param large_polygon_gdf: A gdf of large polygons (i.e. municipal boundaries)</span>
+<span class="sd">    :param small_points_spatial_index: The spatial index for the centroids of the small_polygon_gdf. Note that passing</span>
+<span class="sd">        the spatial index for the polygons of the small_polygon_gdf is different and could lead to unexpected results.</span>
+<span class="sd">        This is optional, and will be generated by the underling points_intersect_multiple_polygons call if not supplied.</span>
 <span class="sd">    :param small_geometry_column: The geometry column of the small_polygon_gdf.</span>
 <span class="sd">    :param large_geometry_column: The geometry column of the large_polygon_gdf.</span>
 <span class="sd">    :param large_name_column: Column for the names of each large polygon; if none will use the index of the large_polygon_gdf.</span>
@@ -384,10 +388,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Get centroids</span>
-    <span class="n">small_polygon_gdf</span><span class="p">[</span><span class="s1">&#39;centroids&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">small_polygon_gdf</span><span class="p">[</span><span class="n">small_geometry_column</span><span class="p">]</span><span class="o">.</span><span class="n">centroid</span>
+    <span class="k">if</span> <span class="s1">&#39;centroids&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">small_polygon_gdf</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">small_polygon_gdf</span><span class="p">[</span><span class="s1">&#39;centroids&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">small_polygon_gdf</span><span class="p">[</span><span class="n">small_geometry_column</span><span class="p">]</span><span class="o">.</span><span class="n">centroid</span>
+
     <span class="n">small_polygon_gdf</span> <span class="o">=</span> <span class="n">small_polygon_gdf</span><span class="o">.</span><span class="n">set_geometry</span><span class="p">(</span><span class="s1">&#39;centroids&#39;</span><span class="p">)</span>
 
     <span class="n">result</span> <span class="o">=</span> <span class="n">points_intersect_multiple_polygons</span><span class="p">(</span><span class="n">points_gdf</span> <span class="o">=</span> <span class="n">small_polygon_gdf</span><span class="p">,</span> <span class="n">polygons_gdf</span> <span class="o">=</span> <span class="n">large_polygon_gdf</span><span class="p">,</span>
+                                                <span class="n">points_spatial_index</span> <span class="o">=</span> <span class="n">small_points_spatial_index</span><span class="p">,</span>
                                                 <span class="n">points_geometry_column</span> <span class="o">=</span> <span class="s1">&#39;centroids&#39;</span><span class="p">,</span>
                                                 <span class="n">polygons_geometry_column</span> <span class="o">=</span> <span class="n">large_geometry_column</span><span class="p">,</span>
                                                 <span class="n">polygons_names_column</span> <span class="o">=</span> <span class="n">large_name_column</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -417,7 +424,7 @@
 <span class="sd">    :param data_source_geometry_column: geometry column for data_source</span>
 <span class="sd">    :param other_geometries_column: geometry column for other_geometries</span>
 <span class="sd">    :param account_method: The method by which to account for the % of an area which is not residential (this prevents</span>
-<span class="sd">        population-related estimates from being too low). Can either be None, &#39;percent_residential&#39;, or &#39;percent_land&#39;</span>
+<span class="sd">        population-related estimates from being too low). Can either be None, &#39;percent_residential&#39;, or &#39;percent_land&#39;.</span>
 <span class="sd">        Defaults to None (although wrappers of this function may have different defaults).</span>
 <span class="sd">    :param horiz: When fragmenting polygons, number of horizontal fragments to make. Defaults to 1.</span>
 <span class="sd">    :param vert: When fragmenting polygons, number of vertical fragments to make. Defaults to 1.</span>

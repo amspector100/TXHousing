@@ -302,16 +302,19 @@ smaller) polygons. This is effectively a slower alternative to the fast_intersec
 
 <dl class="class">
 <dt id="TXHousing.data_processing.boundaries.ZipBoundaries">
-<em class="property">class </em><code class="descclassname">TXHousing.data_processing.boundaries.</code><code class="descname">ZipBoundaries</code><span class="sig-paren">(</span><em>ziplist=None</em>, <em>bounding_counties=None</em>, <em>bounding_polygon=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/boundaries.html#ZipBoundaries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.boundaries.ZipBoundaries" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class for Zipcode Boundaries Data, wraps Boundaries class.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<em class="property">class </em><code class="descclassname">TXHousing.data_processing.boundaries.</code><code class="descname">ZipBoundaries</code><span class="sig-paren">(</span><em>ziplist=None</em>, <em>bounding_counties=None</em>, <em>bounding_polygon=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/boundaries.html#ZipBoundaries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.boundaries.ZipBoundaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for Zipcode Boundaries Data, wraps Boundaries class. You cannot pass subset_by or subset if you pass the
+ziplist parameter, but otherwise all the init parameters are the same.</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ziplist</strong> – A list of zipcodes to subset to.</td>
+<tr class="field-odd field"><th class="field-name">param ziplist:</th><td class="field-body">A list of zipcodes to subset to.</td>
 </tr>
 </tbody>
 </table>
+</div></blockquote>
 <dl class="method">
 <dt id="TXHousing.data_processing.boundaries.ZipBoundaries.add_property_data">
 <code class="descname">add_property_data</code><span class="sig-paren">(</span><em>property_input</em>, <em>features=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/boundaries.html#ZipBoundaries.add_property_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.boundaries.ZipBoundaries.add_property_data" title="Permalink to this definition">¶</a></dt>
@@ -349,7 +352,7 @@ tested for accuracy but is not in the unittests.</p>
 <p>Processes zoning data for Austin, Dallas, and all of North Texas</p>
 <dl class="class">
 <dt id="TXHousing.data_processing.zoning.Zoning_Input">
-<em class="property">class </em><code class="descclassname">TXHousing.data_processing.zoning.</code><code class="descname">Zoning_Input</code><span class="sig-paren">(</span><em>path</em>, <em>feature</em>, <em>separator</em>, <em>proj4string</em>, <em>base_zones</em>, <em>lat=0</em>, <em>long=0</em>, <em>zoom=10</em>, <em>title=''</em>, <em>crs=None</em>, <em>regulations_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/zoning.html#Zoning_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.zoning.Zoning_Input" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">TXHousing.data_processing.zoning.</code><code class="descname">Zoning_Input</code><span class="sig-paren">(</span><em>path</em>, <em>feature</em>, <em>separator</em>, <em>base_zones</em>, <em>proj4string=None</em>, <em>lat=0</em>, <em>long=0</em>, <em>zoom=10</em>, <em>title=''</em>, <em>crs=None</em>, <em>regulations_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/zoning.html#Zoning_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.zoning.Zoning_Input" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple class which binds information about zoning datasets. Also, the lat/long features define the city
 center for each city.</p>
 <dl class="method">
@@ -376,6 +379,14 @@ parse the base zones of the zoning data.</li>
 </table>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.data_processing.zoning.get_austin_surrounding_zones">
+<code class="descclassname">TXHousing.data_processing.zoning.</code><code class="descname">get_austin_surrounding_zones</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/zoning.html#get_austin_surrounding_zones"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.zoning.get_austin_surrounding_zones" title="Permalink to this definition">¶</a></dt>
+<dd><p>Based on the zoning inputs in this file, returns a geodataframe of zoning polygons for Austin AND select
+surrounding areas, with two columns: broad_zone and geometry. This is purely a convenience function which wraps a
+variety of Zoning_Input.process_zoning_shapefile calls.</p>
 </dd></dl>
 
 </div>
@@ -459,6 +470,141 @@ For Realtor data, the data will have geographies in the index and a variety of f
 </div>
 <div class="section" id="module-TXHousing.data_processing.parcel">
 <span id="parcel-data-processing"></span><h2>Parcel Data Processing<a class="headerlink" href="#module-TXHousing.data_processing.parcel" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="TXHousing.data_processing.parcel.Parcel">
+<em class="property">class </em><code class="descclassname">TXHousing.data_processing.parcel.</code><code class="descname">Parcel</code><span class="sig-paren">(</span><em>path</em>, <em>account_col</em>, <em>county=None</em>, <em>processing_function=None</em>, <em>geometry_column='geometry'</em>, <em>crs=None</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#Parcel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.Parcel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for Parcel Data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> – The path of the data.</li>
+<li><strong>account_col</strong> – The name of a column containing unique ids for each property.</li>
+<li><strong>county</strong> – The county that the parcel data is in. Can also be a column of the data which lists the county of
+each parcel. Defaults to None but this param is highly recommended.</li>
+<li><strong>processing_function</strong> – A custom processing function used to set as self.data</li>
+<li><strong>geometry_column</strong> – The geometry column of the data, defaults to ‘geometry’</li>
+<li><strong>crs</strong> – If necessary, set the crs</li>
+<li><strong>name</strong> – A name for the entire dataset, used to identify when printing. Defaults to None, at which point it
+uses the path of the dataset as its name (if this is also None then the name is just None).</li>
+<li><strong>kwargs</strong> – kwargs to pass to the processing_function</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="TXHousing.data_processing.parcel.Parcel.measure_parcels">
+<code class="descname">measure_parcels</code><span class="sig-paren">(</span><em>lat</em>, <em>long</em>, <em>area_feature=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#Parcel.measure_parcels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.Parcel.measure_parcels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the distance to center of the city as well as the area and centroid of each parcel. In effect,
+it adds four new columns to self.data: lat, long, centroids, area_sqft, and dist_to_center. This also
+transforms the parcels to lat long.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="TXHousing.data_processing.parcel.Parcel.merge_multiple">
+<code class="descname">merge_multiple</code><span class="sig-paren">(</span><em>merge_paths</em>, <em>right_keys</em>, <em>left_keys=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#Parcel.merge_multiple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.Parcel.merge_multiple" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrapper of the geopandas.merge function, quickly merge with multiple other csvs</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>merge_paths</strong> – If the geodata must be merged with another datasource, this should be an iterable containing
+the aths of the data to merge it with.</li>
+<li><strong>left_keys</strong> – If the geodata must be merged with another datasource, this should be an iterable containing the
+left keys used to merge the data, in the same order of as the ‘merge_paths’. Defaults to None, in which case
+the merge is performed using the account_feature as the merge key.</li>
+<li><strong>right_keys</strong> – If the geodata must be merged with another datasource, this should be an iterable containing the
+right keys used to merge the data, in the same order of as the ‘merge_paths’</li>
+<li><strong>kwargs</strong> – kwargs to pass to the .merge call</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="TXHousing.data_processing.parcel.Parcel.parse_broad_zone">
+<code class="descname">parse_broad_zone</code><span class="sig-paren">(</span><em>description_column</em>, <em>broad_zone_dictionary</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#Parcel.parse_broad_zone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.Parcel.parse_broad_zone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses broad zones of parcel data. Updates the self.data attribute to include a ‘broad_zone’ column.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>description_column</strong> – The column of descriptions to parse</li>
+<li><strong>broad_zone_dictionary</strong> – A dictionary mapping base zones (i.e. ‘Single Family’) to a list of strings
+which signal that a description means that base zone. Ex: {‘Single Family’:[‘sf’, ‘single f’], ‘Multifamily’:[‘mf’]}
+Note that the order of this dictionary DOES matter - the function will return the FIRST key which has a match.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="TXHousing.data_processing.parcel.Parcel.process_parcel_data">
+<code class="descname">process_parcel_data</code><span class="sig-paren">(</span><em>broad_zone_feature</em>, <em>broad_zone_dictionary</em>, <em>zoning_input</em>, <em>bounding_counties</em>, <em>area_feature=None</em>, <em>merge_paths=None</em>, <em>left_keys=None</em>, <em>right_keys=None</em>, <em>save_path=None</em>, <em>geo_save_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#Parcel.process_parcel_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.Parcel.process_parcel_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper which calls self.merge_multiple, self.parse_broad_zone, self.measure_parcels,
+and self.pull_geographic_information in that order. Basically, after initializing the parcel data and calling
+this function, it should have the following features:</p>
+<p>account, broad_zone, zone_feature, dist_to_center, area_sqft, lat, long, county, zipcode, place, ua (urban area)</p>
+<p>as well as a host of other features that may have been joined with/initially part of the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>broad_zone_feature</strong> – The feature used to parse broad_zones. State cds codes are preferred for consistency.</li>
+<li><strong>broad_zone_dictionary</strong> – Dictionary mapping broad zones to keywords that we will use to parse the
+broad_zone_feature and obtain broad zones.</li>
+<li><strong>zoning_input</strong> – The zoning input for the city of interest; used to calculate distance from city center.</li>
+<li><strong>bounding_counties</strong> – A list of counties which might intersect the data. It’s computationally relatively
+inexpensive to add extra counties to this list, by the way.</li>
+<li><strong>area_feature</strong> – Default None. If the data already lists its area in square feet, then we won’t bother
+recalculating it (this saves a ton of time because crs transformations are very expensive for parcel data).</li>
+<li><strong>merge_paths</strong> – If the geodata must be merged with another datasource, this should be an iterable containing the
+paths of the data to merge it with.</li>
+<li><strong>left_keys</strong> – <p>If the geodata must be merged with another datasource, this should be an iterable containing the
+left keys used to merge the data, in the same order of as the ‘merge_paths’. Defaults to None, in which case</p>
+<blockquote>
+<div>the merge is performed using ‘account’, which is parsed by the init function, as the merge key.</div></blockquote>
+</li>
+<li><strong>right_keys</strong> – If the geodata must be merged with another datasource, this should be an iterable containing the
+right keys used to merge the data, in the same order of as the ‘merge_paths’</li>
+<li><strong>save_path</strong> – A csv path at which to save the data. Defaults to None, in which case it will not save the
+data.</li>
+<li><strong>geo_save_path</strong> – A .shp path at which to save the data. Defaults to None, in which case it will not save
+the data.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None, but modifies parcel data in place.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.data_processing.parcel.cache_all_parcel_data">
+<code class="descclassname">TXHousing.data_processing.parcel.</code><code class="descname">cache_all_parcel_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#cache_all_parcel_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.cache_all_parcel_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates csvs which store the centroids, area, and other relevant features about each parcel for all of the
+surrounding counties of each core municipality.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.data_processing.parcel.cache_municipal_parcel_data">
+<code class="descclassname">TXHousing.data_processing.parcel.</code><code class="descname">cache_municipal_parcel_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#cache_municipal_parcel_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.cache_municipal_parcel_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates csvs which store the centroids, area, and other relevant features about each parcel for municipalities.</p>
+</dd></dl>
+
 <dl class="function">
 <dt id="TXHousing.data_processing.parcel.join_dallas_parcel_data">
 <code class="descclassname">TXHousing.data_processing.parcel.</code><code class="descname">join_dallas_parcel_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#join_dallas_parcel_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.join_dallas_parcel_data" title="Permalink to this definition">¶</a></dt>
@@ -492,30 +638,6 @@ municipal boundaries.</li>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">GeoDataFrame with the parcel shapes and the merged data.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="TXHousing.data_processing.parcel.process_lot_descriptions">
-<code class="descclassname">TXHousing.data_processing.parcel.</code><code class="descname">process_lot_descriptions</code><span class="sig-paren">(</span><em>gdf</em>, <em>description_column</em>, <em>broad_zone_dictionary</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#process_lot_descriptions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.process_lot_descriptions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Processes lot descriptions for zoning data</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>gdf</strong> – A geodataframe, presumably of parcel data, but it could honestly be of anything.</li>
-<li><strong>description_column</strong> – The column of descriptions to parse</li>
-<li><strong>broad_zone_dictionary</strong> – A dictionary mapping base zones (i.e. ‘Single Family’) to a list of strings
-which signal that a description means that base zone. Ex: {‘Single Family’:[‘sf’, ‘single f’], ‘Multifamily’:[‘mf’]}
-Note that the order of this dictionary DOES matter - the function will return the FIRST key which has a match.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A pandas series of the base zones.</p>
 </td>
 </tr>
 </tbody>
