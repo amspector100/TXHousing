@@ -11,21 +11,21 @@ library(tibble)
 
 nas <- c('(X)', '*****')
 
-demo_2000 <- fread('2000-demographics.csv', na.strings=nas)
+demo_2000 <- fread('data/Census/2000-demographics.csv', na.strings=nas)
 demo_2000_selected <- demo_2000[,.(GEOID00=Id2, Geography, TotalPop2000=`Number; Total population`, WhitePop=`Number; HISPANIC OR LATINO AND RACE - Total population - Not Hispanic or Latino - White alone`)]
 demo_2000_selected[,WhitePct:=100*WhitePop/TotalPop2000]
 
 # NB: No need to include "Geography" column twice!
 
-econ_2000 <- fread('2000-economics.csv', na.strings=nas)
+econ_2000 <- fread('data/Census/2000-economics.csv', na.strings=nas)
 econ_2000_selected <- econ_2000[,.(GEOID00=Id2, MedHHInc=`Number; INCOME IN 1999 - Households - Median household income (dollars)`)]
 
 dt_2000 <- merge(demo_2000_selected, econ_2000_selected, on=GEOID00)
 
-pop_2016 <- fread('2016-demographics.csv')
+pop_2016 <- fread('data/Census/2016-demographics.csv')
 pop_2016_selected <- pop_2016[,.(GEOID10=Id2, TotalPop2016=`Estimate; Total:`)]
 
-housing_2016 <- fread('2016-housing.csv')
+housing_2016 <- fread('data/Census/2016-housing.csv')
 housing_2016_selected <- housing_2016[,.(GEOID10=Id2, TotalHousing2016=`Estimate; HOUSING OCCUPANCY - Total housing units`)]
 
 dt_2016 <- merge(pop_2016_selected, housing_2016_selected, on=GEOID10)
@@ -33,12 +33,12 @@ dt_2016 <- merge(pop_2016_selected, housing_2016_selected, on=GEOID10)
 # Reallocate 2016 population to 2000 census tracts.
 # 2000 tracts that were merged in 2010 get proportions of the 2016 population commensurate with their proportions of the 2010 population.
 
-crosswalk <- fread('tx-census-tract-crosswalk.csv')
+crosswalk <- fread('data/Census/tx-census-tract-crosswalk.csv')
 dt_2016_with_crosswalk <- merge(crosswalk, dt_2016, by='GEOID10')
 dt_2016_reduced <- dt_2016_with_crosswalk[,.(TotalPop2016=sum(TotalPop2016*POPPCT10/100), TotalHousing2016=sum(TotalHousing2016*HUPCT10/100)), by=GEOID00]
 
 dt_demos <- merge(dt_2016_reduced, dt_2000, by='GEOID00')
-gazetteer <- fread('ustracts2k.csv')
+gazetteer <- fread('data/Census/ustracts2k.csv')
 gazetteer <- gazetteer[State == 'TX']
 gazetteer[,LandAreaAcres:=LandAreaSqMeters/4046.856]
 dt_final <- merge(dt_demos, gazetteer, by='GEOID00')
@@ -60,7 +60,7 @@ library(magrittr)
 library(dplyr)
 
 # Start by getting geodata for census tracts in 2000
-tracts_2000 <- sf::st_read("Texas_Tract_Boundaries_2000/tl_2010_48_tract00.shp") %>%
+tracts_2000 <- sf::st_read("data/Census/Texas_Tract_Boundaries_2000/tl_2010_48_tract00.shp") %>%
   dplyr::mutate(CTIDFP00 = as.numeric(as.character(CTIDFP00))) %>%
   dplyr::rename(GEOID00 = CTIDFP00)
 dt_final <- as.tibble(dt_final) %>%
