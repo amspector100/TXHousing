@@ -1,7 +1,16 @@
 """Tests core utilities. This is NOT a comprehensive testing suite."""
 
+
+import os
+import sys
+
+# Add path to allow import of TXHousing - also change directory to allow reading in of data
+file_directory = os.path.dirname(os.path.abspath(__file__))
+parent_directory = os.path.split(file_directory)[0]
+os.chdir(parent_directory)
+sys.path.insert(0, os.path.abspath(parent_directory))
+
 from TXHousing.utilities import simple, spatial_joins, measurements
-import TXHousing.chdir # Changes working directory
 import unittest
 import warnings
 import os

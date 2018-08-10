@@ -4,6 +4,8 @@ Analysis of housing regulations in Texas. Hosted on this repo in the aim of maki
 This repo is mostly finished but still under a little bit of development - please direct questions to 
 amspector100@gmail.com.
 
+## To-do
+
 ## Structure and Documentation
 
 All of the Python code lives inside the TXHousing python package, which is structured into three subpackages:
@@ -11,8 +13,8 @@ All of the Python code lives inside the TXHousing python package, which is struc
 which help streamline the code in the analysis package. For documentation of the TXHousing package, see
 [amspector100.github.io/TXHousing](https://amspector100.github.io/TXHousing). 
 
-We did use some R code, which lives in the R subdirectory. It's very simple so it's not packaged and there's no official 
-documentation site.
+We did use some R code, which lives in the R subdirectory. It's very simple, so it's not packaged and there's no official 
+documentation site - but there might be in the future!
 
 ## General Requirements
 
@@ -23,15 +25,15 @@ the geospatial stack in R/Python.
 
 ### Clone
 
-Clone the repo from GitHub, i.e.: git clone https://github.com/amspector100/TXHousing
+Clone the repo from GitHub, i.e.::
 
-git clone 
+    git clone https://github.com/amspector100/TXHousing
 
 ### Data
 
 There are basically two strategies you can employ to get the data for this analysis.
 
-First, if you want to reproduce everything from scratch, the testing modules will alert you to what data you are missing
+**First**, if you want to reproduce everything from scratch, the testing modules will alert you to what data you are missing
 at any given time and also provide you a link at which you may download the data. Basically, you should run the 
 data_processing testing module (as described later) and download data until the data_processing module stops throwing 
 errors. After this, you should have all of the raw data of the project with the exception of parcel files used to 
@@ -42,24 +44,27 @@ adjust the paths to match the global variables supplied in the data_processing s
 
 All data which is not available on the internet is stored in the 'shared_data' directory for this reason.
 
-Second, we are working on setting up an online database from which you can download the entire data directory for the 
+**Second**, we are working on setting up an online database from which you can download the entire data directory for the 
 project. This is currently unavailable but hopefully will become available soon.
 
 ### Getting started
 
 After cloning the package and setting up the data, you should first run the two test modules, test_processing and 
 test_utilities. These are **not** comprehensive testing suites but will let you know if anything is going
-catastrophically inside the utilities or data processing subpackages. To run them, you should simply navigate to the 
-test directory inside the repo and run the files. (Possibly to avoid import errors you may have to add a couple 
-of paths to sys - this will be bug tested in the future.)
+catastrophically wrong inside the utilities or data processing subpackages. To run them, you should simply navigate to the 
+test directory inside the repo and run the files, using a command like::
+
+    python test_utilities.py
+    python test_processing.py
 
 If you have not downloaded the data directory, you will need to generate a couple of data caches before running analysis.
-You can generate them by running the R/tarrant-parcel-processing.R script and the generate_caches.py script, in that order. 
-Note that generating the caches for parcel data will likely take several hours and a lot of memory - reading and writing
- parcel data is very computationally expensive.
+You can generate them by running the R/tarrant-parcel-processing.R script and the generate_caches.py script, **in that order.**
+Note that generating the caches for parcel data and houston permit statuses will likely take several hours and a lot of 
+memory.
 
-If you just want to reproduce all the graphs, you should be able to run the 'generate-all-graphs' and the 'generate_graphs'
-python script after generating the caches. 
+If you want to reproduce all the graphs, you should be able to run the 'generate-all-graphs.R' and the 'generate_graphs.py'
+scripts after generating the caches. You can also call functions in the TXHousing.analysis.misc_calcs module to reproduce
+any other miscellaneous calculations. 
 
 ### Notes on More Detailed Use
 
