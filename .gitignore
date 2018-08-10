@@ -9,6 +9,9 @@ Figures/Large Files/
 # The .idea folder isn't necessary yet
 .idea/
 
+# This module was never used
+TXHousing/utilities/simplifiers.py
+
 # _____ R Defaults _______
 # History files
 .Rhistory
