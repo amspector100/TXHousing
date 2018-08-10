@@ -352,12 +352,12 @@ tested for accuracy but is not in the unittests.</p>
 <p>Processes zoning data for Austin, Dallas, and all of North Texas</p>
 <dl class="class">
 <dt id="TXHousing.data_processing.zoning.Zoning_Input">
-<em class="property">class </em><code class="descclassname">TXHousing.data_processing.zoning.</code><code class="descname">Zoning_Input</code><span class="sig-paren">(</span><em>path</em>, <em>feature</em>, <em>separator</em>, <em>base_zones</em>, <em>proj4string=None</em>, <em>lat=0</em>, <em>long=0</em>, <em>zoom=10</em>, <em>title=''</em>, <em>crs=None</em>, <em>regulations_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/zoning.html#Zoning_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.zoning.Zoning_Input" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">TXHousing.data_processing.zoning.</code><code class="descname">Zoning_Input</code><span class="sig-paren">(</span><em>path</em>, <em>feature</em>, <em>separator</em>, <em>base_zones</em>, <em>proj4string=None</em>, <em>lat=0</em>, <em>long=0</em>, <em>zoom=10</em>, <em>crs=None</em>, <em>regulations_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/zoning.html#Zoning_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.zoning.Zoning_Input" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple class which binds information about zoning datasets. Also, the lat/long features define the city
 center for each city.</p>
 <dl class="method">
 <dt id="TXHousing.data_processing.zoning.Zoning_Input.process_zoning_shapefile">
-<code class="descname">process_zoning_shapefile</code><span class="sig-paren">(</span><em>overlay={'-MU': 'Multifamily'}</em>, <em>broaden=True</em>, <em>parse_base_zones=True</em>, <em>regulation_features=None</em>, <em>quietly=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/zoning.html#Zoning_Input.process_zoning_shapefile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.zoning.Zoning_Input.process_zoning_shapefile" title="Permalink to this definition">¶</a></dt>
+<code class="descname">process_zoning_shapefile</code><span class="sig-paren">(</span><em>overlay={'-MU': 'Multifamily'}</em>, <em>broaden=True</em>, <em>parse_base_zones=True</em>, <em>regulation_features=None</em>, <em>to_latlong=True</em>, <em>quietly=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/zoning.html#Zoning_Input.process_zoning_shapefile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.zoning.Zoning_Input.process_zoning_shapefile" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -371,6 +371,7 @@ the function recognize that mixed-use zones are multifamily zones.</li>
 <li><strong>parse_base_zones</strong> – Boolean. Default true. If true, will use the regulations path provided by the input to
 parse the base zones of the zoning data.</li>
 <li><strong>regulation_features</strong> – A list of features to retrieve from the regulation data. Default None.</li>
+<li><strong>to_latlong</strong> – If True, will try to transform the data to lat/long.</li>
 <li><strong>quietly</strong> (<em>Boolean</em>) – Default false. If true, will suppress all print statements and make the function “quiet”</li>
 </ul>
 </td>
@@ -606,9 +607,11 @@ surrounding counties of each core municipality.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="TXHousing.data_processing.parcel.join_dallas_parcel_data">
-<code class="descclassname">TXHousing.data_processing.parcel.</code><code class="descname">join_dallas_parcel_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#join_dallas_parcel_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.join_dallas_parcel_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Joins 2013 and 2016 Dallas parcel data. Hopefully this will never be necessary as it takes a while.</p>
+<dt id="TXHousing.data_processing.parcel.cache_north_texas_zoning_data">
+<code class="descclassname">TXHousing.data_processing.parcel.</code><code class="descname">cache_north_texas_zoning_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#cache_north_texas_zoning_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.cache_north_texas_zoning_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Because we use the north texas zoning data to validate parcel results, we apply the parcel processing functions
+to the north texas zoning data and then cache the results.(This is a bit hacky, because you wouldn’t expect to see
+zoning data fit under the parcel class, but so be it.)</p>
 </dd></dl>
 
 <dl class="function">
@@ -619,7 +622,7 @@ surrounding counties of each core municipality.</p>
 
 <dl class="function">
 <dt id="TXHousing.data_processing.parcel.process_houston_parcel_data">
-<code class="descclassname">TXHousing.data_processing.parcel.</code><code class="descname">process_houston_parcel_data</code><span class="sig-paren">(</span><em>feature_files=['data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_res.txt'], feature_columns_list=[['ACCOUNT', 'USE_CODE', 'BUILDING_NUMBER', 'IMPRV_TYPE', 'BUILDING_STYLE_CODE', 'CLASS_STRUCTURE', 'CLASS_STRUC_DESCRIPTION', 'DEPRECIATION_VALUE', 'CAMA_REPLACEMENT_COST', 'ACCRUED_DEPR_PCT', 'QUALITY', 'QUALITY_DESCRIPTION', 'DATE_ERECTED', 'EFFECTIVE_DATE', 'YR_REMODEL', 'YR_ROLL', 'APPRAISED_BY', 'APPRAISED_DATE', 'NOTE', 'IMPR_SQ_FT', 'ACTUAL_AREA', 'HEAT_AREA', 'GROSS_AREA', 'EFFECTIVE_AREA', 'BASE_AREA', 'PERIMETER', 'PERCENT_COMPLETE', 'NBHD_FACTOR', 'RCNLD', 'SIZE_INDEX', 'LUMP_SUM_ADJ']], process_crs=True, county_level=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#process_houston_parcel_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.process_houston_parcel_data" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">TXHousing.data_processing.parcel.</code><code class="descname">process_houston_parcel_data</code><span class="sig-paren">(</span><em>feature_files=['data/Parcel/Harris_Parcel_Land_Features/building_res.txt'], feature_columns_list=[['ACCOUNT', 'USE_CODE', 'BUILDING_NUMBER', 'IMPRV_TYPE', 'BUILDING_STYLE_CODE', 'CLASS_STRUCTURE', 'CLASS_STRUC_DESCRIPTION', 'DEPRECIATION_VALUE', 'CAMA_REPLACEMENT_COST', 'ACCRUED_DEPR_PCT', 'QUALITY', 'QUALITY_DESCRIPTION', 'DATE_ERECTED', 'EFFECTIVE_DATE', 'YR_REMODEL', 'YR_ROLL', 'APPRAISED_BY', 'APPRAISED_DATE', 'NOTE', 'IMPR_SQ_FT', 'ACTUAL_AREA', 'HEAT_AREA', 'GROSS_AREA', 'EFFECTIVE_AREA', 'BASE_AREA', 'PERIMETER', 'PERCENT_COMPLETE', 'NBHD_FACTOR', 'RCNLD', 'SIZE_INDEX', 'LUMP_SUM_ADJ']], process_crs=True, county_level=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/data_processing/parcel.html#process_houston_parcel_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.data_processing.parcel.process_houston_parcel_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge houston or harris parcel data with harris county data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

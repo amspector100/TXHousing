@@ -147,13 +147,9 @@
 <span></span><span class="sd">&quot;&quot;&quot;Graphs which mostly rely on municipal parcel data. Note that all of these graphs rely on the cached parcel data in</span>
 <span class="sd"> csv format, not the actual parcel data, which is processed and cached in the data_processing package.&quot;&quot;&quot;</span>
 
-
-<span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
-<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">utilities</span>
-<span class="kn">from</span> <span class="nn">..data_processing</span> <span class="k">import</span> <span class="n">zoning</span><span class="p">,</span> <span class="n">parcel</span>
+<span class="kn">from</span> <span class="nn">..data_processing</span> <span class="k">import</span> <span class="n">parcel</span>
 <span class="kn">from</span> <span class="nn">plotnine</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
 

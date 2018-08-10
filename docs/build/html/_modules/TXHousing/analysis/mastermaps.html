@@ -178,9 +178,14 @@
     <span class="k">return</span> <span class="n">zipdata</span></div>
 
 
-<span class="k">def</span> <span class="nf">create_austin_mastermap</span><span class="p">(</span><span class="n">save_path</span> <span class="o">=</span> <span class="s1">&#39;Figures/Mastermaps/Austin_Mastermap_v2.html&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="create_austin_mastermap"><a class="viewcode-back" href="../../../analysis.html#TXHousing.analysis.mastermaps.create_austin_mastermap">[docs]</a><span class="k">def</span> <span class="nf">create_austin_mastermap</span><span class="p">(</span><span class="n">save_path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Generates Austin Mastermap. Save path defaults to &#39;Figures/Mastermaps/Austin_Mastermap_v2.html&quot;&quot;&quot;</span>
 
     <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="c1"># Get save_path</span>
+    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="s1">&#39;Figures/Mastermaps/Austin_Mastermap_v2.html&#39;</span>
 
     <span class="n">basemap</span> <span class="o">=</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">([</span><span class="n">data_processing</span><span class="o">.</span><span class="n">zoning</span><span class="o">.</span><span class="n">austin_inputs</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">data_processing</span><span class="o">.</span><span class="n">zoning</span><span class="o">.</span><span class="n">austin_inputs</span><span class="o">.</span><span class="n">long</span><span class="p">],</span>
                          <span class="n">zoom_start</span><span class="o">=</span><span class="n">data_processing</span><span class="o">.</span><span class="n">zoning</span><span class="o">.</span><span class="n">austin_inputs</span><span class="o">.</span><span class="n">zoom</span><span class="p">)</span>
@@ -257,18 +262,22 @@
     <span class="c1"># Add dark layer for visualization and layer control</span>
     <span class="n">folium</span><span class="o">.</span><span class="n">TileLayer</span><span class="p">(</span><span class="s1">&#39;cartodbdark_matter&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">basemap</span><span class="p">)</span>
     <span class="n">LayerControl</span><span class="p">()</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">basemap</span><span class="p">)</span>
-    <span class="n">basemap</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+    <span class="n">basemap</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="create_dallas_mastermap"><a class="viewcode-back" href="../../../analysis.html#TXHousing.analysis.mastermaps.create_dallas_mastermap">[docs]</a><span class="k">def</span> <span class="nf">create_dallas_mastermap</span><span class="p">(</span><span class="n">save_path</span> <span class="o">=</span> <span class="s1">&#39;Figures/Mastermaps/Dallas_Mastermap_v2.html&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="create_dallas_mastermap"><a class="viewcode-back" href="../../../analysis.html#TXHousing.analysis.mastermaps.create_dallas_mastermap">[docs]</a><span class="k">def</span> <span class="nf">create_dallas_mastermap</span><span class="p">(</span><span class="n">save_path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Final graph for dallas.</span>
 
-<span class="sd">    :param save_path: The path at which to save the final HTML.</span>
+<span class="sd">    :param save_path: The path at which to save the final HTML. Defaults to &#39;Figures/Mastermaps/Dallas_Mastermap_v2.html&#39;</span>
 <span class="sd">    :return: None</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="c1"># Get save_path</span>
+    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="s1">&#39;Figures/Mastermaps/Dallas_Mastermap_v2.html&#39;</span>
 
     <span class="n">basemap</span> <span class="o">=</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">([</span><span class="n">data_processing</span><span class="o">.</span><span class="n">zoning</span><span class="o">.</span><span class="n">dallas_inputs</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">data_processing</span><span class="o">.</span><span class="n">zoning</span><span class="o">.</span><span class="n">dallas_inputs</span><span class="o">.</span><span class="n">long</span><span class="p">],</span>
                          <span class="n">zoom_start</span><span class="o">=</span><span class="n">data_processing</span><span class="o">.</span><span class="n">zoning</span><span class="o">.</span><span class="n">dallas_inputs</span><span class="o">.</span><span class="n">zoom</span><span class="p">)</span>
@@ -356,13 +365,17 @@
     <span class="n">basemap</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="create_houston_mastermap"><a class="viewcode-back" href="../../../analysis.html#TXHousing.analysis.mastermaps.create_houston_mastermap">[docs]</a><span class="k">def</span> <span class="nf">create_houston_mastermap</span><span class="p">(</span><span class="n">save_path</span> <span class="o">=</span> <span class="s1">&#39;Figures/Mastermaps/Houston_Mastermap_v2.html&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="create_houston_mastermap"><a class="viewcode-back" href="../../../analysis.html#TXHousing.analysis.mastermaps.create_houston_mastermap">[docs]</a><span class="k">def</span> <span class="nf">create_houston_mastermap</span><span class="p">(</span><span class="n">save_path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Final Houston Mastermap</span>
 
-<span class="sd">    :param save_path: The path to save the html to</span>
+<span class="sd">    :param save_path: The path to save the html to. Defaults to  &#39;Figures/Mastermaps/Houston_Mastermap_v2.html&#39;.</span>
 <span class="sd">    :return: None</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Get save_path</span>
+    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="s1">&#39;Figures/Mastermaps/Houston_Mastermap_v2.html&#39;</span>
 
     <span class="n">basemap</span> <span class="o">=</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">([</span><span class="n">data_processing</span><span class="o">.</span><span class="n">zoning</span><span class="o">.</span><span class="n">houston_inputs</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">data_processing</span><span class="o">.</span><span class="n">zoning</span><span class="o">.</span><span class="n">houston_inputs</span><span class="o">.</span><span class="n">long</span><span class="p">],</span>
                          <span class="n">zoom_start</span><span class="o">=</span><span class="n">data_processing</span><span class="o">.</span><span class="n">zoning</span><span class="o">.</span><span class="n">houston_inputs</span><span class="o">.</span><span class="n">zoom</span><span class="p">)</span>
