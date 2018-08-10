@@ -6,13 +6,13 @@ import warnings
 import shapely.geometry
 
 # Filepaths
-austin_permit_path = 'data/austin_construction_permits.csv'
+austin_permit_path = 'data/Permit/austin_construction_permits.csv'
 
-dallas_permit_path = 'data/dallas_construction_permits.csv'
+dallas_permit_path = 'data/Permit/dallas_construction_permits.csv'
 dpm_save_path = "shared_data/dallas_corrected_permits/dallas_permits_corrected.shp"
 
-houston_structural_permits_path = "data/Houston_Structural_Permits/Permits_wm_Structural.shp"
-houston_demolition_permits_path = "data/Houston_Demolition_Permits/Demolition_ILMS_Code_SD.shp"
+houston_structural_permits_path = "data/Permit/Houston_Structural_Permits/Permits_wm_Structural.shp"
+houston_demolition_permits_path = "data/Permit/Houston_Demolition_Permits/Demolition_ILMS_Code_SD.shp"
 houston_permit_statuses_path = 'shared_data/houston_permit_statuses.csv'
 backup_houston_permit_statuses_path = 'shared_data/houston_permit_statuses_backup.csv'
 

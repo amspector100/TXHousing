@@ -10,7 +10,7 @@ import geopandas as gpd
 import warnings
 from . import simple, spatial_joins
 
-texas_places_path = "data/cb_2017_48_place_500k/cb_2017_48_place_500k.shp"
+texas_places_path = "data/Census/cb_2017_48_place_500k/cb_2017_48_place_500k.shp"
 
 
 # Haversine, area, dist to center - None of these use spatial joins -------------------------------------------------

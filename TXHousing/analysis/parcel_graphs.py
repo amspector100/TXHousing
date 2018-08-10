@@ -1,13 +1,9 @@
 """Graphs which mostly rely on municipal parcel data. Note that all of these graphs rely on the cached parcel data in
  csv format, not the actual parcel data, which is processed and cached in the data_processing package."""
 
-
-import time
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-from .. import utilities
-from ..data_processing import zoning, parcel
+from ..data_processing import parcel
 from plotnine import *
 from functools import reduce
 
