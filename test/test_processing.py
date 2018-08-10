@@ -77,11 +77,11 @@ class TestPropertyProcessing(unittest.TestCase):
         try:
             data, metadata = property.realtor_core_inventory.process_property_data()
         except Exception as e:
-            self.fail("process_property_data unexpectedly raised {} for Realtor data".format(e))
+            self.fail("process_property_data, for Realtor data, unexpectedly raised {}".format(e))
         try:
             data, metadata = property.sfhomes_nbhd.process_property_data()
         except Exception as e:
-            self.fail('process_property_data unexpectedly raised {} for Zillow data'.format(e))
+            self.fail('process_property_data, for Zillow data, unexpectedly raised {}'.format(e))
 
 # Note that this only tests ParcelProcessing for core municipalities
 class TestParcelProcessing(unittest.TestCase):
