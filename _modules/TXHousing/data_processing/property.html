@@ -241,8 +241,11 @@
         <span class="n">raw_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">index_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_col</span><span class="p">)</span>
 
         <span class="c1"># Only consider specific geographic subset</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geo_filter_values</span> <span class="o">!=</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
-            <span class="n">raw_data</span> <span class="o">=</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">raw_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_filter</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_filter_values</span><span class="p">),</span> <span class="p">:]</span>
+        <span class="k">if</span> <span class="n">geo_filter_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">geo_filter_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geo_filter_values</span>
+
+        <span class="k">if</span> <span class="n">geo_filter_values</span> <span class="o">!=</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="n">raw_data</span> <span class="o">=</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">raw_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_filter</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">geo_filter_values</span><span class="p">),</span> <span class="p">:]</span>
 
         <span class="c1"># Separate metadata and data</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s1">&#39;Zillow&#39;</span><span class="p">:</span>
@@ -309,29 +312,29 @@
                 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
 
 <span class="c1"># Zillow inputs --</span>
-<span class="n">sfhomes_nbhd</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;data/Zillow Data/sfhomes_neighborhood.csv&#39;</span><span class="p">,</span>
+<span class="n">sfhomes_nbhd</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;data/Zillow/sfhomes_neighborhood.csv&#39;</span><span class="p">,</span>
                         <span class="n">source</span> <span class="o">=</span> <span class="s1">&#39;Zillow&#39;</span><span class="p">)</span>
 
-<span class="n">inventoryraw</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Zillow Data/inventoryraw_zip.csv&quot;</span><span class="p">,</span>
+<span class="n">inventoryraw</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Zillow/inventoryraw_zip.csv&quot;</span><span class="p">,</span>
                             <span class="n">source</span> <span class="o">=</span> <span class="s1">&#39;Zillow&#39;</span><span class="p">)</span>
 
-<span class="n">medpricecuts</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Zillow Data/medpricecut_zip.csv&quot;</span><span class="p">,</span>
+<span class="n">medpricecuts</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Zillow/medpricecut_zip.csv&quot;</span><span class="p">,</span>
                             <span class="n">source</span> <span class="o">=</span> <span class="s1">&#39;Zillow&#39;</span><span class="p">)</span>
 
-<span class="n">allhomeprices</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;data/Zillow Data/allhomeprice_zip.csv&#39;</span><span class="p">,</span>
+<span class="n">allhomeprices</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;data/Zillow/allhomeprice_zip.csv&#39;</span><span class="p">,</span>
                              <span class="n">source</span> <span class="o">=</span> <span class="s1">&#39;Zillow&#39;</span><span class="p">)</span>
 
 <span class="c1"># Realtor inputs --</span>
-<span class="n">realtor_hotness_data</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/RDC_MarketHotness_Monthly_Zip.csv&quot;</span><span class="p">,</span>
+<span class="n">realtor_hotness_data</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Realtor/RDC_MarketHotness_Monthly_Zip.csv&quot;</span><span class="p">,</span>
                                       <span class="n">source</span> <span class="o">=</span> <span class="s1">&#39;Realtor&#39;</span><span class="p">)</span>
 
-<span class="n">realtor_core_inventory</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;data/RDC_InventoryCoreMetrics_Zip.csv&#39;</span><span class="p">,</span>
+<span class="n">realtor_core_inventory</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;data/Realtor/RDC_InventoryCoreMetrics_Zip.csv&#39;</span><span class="p">,</span>
                                  <span class="n">source</span> <span class="o">=</span> <span class="s1">&#39;Realtor&#39;</span><span class="p">,</span> <span class="n">geo_filter_values</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span>
 
-<span class="n">realtor_core_inventory_sf</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/RDC_InventoryCoreMetrics_Zip_sfh.csv&quot;</span><span class="p">,</span>
+<span class="n">realtor_core_inventory_sf</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Realtor/RDC_InventoryCoreMetrics_Zip_sfh.csv&quot;</span><span class="p">,</span>
                                  <span class="n">source</span> <span class="o">=</span> <span class="s1">&#39;Realtor&#39;</span><span class="p">,</span> <span class="n">geo_filter_values</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span>
 
-<span class="n">realtor_core_inventory_mf</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/RDC_InventoryCoreMetrics_Zip_cth.csv&quot;</span><span class="p">,</span>
+<span class="n">realtor_core_inventory_mf</span> <span class="o">=</span> <span class="n">Property_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Realtor/RDC_InventoryCoreMetrics_Zip_cth.csv&quot;</span><span class="p">,</span>
                                  <span class="n">source</span> <span class="o">=</span> <span class="s1">&#39;Realtor&#39;</span><span class="p">,</span> <span class="n">geo_filter_values</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span>
 </pre></div>
 

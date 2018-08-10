@@ -264,7 +264,8 @@
         <span class="k">if</span> <span class="n">account_for_area</span> <span class="ow">and</span> <span class="n">divide_area_by</span> <span class="o">==</span> <span class="s1">&#39;polygon&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">precise_matches</span><span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">/</span><span class="n">polygon</span><span class="o">.</span><span class="n">area</span>
         <span class="k">elif</span> <span class="n">divide_area_by</span> <span class="o">==</span> <span class="s1">&#39;nonempty&#39;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Cannot divide_area_by by the total area of the nonempty intersections when factor is None&#39;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Cannot divide_area_by by the total area of the nonempty intersections when factor is None&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">precise_matches</span><span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">/</span><span class="n">polygon</span><span class="o">.</span><span class="n">area</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">precise_matches</span><span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 

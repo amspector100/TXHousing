@@ -154,19 +154,23 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">boundaries</span><span class="p">,</span> <span class="n">zoning</span>
 
 <span class="c1"># Globals for municipalities -----------------------------------------------------------------------------------------</span>
-<span class="n">austin_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp&quot;</span>
+<span class="c1"># Austin</span>
+<span class="n">austin_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/austin_parcels_2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp&quot;</span>
 
-<span class="n">dallas_parcel_data_path_2013</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/Dallas County Parcels 2013/geo_export_9b090abf-d5d9-4c74-a6be-4486e75ee147.shp&quot;</span>
-<span class="n">dallas_parcel_data_path_2016</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/Dallas County Parcels 2016/geo_export_bd65f212-41ce-4166-804a-5dc5ef85ee84.shp&quot;</span>
+<span class="c1"># Dallas</span>
+<span class="n">dallas_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/dalllas_county_2018/PARCEL/PARCEL.shp&quot;</span><span class="c1"># 2018</span>
+<span class="n">dallas_county_appraisal_path</span> <span class="o">=</span> <span class="s1">&#39;data/Parcel/dallas_county_parcel_data/ACCOUNT_APPRL_YEAR.csv&#39;</span>
+<span class="n">dallas_county_res_path</span> <span class="o">=</span> <span class="s1">&#39;data/Parcel/dallas_county_parcel_data/res_detail.csv&#39;</span>
+<span class="n">dallas_county_land_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/dallas_county_parcel_data/land.csv&quot;</span>
 
-<span class="n">harris_parcel_path_2018</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/Harris_Parcels_2018/Parcels.shp&quot;</span>
+<span class="c1"># Harris</span>
+<span class="n">harris_parcel_path_2018</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/Harris_Parcels_2018/Parcels.shp&quot;</span>
 
-<span class="c1"># Extra parcel feature files and their columns for Harris - unfortunately these are not part of the data.</span>
-<span class="n">harris_parcel_land_path_2018</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/Harris_Parcel_Land_Features/land.txt&quot;</span>
-<span class="n">harris_parcel_appraisal_path_2018</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/Harris_Parcel_Land_Features/real_acct.txt&quot;</span>
-<span class="n">harris_parcel_building_res_path_2018</span> <span class="o">=</span> <span class="s1">&#39;data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_res.txt&#39;</span>
-<span class="n">harris_parcel_building_other_path_2018</span> <span class="o">=</span> <span class="s1">&#39;data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_other.txt&#39;</span>
-
+<span class="c1"># Extra parcel feature files and their columns for Harris - unfortunately the columns are not part of the data.</span>
+<span class="n">harris_parcel_land_path_2018</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/Harris_Parcel_Land_Features/land.txt&quot;</span>
+<span class="n">harris_parcel_appraisal_path_2018</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/Harris_Parcel_Land_Features/real_acct.txt&quot;</span>
+<span class="n">harris_parcel_building_res_path_2018</span> <span class="o">=</span> <span class="s1">&#39;data/Parcel/Harris_Parcel_Land_Features/building_res.txt&#39;</span>
+<span class="n">harris_parcel_building_other_path_2018</span> <span class="o">=</span> <span class="s1">&#39;data/Parcel/Harris_Parcel_Land_Features/building_other.txt&#39;</span>
 <span class="n">houston_land_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ACCOUNT&quot;</span><span class="p">,</span> <span class="s2">&quot;LINE_NUMBER&quot;</span><span class="p">,</span> <span class="s2">&quot;LAND_USE_CODE&quot;</span><span class="p">,</span> <span class="s2">&quot;LAND_USE_DSCR&quot;</span><span class="p">,</span> <span class="s2">&quot;SITE_CD&quot;</span><span class="p">,</span> <span class="s2">&quot;SITE_CD_DSCR&quot;</span><span class="p">,</span>
                         <span class="s2">&quot;SITE_ADJ&quot;</span><span class="p">,</span> <span class="s2">&quot;UNIT_TYPE&quot;</span><span class="p">,</span> <span class="s2">&quot;UNITS&quot;</span><span class="p">,</span> <span class="s2">&quot;SIZE_FACTOR&quot;</span><span class="p">,</span> <span class="s2">&quot;SITE_FACT&quot;</span><span class="p">,</span> <span class="s2">&quot;APPR_OVERRIDE_FACTOR&quot;</span><span class="p">,</span>
                         <span class="s2">&quot;APPR_OVERRIDE_REASON&quot;</span><span class="p">,</span> <span class="s2">&quot;TOT_ADJ&quot;</span><span class="p">,</span> <span class="s2">&quot;UNIT_PRICE&quot;</span><span class="p">,</span> <span class="s2">&quot;ADJ_UNIT_PRICE&quot;</span><span class="p">,</span> <span class="s2">&quot;VALUE&quot;</span><span class="p">,</span> <span class="s2">&quot;OVERRIDE_VALUE&quot;</span><span class="p">]</span>
@@ -200,7 +204,6 @@
                                 <span class="s2">&quot;EFFECTIVE_AREA&quot;</span><span class="p">,</span> <span class="s2">&quot;BASE_AREA&quot;</span><span class="p">,</span> <span class="s2">&quot;PERIMETER&quot;</span><span class="p">,</span> <span class="s2">&quot;PERCENT_COMPLETE&quot;</span><span class="p">,</span> <span class="s2">&quot;CATEGORY&quot;</span><span class="p">,</span>
                                 <span class="s2">&quot;CATEGORY_DSCR&quot;</span><span class="p">,</span> <span class="s2">&quot;PROPERTY_NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;UNITS&quot;</span><span class="p">,</span> <span class="s2">&quot;NET_RENT_AREA&quot;</span><span class="p">,</span> <span class="s2">&quot;LEASE_RATE&quot;</span><span class="p">,</span>
                                 <span class="s2">&quot;OCCUPANCY_RATE&quot;</span><span class="p">,</span> <span class="s2">&quot;TOTAL_INCOME&quot;</span><span class="p">]</span>
-
 
 <div class="viewcode-block" id="Parcel"><a class="viewcode-back" href="../../../data_processing.html#TXHousing.data_processing.parcel.Parcel">[docs]</a><span class="k">class</span> <span class="nc">Parcel</span><span class="p">(</span><span class="n">boundaries</span><span class="o">.</span><span class="n">Boundaries</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Class for Parcel Data.</span>
@@ -455,7 +458,6 @@
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished processing </span><span class="si">{}</span><span class="s1"> parcel shapefile; took </span><span class="si">{}</span><span class="s1"> since initialization&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                                                                                              <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">time0</span><span class="p">))</span></div></div>
 
-
 <span class="c1"># Specific processing functions --------------------------------------------------------------------------------------</span>
 
 <div class="viewcode-block" id="process_austin_parcel_data"><a class="viewcode-back" href="../../../data_processing.html#TXHousing.data_processing.parcel.process_austin_parcel_data">[docs]</a><span class="k">def</span> <span class="nf">process_austin_parcel_data</span><span class="p">():</span>
@@ -476,29 +478,6 @@
             <span class="k">return</span> <span class="n">s</span>
     <span class="n">parcel_data</span><span class="p">[</span><span class="s1">&#39;basezone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parcel_data</span><span class="p">[</span><span class="s1">&#39;basezone&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">format_basezone</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">parcel_data</span></div>
-
-<div class="viewcode-block" id="join_dallas_parcel_data"><a class="viewcode-back" href="../../../data_processing.html#TXHousing.data_processing.parcel.join_dallas_parcel_data">[docs]</a><span class="k">def</span> <span class="nf">join_dallas_parcel_data</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Joins 2013 and 2016 Dallas parcel data. Hopefully this will never be necessary as it takes a while.&quot;&quot;&quot;</span>
-
-    <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reading 2013 file&#39;</span><span class="p">)</span>
-    <span class="n">p2013</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">dallas_parcel_data_path_2013</span><span class="p">)</span>
-    <span class="n">p2013</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s1">&#39;gis_acct&#39;</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="c1"># Only drops about 700/300K</span>
-    <span class="n">p2013</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_2013&#39;</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">p2013</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
-    <span class="n">p2013</span> <span class="o">=</span> <span class="n">p2013</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;gis_acct_2013&#39;</span><span class="p">:</span> <span class="s1">&#39;gis_acct&#39;</span><span class="p">})</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished reading 2013 file, took </span><span class="si">{}</span><span class="s1">. Now reading 2016 file.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">))</span>
-    <span class="n">p2016</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">dallas_parcel_data_path_2016</span><span class="p">)</span>
-    <span class="n">p2016</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s1">&#39;gis_acct&#39;</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="c1"># Only drops about 750/400K</span>
-    <span class="n">p2016</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_2016&#39;</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">p2016</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
-    <span class="n">p2016</span> <span class="o">=</span> <span class="n">p2016</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;gis_acct_2016&#39;</span><span class="p">:</span> <span class="s1">&#39;gis_acct&#39;</span><span class="p">})</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished reading 2016 file, took </span><span class="si">{}</span><span class="s1">. Now merging files.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">))</span>
-    <span class="n">parcel_data</span> <span class="o">=</span> <span class="n">p2016</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">p2013</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="s1">&#39;gis_acct&#39;</span><span class="p">)</span>
-    <span class="n">parcel_data</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">parcel_data</span><span class="p">[[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">parcel_data</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="s1">&#39;geometry&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">col</span><span class="p">]],</span>
-                                   <span class="n">geometry</span> <span class="o">=</span> <span class="n">parcel_data</span><span class="p">[</span><span class="s1">&#39;geometry_2016&#39;</span><span class="p">])</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">parcel_data</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">parcel_data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">parcel_data</span></div>
 
 <div class="viewcode-block" id="process_houston_parcel_data"><a class="viewcode-back" href="../../../data_processing.html#TXHousing.data_processing.parcel.process_houston_parcel_data">[docs]</a><span class="k">def</span> <span class="nf">process_houston_parcel_data</span><span class="p">(</span><span class="n">feature_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">harris_parcel_building_res_path_2018</span><span class="p">],</span>
@@ -558,13 +537,15 @@
 <span class="c1"># Cache parcel data --------------------------------------------------------------------------------------------------</span>
 
 <span class="k">def</span> <span class="nf">get_cached_municipal_parcel_path</span><span class="p">(</span><span class="n">cityname</span><span class="p">):</span>
-    <span class="k">return</span> <span class="s1">&#39;data/caches/municipal_parcel/</span><span class="si">{}</span><span class="s1">_municipal_parcel.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cityname</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;data/Caches/municipal_parcel/</span><span class="si">{}</span><span class="s1">_municipal_parcel.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cityname</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">get_cached_all_parcel_path_csv</span><span class="p">(</span><span class="n">cityname</span><span class="p">):</span>
-    <span class="k">return</span> <span class="s1">&#39;data/caches/all_parcel/</span><span class="si">{}</span><span class="s1">_all_parcel.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cityname</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;data/Caches/all_parcel/</span><span class="si">{}</span><span class="s1">_all_parcel.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cityname</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">get_cached_all_parcel_path_shp</span><span class="p">(</span><span class="n">cityname</span><span class="p">):</span>
-    <span class="k">return</span> <span class="s1">&#39;data/caches/all_parcel/</span><span class="si">{}</span><span class="s1">_all_parcel.shp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cityname</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;data/Caches/all_parcel/</span><span class="si">{}</span><span class="s1">_all_parcel.shp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cityname</span><span class="p">)</span>
+
+<span class="n">all_dallas_zoning_path_csv</span> <span class="o">=</span> <span class="s1">&#39;data/Zoning/processed_north_texas_data/zones.csv&#39;</span>
 
 <span class="c1"># State code dictionary is used for a lot of different counties, mostly around Houston</span>
 <span class="n">state_sptbcode_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Single Family&#39;</span><span class="p">:[</span><span class="s1">&#39;A1&#39;</span><span class="p">,</span> <span class="s1">&#39;A2&#39;</span><span class="p">],</span> <span class="s1">&#39;Multifamily&#39;</span><span class="p">:[</span><span class="s1">&#39;A3&#39;</span><span class="p">,</span> <span class="s1">&#39;A4&#39;</span><span class="p">,</span> <span class="s1">&#39;B1&#39;</span><span class="p">,</span> <span class="s1">&#39;B2&#39;</span><span class="p">,</span> <span class="s1">&#39;B3&#39;</span><span class="p">,</span> <span class="s1">&#39;B4&#39;</span><span class="p">]}</span>
@@ -636,7 +617,6 @@
                                        <span class="n">right_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ACCOUNT_NUM&#39;</span><span class="p">,</span> <span class="s1">&#39;ACCOUNT_NUM&#39;</span><span class="p">],</span>
                                        <span class="n">save_path</span> <span class="o">=</span> <span class="n">get_cached_municipal_parcel_path</span><span class="p">(</span><span class="s1">&#39;dallas&#39;</span><span class="p">))</span></div>
 
-
 <div class="viewcode-block" id="cache_all_parcel_data"><a class="viewcode-back" href="../../../data_processing.html#TXHousing.data_processing.parcel.cache_all_parcel_data">[docs]</a><span class="k">def</span> <span class="nf">cache_all_parcel_data</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Creates csvs which store the centroids, area, and other relevant features about each parcel for all of the</span>
 <span class="sd">    surrounding counties of each core municipality.&quot;&quot;&quot;</span>
@@ -649,12 +629,12 @@
     <span class="c1"># Houston  --------------------------------------------------------------------------------------------</span>
     <span class="c1"># All of these counties use the state code dictionary - manually checked that this is the right thing to do</span>
 
-    <span class="n">fort_bend_parcel_path</span> <span class="o">=</span> <span class="s1">&#39;data/parcels/fort_bend_parcels_2018/CAMASUMMARY.shp&#39;</span>
+    <span class="n">fort_bend_parcel_path</span> <span class="o">=</span> <span class="s1">&#39;data/Parcel/fort_bend_parcels_2018/CAMASUMMARY.shp&#39;</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fort_bend_parcel_path</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Fort Bend County Parcel not in the data directory - use cached data instead or </span>
 <span class="s2">            download the raw data from  &#39;https://fbcad.org/District-Information/GIS-Data&#39;.&quot;&quot;&quot;</span><span class="p">)</span>
 
-    <span class="n">montgomery_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/parcels/montgomery_parcels_2018/Tax_Parcel_View.shp&quot;</span>  <span class="c1"># 2018</span>
+    <span class="n">montgomery_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/montgomery_parcels_2018/Tax_Parcel_View.shp&quot;</span>  <span class="c1"># 2018</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">montgomery_county_parcel_path</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Montgomery County Parcel not in the data directory - use cached data instead or </span>
 <span class="s2">            download the raw data from &#39;https://data-moco.opendata.arcgis.com/datasets/tax-parcel-view&#39;.&quot;&quot;&quot;</span><span class="p">)</span>
@@ -714,14 +694,14 @@
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished with Houston, global time is </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">))</span>
 
     <span class="c1"># Austin  --------------------------------------------------------------------------------------------</span>
-    <span class="n">travis_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/parcels/travis_county_parcels_2016/Parcels_Travis_2016.shp&quot;</span>  <span class="c1"># 2016</span>
-    <span class="n">travis_county_data_path</span> <span class="o">=</span> <span class="s1">&#39;data/parcels/travis_county_parcel_data/land_det.csv&#39;</span>
+    <span class="n">travis_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/travis_county_parcels_2016/Parcels_Travis_2016.shp&quot;</span>  <span class="c1"># 2016</span>
+    <span class="n">travis_county_data_path</span> <span class="o">=</span> <span class="s1">&#39;data/Parcel/travis_county_parcel_data/land_det.csv&#39;</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">travis_county_parcel_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">travis_county_data_path</span><span class="p">))</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Travis County Parcel Shapes/Data not in the data directory - use cached data </span>
 <span class="s2">            instead or download the raw data from https://www.traviscad.org/reports-request/&quot;&quot;&quot;</span><span class="p">)</span>
 
-    <span class="n">williamson_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/parcels/williamson_parcels_2016/Parcel_Poly.shp&quot;</span>  <span class="c1"># 2017</span>
-    <span class="n">williamson_county_real_improvement_path</span> <span class="o">=</span> <span class="s2">&quot;data/parcels/williamson_data_2016b/Improvement.txt&quot;</span>  <span class="c1"># 2018</span>
+    <span class="n">williamson_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/williamson_parcels_2016/Parcel_Poly.shp&quot;</span>  <span class="c1"># 2017</span>
+    <span class="n">williamson_county_real_improvement_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/williamson_data_2016b/Improvement.txt&quot;</span>  <span class="c1"># 2018</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">williamson_county_parcel_path</span><span class="p">)</span> <span class="ow">and</span>
         <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">williamson_county_real_improvement_path</span><span class="p">))</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Williamson County Parcel Shapes/Data not in the data directory - use cached data </span>
@@ -770,17 +750,17 @@
     <span class="c1"># Dallas -----------------------------------------------------------------------------------------------</span>
 
     <span class="c1"># Extra paths for the others. Make sure they exist or raise errors otherwise.</span>
-    <span class="n">collin_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/parcels/collin_county_2018/parcels.shp&quot;</span>  <span class="c1"># 2018</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">collin_county_parcel_path</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>        
+    <span class="n">collin_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/collin_county_2018/parcels.shp&quot;</span>  <span class="c1"># 2018</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">collin_county_parcel_path</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Collin County Parcel not in the data directory - use cached data instead or </span>
 <span class="s2">            download the raw data from https://www.collincad.org/downloads.&quot;&quot;&quot;</span><span class="p">)</span>
 
-    <span class="n">denton_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/parcels/denton_county_parcels_2018/County_Parcels.shp&quot;</span>  <span class="c1"># 2018</span>
+    <span class="n">denton_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/denton_county_parcels_2018/County_Parcels.shp&quot;</span>  <span class="c1"># 2018</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">denton_county_parcel_path</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Denton County Parcel not in the data directory - use cached data instead or </span>
 <span class="s2">            download the raw data from https://www.dentoncad.com/forms-and-downloads.&quot;&quot;&quot;</span><span class="p">)</span>
 
-    <span class="n">processed_tarrant_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/parcels/processed_tarrant_county_parcels_2018/TADData.shp&quot;</span>
+    <span class="n">processed_tarrant_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/Parcel/processed_tarrant_county_parcels_2018/TADData.shp&quot;</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">processed_tarrant_county_parcel_path</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Processed Tarrant County Parcel data not in the data directory. Use the cached</span>
 <span class="s2">            data or download the raw data from https://www.tad.org/data-download/ and run the </span>
@@ -855,14 +835,33 @@
     <span class="n">all_dallas_parcels_csv</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">get_cached_all_parcel_path_csv</span><span class="p">(</span><span class="s1">&#39;dallas&#39;</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished with Dallas, global time is </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">))</span></div>
 
+<div class="viewcode-block" id="cache_north_texas_zoning_data"><a class="viewcode-back" href="../../../data_processing.html#TXHousing.data_processing.parcel.cache_north_texas_zoning_data">[docs]</a><span class="k">def</span> <span class="nf">cache_north_texas_zoning_data</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;  Because we use the north texas zoning data to validate parcel results, we apply the parcel processing functions</span>
+<span class="sd">     to the north texas zoning data and then cache the results.(This is a bit hacky, because you wouldn&#39;t expect to see</span>
+<span class="sd">     zoning data fit under the parcel class, but so be it.) &quot;&quot;&quot;</span>
 
+    <span class="n">final_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;account&#39;</span><span class="p">,</span> <span class="s1">&#39;broad_zone&#39;</span><span class="p">,</span> <span class="s1">&#39;zone_feature&#39;</span><span class="p">,</span> <span class="s1">&#39;dist_to_center&#39;</span><span class="p">,</span> <span class="s1">&#39;area_sqft&#39;</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="s1">&#39;county&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;zipcode&#39;</span><span class="p">,</span> <span class="s1">&#39;place&#39;</span><span class="p">,</span> <span class="s1">&#39;ua&#39;</span><span class="p">]</span>
 
+    <span class="k">def</span> <span class="nf">retrieve_north_texas_data</span><span class="p">():</span>
+        <span class="n">north_texas_data</span> <span class="o">=</span> <span class="n">zoning</span><span class="o">.</span><span class="n">north_texas_inputs</span><span class="o">.</span><span class="n">process_zoning_shapefile</span><span class="p">(</span><span class="n">broaden</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">to_latlong</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">north_texas_data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">north_texas_data</span><span class="o">.</span><span class="n">index</span> <span class="c1"># The data has no ID so we make a unique one</span>
+        <span class="k">return</span> <span class="n">north_texas_data</span>
 
+    <span class="n">north_texas_data</span> <span class="o">=</span> <span class="n">Parcel</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">account_col</span> <span class="o">=</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">county</span> <span class="o">=</span> <span class="s1">&#39;COUNTY&#39;</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NT_Zoning&#39;</span><span class="p">,</span>
+                              <span class="n">processing_function</span> <span class="o">=</span> <span class="n">retrieve_north_texas_data</span><span class="p">)</span>
 
-<span class="n">dallas_county_parcel_path</span> <span class="o">=</span> <span class="s2">&quot;data/parcels/dalllas_county_2018/PARCEL/PARCEL.shp&quot;</span><span class="c1"># 2018</span>
-<span class="n">dallas_county_land_path</span> <span class="o">=</span> <span class="s2">&quot;data/parcels/dallas_county_parcel_data/land.csv&quot;</span>
-<span class="n">dallas_county_appraisal_path</span> <span class="o">=</span> <span class="s1">&#39;data/parcels/dallas_county_parcel_data/ACCOUNT_APPRL_YEAR.csv&#39;</span>
-<span class="n">dallas_county_res_path</span> <span class="o">=</span> <span class="s1">&#39;data/parcels/dallas_county_parcel_data/res_detail.csv&#39;</span>
+    <span class="n">north_texas_data</span><span class="o">.</span><span class="n">process_parcel_data</span><span class="p">(</span><span class="n">broad_zone_feature</span> <span class="o">=</span> <span class="s1">&#39;CATEGORY&#39;</span><span class="p">,</span>
+                                         <span class="n">broad_zone_dictionary</span>  <span class="o">=</span> <span class="n">zoning</span><span class="o">.</span><span class="n">north_texas_inputs</span><span class="o">.</span><span class="n">base_zones</span><span class="p">,</span>
+                                         <span class="n">zoning_input</span> <span class="o">=</span> <span class="n">zoning</span><span class="o">.</span><span class="n">dallas_inputs</span><span class="p">,</span>
+                                         <span class="n">bounding_counties</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Erath&#39;</span><span class="p">,</span> <span class="s1">&#39;Johnson&#39;</span><span class="p">,</span> <span class="s1">&#39;Navarro&#39;</span><span class="p">,</span> <span class="s1">&#39;Hood&#39;</span><span class="p">,</span> <span class="s1">&#39;Palo Pinto&#39;</span><span class="p">,</span>
+                                                                        <span class="s1">&#39;Parker&#39;</span><span class="p">,</span> <span class="s1">&#39;Tarrant&#39;</span><span class="p">,</span> <span class="s1">&#39;Kaufman&#39;</span><span class="p">,</span> <span class="s1">&#39;Somervell&#39;</span><span class="p">,</span> <span class="s1">&#39;Wise&#39;</span><span class="p">,</span>
+                                                                        <span class="s1">&#39;Collin&#39;</span><span class="p">,</span> <span class="s1">&#39;Hunt&#39;</span><span class="p">,</span> <span class="s1">&#39;Rockwall&#39;</span><span class="p">,</span> <span class="s1">&#39;Dallas&#39;</span><span class="p">,</span> <span class="s1">&#39;Denton&#39;</span><span class="p">,</span>
+                                                                        <span class="s1">&#39;Ellis&#39;</span><span class="p">],</span>
+                                         <span class="n">merge_paths</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">north_texas_data</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">north_texas_data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">final_columns</span><span class="p">]</span>
+
+    <span class="n">north_texas_data</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">all_dallas_zoning_path_csv</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
