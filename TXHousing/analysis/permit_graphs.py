@@ -50,7 +50,7 @@ def plot_permit_scatterplot():
                                                                                                  'NEW HI-']))]
 
     # Now get zip data and merge with realtor data
-    print('Working with Zip Boundaries, time is {}'.format(time.time() - time0))
+    print('Working with Zip Boundaries and Permit Data, time is {}'.format(time.time() - time0))
     zipdata = boundaries.ZipBoundaries()
     zipdata.add_property_data(property.realtor_core_inventory_sf, features = ['Median Listing Price'], rsuffix = '_sf')
     zipdata.add_property_data(property.realtor_core_inventory_mf, features = ['Median Listing Price'], rsuffix = '_mf')
@@ -66,7 +66,6 @@ def plot_permit_scatterplot():
     # Spatial join with austin/dallas permit data - houston permit data already has zipcode information in it
     for pdata, colname in zip([austin_sf, austin_mf, dallas_sf, dallas_mf],
                               ['austin_sf', 'austin_mf', 'dallas_sf', 'dallas_mf']):
-        print(colname, time.time() - time0)
         intersections = zipdata.fast_intersection(pdata)
         counted = intersections.groupby(intersections).count()
         zipdata.data[colname] = counted
@@ -83,7 +82,6 @@ def plot_permit_scatterplot():
     sfplot = (ggplot(sfresult, aes(x = 'Median Listing Price', y = 'num_permits', color = 'City'))
               + geom_point()
               + stat_smooth(method='lowess', span=0.5)
-              + stat_smooth(data = sfresult.loc[sfresult['Median Listing Price'] < 1500000], method = 'lm', show_guide = True)
               + facet_wrap('City', scales='fixed')
               + scale_x_continuous(limits=(0, 2200000), breaks=(0, 1000000, 2000000))
               + scale_y_continuous(limits=(0, y_max))
@@ -155,7 +153,6 @@ def plot_permit_locations(save_path = 'Figures/Permit/all_cities_permit_rings.sv
 
     all_permit_data = pd.concat([austin_permit_rings, dallas_permit_rings, houston_permit_rings], axis = 0)
     all_permit_data['dist_to_center'] = all_permit_data.index
-    print(all_permit_data)
 
     all_permit_data = pd.melt(all_permit_data, var_name = 'permit_type', value_name = 'num_permits', id_vars = ['City', 'dist_to_center'])
     all_permit_data['permit_type'] = all_permit_data['permit_type'].apply(lambda x: 'Single Family' if x == 'SF' else 'Multifamily')
@@ -168,5 +165,4 @@ def plot_permit_locations(save_path = 'Figures/Permit/all_cities_permit_rings.sv
                           x = 'Distance from City Center (Miles)',
                           y = 'Number of Construction Permits Issued per Square Mile')
                    + scale_x_discrete(expand=(0, 0.1)))
-    print(permit_plot)
     permit_plot.save(save_path, width = width, height = height)

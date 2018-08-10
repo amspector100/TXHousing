@@ -212,7 +212,8 @@ def add_counties(ax, county_list):
     for idx, row in counties.iterrows():
         ax.annotate(s=row['NAME'], xy=row['coords'], horizontalalignment='center')
 
-def map_broad_zones(data, county_list, name, minlat, maxlat, minlong, maxlong, save_path, colordic = None):
+def map_broad_zones(data, county_list, name, minlat, maxlat, minlong, maxlong, save_path, colordic = None,
+                    featurename = 'Base Zoning'):
     """Plots an actual map of broad_zones in a data source within the lat/long bounds. If you want to do this for Austin
     or Dallas, just use the map_broad_zones_dallas_austin wrapper.
 
@@ -221,7 +222,8 @@ def map_broad_zones(data, county_list, name, minlat, maxlat, minlong, maxlong, s
     :param name: A name to be used in titling the egraph.
     :param minlat, maxlat, minlong, maxlong: Bounds of the graph
     :param save_path: A path at which to save the map.
-    :param colordic: Dictionary which maps broad_zones to colors."""
+    :param colordic: Dictionary which maps broad_zones to colors.
+    :param featurename: Used for the title of the graph. Graph title is {featurename} around {name}."""
 
     time0 = time.time()
 
@@ -260,7 +262,7 @@ def map_broad_zones(data, county_list, name, minlat, maxlat, minlong, maxlong, s
         ax.set_ylabel('Latitude')
         ax.set_ylim(minlat, maxlat)
         ax.set_xlim(minlong, maxlong)
-        ax.set_title('Base Zoning Around {}, TX'.format(name))
+        ax.set_title('{} Around {}, TX'.format(featurename, name))
         ax.legend(tuple(legend_handlers), tuple(zones), fontsize = 6)
 
     else:
@@ -281,7 +283,8 @@ def map_broad_zones_dallas_austin(plot_austin = True, plot_dallas = True):
                         county_list = ['Travis', 'Williamson'],
                         minlat=30.09, maxlat=30.76, minlong=-98.11, maxlong=-97.43,
                         name = 'Austin',
-                        save_path = 'Figures/Zoning/Austin_base_zones.png')
+                        save_path = 'Figures/Zoning/Austin_base_zones.png',
+                        featurename = 'Zoning')
 
     if plot_dallas:
         north_texas_data = zoning.north_texas_inputs.process_zoning_shapefile()
@@ -289,56 +292,60 @@ def map_broad_zones_dallas_austin(plot_austin = True, plot_dallas = True):
                         county_list = ['Dallas', 'Denton', 'Tarrant', 'Collin'],
                         minlat=32.49, maxlat=33.51, minlong=-97.71, maxlong=-96.29,
                         name = 'Dallas',
-                        save_path = 'Figures/Zoning/north_texas_base_zones.png')
+                        save_path = 'Figures/Zoning/north_texas_base_zones.png',
+                        featurename = 'Land Use')
 
 
 
-def plot_zone_income_histogram(save_path = 'Figures/Zoning/income_housing_typology.svg',
-                               cache_path = 'shared_data/calculations/zoning_income_data.csv'):
+def plot_zone_income_histogram(calculate = True,
+                                save_path = 'Figures/Zoning/income_housing_typology.svg',
+                                cache_path = 'shared_data/calculations/zoning_income_data.csv'):
     """ Plots the distribution of incomes conditional on broad zones in Austin and Dallas"""
 
-    # Get block data with income brackets
-    block_data = boundaries.BlockBoundaries(['X19_INCOME'], cities = ['Austin', 'Dallas'])
-    factor_dictionary =   {'B19001e2':0, # Start values, the next value is the end of the bracket
-                           'B19001e3':10000,
-                           'B19001e4':15000,
-                           'B19001e5':20000,
-                           'B19001e6':25000,
-                           'B19001e7':30000,
-                           'B19001e8':35000,
-                           'B19001e9':40000,
-                           'B19001e10':45000,
-                           'B19001e11':50000,
-                           'B19001e12':60000,
-                           'B19001e13':75000,
-                           'B19001e14':100000,
-                           'B19001e15':125000,
-                           'B19001e16':150000,
-                           'B19001e17':200000}
+    if calculate:
 
-    data_features = [factor_dictionary[key] for key in factor_dictionary]
-    block_data.data = block_data.data.rename(columns = factor_dictionary)
+        # Get block data with income brackets
+        block_data = boundaries.BlockBoundaries(['X19_INCOME'], cities = ['Austin', 'Dallas'])
+        factor_dictionary =   {'B19001e2':0, # Start values, the next value is the end of the bracket
+                               'B19001e3':10000,
+                               'B19001e4':15000,
+                               'B19001e5':20000,
+                               'B19001e6':25000,
+                               'B19001e7':30000,
+                               'B19001e8':35000,
+                               'B19001e9':40000,
+                               'B19001e10':45000,
+                               'B19001e11':50000,
+                               'B19001e12':60000,
+                               'B19001e13':75000,
+                               'B19001e14':100000,
+                               'B19001e15':125000,
+                               'B19001e16':150000,
+                               'B19001e17':200000}
 
-    # Austin/Dallas Zones
-    dallas_zones = zoning.dallas_inputs.process_zoning_shapefile()
-    dallas_zones = dallas_zones.loc[dallas_zones['broad_zone'].isin(['Single Family', 'Multifamily'])]
-    austin_zones = zoning.austin_inputs.process_zoning_shapefile()
-    austin_zones = austin_zones.loc[austin_zones['broad_zone'].isin(['Single Family', 'Multifamily'])]
+        data_features = [factor_dictionary[key] for key in factor_dictionary]
+        block_data.data = block_data.data.rename(columns = factor_dictionary)
 
-    # Pull income statistics
-    austin_zones = block_data.push_features(austin_zones, data_features)
-    dallas_zones = block_data.push_features(dallas_zones, data_features)
+        # Austin/Dallas Zones
+        dallas_zones = zoning.dallas_inputs.process_zoning_shapefile()
+        dallas_zones = dallas_zones.loc[dallas_zones['broad_zone'].isin(['Single Family', 'Multifamily'])]
+        austin_zones = zoning.austin_inputs.process_zoning_shapefile()
+        austin_zones = austin_zones.loc[austin_zones['broad_zone'].isin(['Single Family', 'Multifamily'])]
 
-    # Plot
-    austin_zones['City'] = 'Austin'
-    dallas_zones['City'] = 'Dallas'
-    selected_columns = data_features
-    selected_columns.extend(['broad_zone', 'City']) # We don't need geometry anymore
-    all_zones = pd.concat([austin_zones[selected_columns], dallas_zones[selected_columns]], axis = 0)
-    final_data = all_zones.groupby(['City', 'broad_zone']).sum()
-    final_data.to_csv(cache_path)
+        # Pull income statistics
+        austin_zones = block_data.push_features(austin_zones, data_features)
+        dallas_zones = block_data.push_features(dallas_zones, data_features)
 
-    # Read in data just to get it in a consistent format - this is very fast anyways, it's like a 1 kb file
+        # Calculate and cache
+        austin_zones['City'] = 'Austin'
+        dallas_zones['City'] = 'Dallas'
+        selected_columns = data_features
+        selected_columns.extend(['broad_zone', 'City']) # We don't need geometry anymore
+        all_zones = pd.concat([austin_zones[selected_columns], dallas_zones[selected_columns]], axis = 0)
+        final_data = all_zones.groupby(['City', 'broad_zone']).sum()
+        final_data.to_csv(cache_path)
+
+    # Read in data
     final_data = pd.read_csv(cache_path)
     final_data = final_data.melt(var_name = 'Household_Income', value_name = 'Count', id_vars = ['City', 'broad_zone'])
 

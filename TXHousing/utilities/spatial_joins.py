@@ -118,7 +118,8 @@ def polygons_intersect_single_polygon(small_polygons, polygon, spatial_index, ge
         if account_for_area and divide_area_by == 'polygon':
             return precise_matches['area'].sum()/polygon.area
         elif divide_area_by == 'nonempty':
-            raise ValueError('Cannot divide_area_by by the total area of the nonempty intersections when factor is None')
+            warnings.warn('Cannot divide_area_by by the total area of the nonempty intersections when factor is None')
+            return precise_matches['area'].sum()/polygon.area
         else:
             return precise_matches['area'].sum()
 

@@ -46,6 +46,7 @@ def texas_job_centers(num_polygons = 4000):
         # Query and find nearest neighbors, subset
         nearest_index = list(spatial_index.nearest((zoning_input.long, zoning_input.lat), num_results = num_polygons))
         city_data = block_data.data.iloc[nearest_index]
+        city_data['geometry'] = city_data['geometry'].simplify(tolerance = 0.001)
 
         # Graph
         choropleth.continuous_choropleth(city_data, factor = 'local_workers_pct',
@@ -58,10 +59,6 @@ def texas_job_centers(num_polygons = 4000):
         folium.TileLayer('cartodbdark_matter').add_to(basemap)
         folium.LayerControl().add_to(basemap)
         basemap.save('Figures/Suburbs/{}_job_choropleth.html'.format(name))
-        print('Graphed for {}'.format(name))
-
-    print('Finished')
-
 
 def analyze_land_use_by_metro(name):
     """ Calculates mean and median lot size as well as the land use by municipality around Austin, Dallas, or Houston,
@@ -229,7 +226,9 @@ def suburbs_scatterplot():
 
 
 # Commuting ------------------------------------------------------------------------------------------------------
-def analyze_transportation_networks(names, zoning_inputs, num_blocks = 5000, step = 2.5, maximum = 60):
+def analyze_transportation_networks(names = ['Austin', 'Dallas', 'Houston'],
+                                    zoning_inputs = [zoning.austin_inputs, zoning.dallas_inputs, zoning.houston_inputs],
+                                    num_blocks = 5000, step = 2.5, maximum = 60):
 
     block_data = boundaries.BlockBoundaries(['X08_COMMUTING', 'X01_AGE_AND_SEX'], cities = None)
 

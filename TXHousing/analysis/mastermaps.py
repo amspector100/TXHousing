@@ -32,9 +32,14 @@ def add_zipdata(ziplist, basemap,
     return zipdata
 
 
-def create_austin_mastermap(save_path = 'Figures/Mastermaps/Austin_Mastermap_v2.html'):
+def create_austin_mastermap(save_path = None):
+    """ Generates Austin Mastermap. Save path defaults to 'Figures/Mastermaps/Austin_Mastermap_v2.html"""
 
     time0 = time.time()
+
+    # Get save_path
+    if save_path is None:
+        save_path = 'Figures/Mastermaps/Austin_Mastermap_v2.html'
 
     basemap = folium.Map([data_processing.zoning.austin_inputs.lat, data_processing.zoning.austin_inputs.long],
                          zoom_start=data_processing.zoning.austin_inputs.zoom)
@@ -114,15 +119,19 @@ def create_austin_mastermap(save_path = 'Figures/Mastermaps/Austin_Mastermap_v2.
     basemap.save(save_path)
 
 
-def create_dallas_mastermap(save_path = 'Figures/Mastermaps/Dallas_Mastermap_v2.html'):
+def create_dallas_mastermap(save_path = None):
     """
     Final graph for dallas.
 
-    :param save_path: The path at which to save the final HTML.
+    :param save_path: The path at which to save the final HTML. Defaults to 'Figures/Mastermaps/Dallas_Mastermap_v2.html'
     :return: None
     """
 
     time0 = time.time()
+
+    # Get save_path
+    if save_path is None:
+        save_path = 'Figures/Mastermaps/Dallas_Mastermap_v2.html'
 
     basemap = folium.Map([data_processing.zoning.dallas_inputs.lat, data_processing.zoning.dallas_inputs.long],
                          zoom_start=data_processing.zoning.dallas_inputs.zoom)
@@ -210,13 +219,17 @@ def create_dallas_mastermap(save_path = 'Figures/Mastermaps/Dallas_Mastermap_v2.
     basemap.save(save_path)
 
 
-def create_houston_mastermap(save_path = 'Figures/Mastermaps/Houston_Mastermap_v2.html'):
+def create_houston_mastermap(save_path = None):
     """Final Houston Mastermap
 
-    :param save_path: The path to save the html to
+    :param save_path: The path to save the html to. Defaults to  'Figures/Mastermaps/Houston_Mastermap_v2.html'.
     :return: None
 
     """
+
+    # Get save_path
+    if save_path is None:
+        save_path = 'Figures/Mastermaps/Houston_Mastermap_v2.html'
 
     basemap = folium.Map([data_processing.zoning.houston_inputs.lat, data_processing.zoning.houston_inputs.long],
                          zoom_start=data_processing.zoning.houston_inputs.zoom)
