@@ -8,19 +8,23 @@ from ..utilities import simple, spatial_joins, measurements
 from . import boundaries, zoning
 
 # Globals for municipalities -----------------------------------------------------------------------------------------
+# Austin
 austin_parcel_path = "data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
 
-dallas_parcel_data_path_2013 = "data/Zoning Shapefiles/Dallas County Parcels 2013/geo_export_9b090abf-d5d9-4c74-a6be-4486e75ee147.shp"
-dallas_parcel_data_path_2016 = "data/Zoning Shapefiles/Dallas County Parcels 2016/geo_export_bd65f212-41ce-4166-804a-5dc5ef85ee84.shp"
+# Dallas
+dallas_county_parcel_path = "data/parcels/dalllas_county_2018/PARCEL/PARCEL.shp"# 2018
+dallas_county_appraisal_path = 'data/parcels/dallas_county_parcel_data/ACCOUNT_APPRL_YEAR.csv'
+dallas_county_res_path = 'data/parcels/dallas_county_parcel_data/res_detail.csv'
+dallas_county_land_path = "data/parcels/dallas_county_parcel_data/land.csv"
 
+# Harris
 harris_parcel_path_2018 = "data/Zoning Shapefiles/Harris_Parcels_2018/Parcels.shp"
 
-# Extra parcel feature files and their columns for Harris - unfortunately these are not part of the data.
+# Extra parcel feature files and their columns for Harris - unfortunately the columns are not part of the data.
 harris_parcel_land_path_2018 = "data/Zoning Shapefiles/Harris_Parcel_Land_Features/land.txt"
 harris_parcel_appraisal_path_2018 = "data/Zoning Shapefiles/Harris_Parcel_Land_Features/real_acct.txt"
 harris_parcel_building_res_path_2018 = 'data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_res.txt'
 harris_parcel_building_other_path_2018 = 'data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_other.txt'
-
 houston_land_columns = ["ACCOUNT", "LINE_NUMBER", "LAND_USE_CODE", "LAND_USE_DSCR", "SITE_CD", "SITE_CD_DSCR",
                         "SITE_ADJ", "UNIT_TYPE", "UNITS", "SIZE_FACTOR", "SITE_FACT", "APPR_OVERRIDE_FACTOR",
                         "APPR_OVERRIDE_REASON", "TOT_ADJ", "UNIT_PRICE", "ADJ_UNIT_PRICE", "VALUE", "OVERRIDE_VALUE"]
@@ -54,7 +58,6 @@ houston_building_other_columns = ["ACCOUNT", "USE_CODE", "BLD_NUM", "IMPRV_TYPE"
                                 "EFFECTIVE_AREA", "BASE_AREA", "PERIMETER", "PERCENT_COMPLETE", "CATEGORY",
                                 "CATEGORY_DSCR", "PROPERTY_NAME", "UNITS", "NET_RENT_AREA", "LEASE_RATE",
                                 "OCCUPANCY_RATE", "TOTAL_INCOME"]
-
 
 class Parcel(boundaries.Boundaries):
     """ Class for Parcel Data.
@@ -330,29 +333,6 @@ def process_austin_parcel_data():
             return s
     parcel_data['basezone'] = parcel_data['basezone'].apply(format_basezone)
 
-    return parcel_data
-
-def join_dallas_parcel_data():
-    """Joins 2013 and 2016 Dallas parcel data. Hopefully this will never be necessary as it takes a while."""
-
-    time0 = time.time()
-    print('Reading 2013 file')
-    p2013 = gpd.read_file(dallas_parcel_data_path_2013)
-    p2013.drop_duplicates('gis_acct', inplace = True) # Only drops about 700/300K
-    p2013.columns = [str(col) + '_2013' for col in p2013.columns]
-    p2013 = p2013.rename(columns = {'gis_acct_2013': 'gis_acct'})
-
-    print('Finished reading 2013 file, took {}. Now reading 2016 file.'.format(time.time() - time0))
-    p2016 = gpd.read_file(dallas_parcel_data_path_2016)
-    p2016.drop_duplicates('gis_acct', inplace = True) # Only drops about 750/400K
-    p2016.columns = [str(col) + '_2016' for col in p2016.columns]
-    p2016 = p2016.rename(columns = {'gis_acct_2016': 'gis_acct'})
-
-    print('Finished reading 2016 file, took {}. Now merging files.'.format(time.time() - time0))
-    parcel_data = p2016.merge(p2013, on = 'gis_acct')
-    parcel_data = gpd.GeoDataFrame(data = parcel_data[[col for col in parcel_data.columns if 'geometry' not in col]],
-                                   geometry = parcel_data['geometry_2016'])
-    print(parcel_data.columns, parcel_data.index)
     return parcel_data
 
 def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path_2018],
@@ -708,12 +688,3 @@ def cache_all_parcel_data():
     all_dallas_parcels_csv = all_dallas_parcels[[col for col in all_dallas_parcels.columns if col != 'geometry']]
     all_dallas_parcels_csv.to_csv(get_cached_all_parcel_path_csv('dallas'))
     print('Finished with Dallas, global time is {}'.format(time.time() - time0))
-
-
-
-
-
-dallas_county_parcel_path = "data/parcels/dalllas_county_2018/PARCEL/PARCEL.shp"# 2018
-dallas_county_land_path = "data/parcels/dallas_county_parcel_data/land.csv"
-dallas_county_appraisal_path = 'data/parcels/dallas_county_parcel_data/ACCOUNT_APPRL_YEAR.csv'
-dallas_county_res_path = 'data/parcels/dallas_county_parcel_data/res_detail.csv'

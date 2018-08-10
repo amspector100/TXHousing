@@ -11,7 +11,6 @@ import numpy as np
 # Set random state for repeatability
 np.random.seed(110)
 
-
 comprehensive_flag = False
 while comprehensive_flag not in ['y', 'n']:
     comprehensive_flag = input("""For test_processing module, would you like to run a comprehensive test? Enter one of [Y/N]""").lower()
@@ -93,8 +92,12 @@ class TestParcelProcessing(unittest.TestCase):
     def test_data_existence(self):
         self.assertTrue(os.path.exists(parcel.austin_parcel_path),
                         'Austin municipal parcel data is not in the data directory; download it from https://data.austintexas.gov/Building-and-Development/Land-Database-2016/nuca-fzpt')
-        self.assertTrue(os.path.exists(parcel.dallas_parcel_data_path_2016),
-                       'Dallas municipal parcel data is not in the data directory; download it from https://dallasopendata.com/Geography-Boundaries/Parcel-Shapefile/hy5f-5hrv')
+        self.assertTrue(os.path.exists(parcel.dallas_county_parcel_path),
+                        """Dallas county parcel data (used to calc municipal parcel data) is not in the data directory; 
+                        download it from http://dallascad.org/contact.aspx""")
+        self.assertTrue((os.path.exists(parcel.dallas_county_appraisal_path) & os.path.exists(parcel.dallas_county_res_path)),
+                        """Dallas county parcel data features are not in the data directory download them from
+                         http://dallascad.org/contact.aspx""")
         self.assertTrue(os.path.exists(parcel.harris_parcel_path_2018),
                         'Houston municipal parcel shapefile is not in the data directory; download it from http://pdata.hcad.org/download/index.html')
         self.assertTrue(os.path.exists(parcel.harris_parcel_building_res_path_2018),
