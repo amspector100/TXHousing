@@ -27,17 +27,17 @@ stopifnot(length(new_cols) == length(old_cols_2010))
 stopifnot(length(new_cols) == length(old_cols_2016))
 
 # Read in and process data. Filtering precedes row-binding to save memory.
-data_2000 <- read_csv('data/DEC_00_SF3_DP4.csv') %>%
+data_2000 <- read_csv('data/Census/DEC_00_SF3_DP4.csv') %>%
   select(one_of(old_cols_2000)) %>%
   rename_at(vars(old_cols_2000), ~ new_cols) %>%
   mutate(Year='2000 (Decennial Census)')
 
-data_2010 <- read_csv('data/ACS_10_5YR_DP04.csv') %>%
+data_2010 <- read_csv('data/Census/ACS_10_5YR_DP04.csv') %>%
   select(one_of(old_cols_2010)) %>%
   rename_at(vars(old_cols_2010), ~ new_cols) %>%
   mutate(Year='2010 (five-year ACS)')
 
-data_2016 <- read_csv('data/ACS_16_5YR_DP04.csv') %>%
+data_2016 <- read_csv('data/Census/ACS_16_5YR_DP04.csv') %>%
   select(one_of(old_cols_2016)) %>%
   rename_at(vars(old_cols_2016), ~ new_cols) %>%
   mutate(Year='2016 (five-year ACS)')

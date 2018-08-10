@@ -103,11 +103,11 @@ def plot_permit_scatterplot():
 
     width = 10
     height = 5
-    sfplot.save(filename='Figures/Bucket 2/construction_scatter_sf.svg', width=width, height=height, bbox_inches = 'tight')
-    mfplot.save(filename='Figures/Bucket 2/construction_scatter_mf.svg', width=width, height=height, bbox_inches = 'tight')
+    sfplot.save(filename='Figures/Permit/construction_scatter_sf.svg', width=width, height=height, bbox_inches = 'tight')
+    mfplot.save(filename='Figures/Permit/construction_scatter_mf.svg', width=width, height=height, bbox_inches = 'tight')
 
 
-def plot_permit_locations(save_path = 'Figures/Bucket 2/all_cities_permit_rings.svg', width = 10, height = 8, step = 1,
+def plot_permit_locations(save_path = 'Figures/Permit/all_cities_permit_rings.svg', width = 10, height = 8, step = 1,
                           maximum = 10):
     """ Plots the number of permits issued per square mile, conditional on from city center & broad_zone"""
 

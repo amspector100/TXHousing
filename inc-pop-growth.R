@@ -7,8 +7,6 @@ library(ggplot2)
 library(stringr)
 library(tibble)
 
-setwd("C:/Users/aspector/Documents/R Projects/TX Housing/data")
-
 # Assemble 2000 statistics.
 
 nas <- c('(X)', '*****')
@@ -75,11 +73,11 @@ metro_area_names <- c('Austin-Round Rock, TX',
 place_names <- c('Austin', 'Dallas', 'Houston')
 
 # Now get geodata for metro-areas (CBSA) and for places 
-metro_shapes <- st_read("cb_2017_us_cbsa_500k/cb_2017_us_cbsa_500k.shp") %>%
+metro_shapes <- st_read("data/Census/cb_2017_us_cbsa_500k/cb_2017_us_cbsa_500k.shp") %>%
   dplyr::mutate(NAME = as.character(NAME)) %>%
   dplyr::filter(NAME %in% metro_area_names)
 metro_shapes <- st_cast(metro_shapes, 'POLYGON')
-places <- sf::st_read("tl_2017_48_TX_place/tl_2017_48_place.shp") %>%
+places <- sf::st_read("data/Census/cb_2017_48_place_500k/cb_2017_48_place_500k.shp") %>%
   dplyr::mutate(NAME = as.character(NAME)) %>%
   dplyr::filter(NAME %in% place_names)
 places <- st_cast(places, "POLYGON")
@@ -105,20 +103,6 @@ final_data <- as.data.frame(rbind(core_areas, metro_areas)) %>%
     TRUE ~ 'Unknown'
   ))
 
-#nbins = 20
-#binwidth = 200000/nbins
-#final_data_v2 <- final_data %>%
-#  mutate('Bin' = MedHHInc %/% binwidth) %>%
-#  mutate(Bin = as.factor(Bin)) %>%
-#  group_by(Bin, City, Geography) %>%
-#  summarise('conditional_mean' = mean(PopGrowthPerAcre),
-#            'conditional_sd' = sd(PopGrowthPerAcre)) %>%
-#  mutate('upper' = conditional_mean + conditional_sd) %>%
-#  mutate('lower' = conditional_mean - conditional_sd) %>%
-#  tidyr::gather(key = 'key', value = 'summary', conditional_mean, upper, lower) %>%
-#  mutate(x = as.numeric(Bin)*binwidth)
-#final_data_v2 <- as.data.frame(final_data_v2)
-
 # Plot number 1: White demographic
 gg <- ggplot(final_data, aes(x=WhitePct, y=PopGrowthPerAcre, color=City)) +
   geom_point() + 
@@ -126,12 +110,9 @@ gg <- ggplot(final_data, aes(x=WhitePct, y=PopGrowthPerAcre, color=City)) +
        xlab = 'Percentange of White Individuals (2000)',
        ylab = 'Population Growth per Acre in Census Tracts (2000-2016)',
        caption = 'Data from 2000 Census and 2016 ACS') +
-  facet_grid(Geography ~ City) #+ 
-  #stat_quantile(quantiles = c(0.25, 0.5, 0.75), method = 'loess', 
-  #              color = 'black')
+  facet_grid(Geography ~ City)
 
-setwd('C:/Users/aspector/Documents/R Projects/TX Housing/Figures/Bucket 2')
-svg('whitepct_v_popgrowth.svg', width=10, height=8)
+svg('Figures/whitepct_v_popgrowth.svg', width=10, height=8)
 print(gg)
 dev.off()
 
@@ -142,13 +123,9 @@ gg2 <- ggplot(final_data, aes(x=MedHHInc, y=PopGrowthPerAcre, color=City)) +
        xlab = 'Median Household Income (2000)',
        ylab = 'Population Growth per Acre in Census Tracts (2000-2016)',
        caption = 'Data from 2000 Census and 2016 ACS') +
-  #geom_line(data = final_data_v2, aes(x = x, y = summary, group = key),
-            #inherit.aes = FALSE) + 
-  facet_grid(Geography ~ City) #+ 
-  #stat_quantile(quantiles = c(0.25, 0.5, 0.75), method = 'loess', 
-  #              color = 'black')
+  facet_grid(Geography ~ City) 
+
   
-setwd('C:/Users/aspector/Documents/R Projects/TX Housing/Figures/Bucket 2')
-svg('income_v_popgrowth.svg', width=10, height=8)
+svg('Figures/income_v_popgrowth.svg', width=10, height=8)
 print(gg2)
 dev.off()

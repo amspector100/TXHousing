@@ -9,7 +9,7 @@ from plotnine import *
 import matplotlib.pyplot as plt
 
 # Minimum lot size graph -------------------------------------
-def plot_minimum_lot_size(savepath = 'Figures/Bucket 2/Minimum_Lot_Size_Residential_No_Agriculture.svg',
+def plot_minimum_lot_size(savepath = 'Figures/Zoning/Minimum_Lot_Size_Residential_No_Agriculture.svg',
                           width = 10, height = 8):
     """Graphs average minimum lot size in Austin/Dallas.
 
@@ -62,7 +62,7 @@ def plot_minimum_lot_size(savepath = 'Figures/Bucket 2/Minimum_Lot_Size_Resident
                          y = 'Average Lot Size (Square Feet)'))
     minlotplot.save(savepath, width = width, height = height)
 
-def plot_hd_locations(save_path = 'Figures/Bucket 2/HDLocations.svg', width = 8, height = 5):
+def plot_hd_locations(save_path = 'Figures/Zoning/HDLocations.svg', width = 8, height = 5):
     """Graphs locations of historic districts in Austin, Dallas, Houston"""
 
     tx_hd_data = gpd.read_file(zoning.tx_hd_path).to_crs({'init':'epsg:4326'})
@@ -186,7 +186,7 @@ def plot_broad_zones_proportion():
                    + labs(title = 'Single Family Zoning in Austin and Dallas, Excluding Agricultural and Nonresidential Land',
                           x = 'Distance from the city center (Miles)',
                           y = 'Percentage of Residential Land Zoned'))
-    sfringsplot.save('Figures/Bucket 2/SFZoningRings.svg', width = 8, height = 5)
+    sfringsplot.save('Figures/Zoning/SFZoningRings.svg', width = 8, height = 5)
 
     # Plot Multifamily
     mfrings = zone_rings.loc[zone_rings['broad_zone'] == 'Multifamily']
@@ -197,7 +197,7 @@ def plot_broad_zones_proportion():
                    + labs(title = 'Multifamily Zoning in Austin and Dallas, Excluding Agricultural and Nonresidential Land',
                           x = 'Distance from the city center (Miles)',
                           y = 'Percentage of Residential Land Zoned'))
-    mfringsplot.save('Figures/Bucket 2/MFZoningRings.svg', width = 8, height = 5)
+    mfringsplot.save('Figures/Zoning/MFZoningRings.svg', width = 8, height = 5)
 
 # Matplotlib helper functions
 def add_counties(ax, county_list):

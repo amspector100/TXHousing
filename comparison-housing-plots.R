@@ -1,5 +1,3 @@
-# setwd("C:/Users/aspector/Documents/R Projects/TX Housing/data")
-
 # Source: 2016 5-year ACS tables DP-4
 
 library(dplyr)
@@ -20,7 +18,7 @@ stopifnot(length(new_cols) == length(old_cols))
 
 
 # Initial read of data
-path <- "Typology_Comparison_ACS_16_5YR_DP04/ACS_16_5YR_DP04.csv"
+path <- "data/Census/ACS_16_5YR_DP04.csv"
 data <- read_csv(path) %>%
   select(one_of(old_cols)) %>%
   rename_at(vars(old_cols), ~ new_cols) %>%
@@ -40,9 +38,8 @@ data_coarse <- data %>%
            )
   ) %>%
   filter(HousingType != 'Impermanent') %>% 
-  filter(Area != 'Los Angeles County, California') %>%
   # Rename areas
-  #mutate(Area = ifelse(Area == 'Los Angeles County, California', 'LA County', Area)) %>%
+  mutate(Area = ifelse(Area == 'Los Angeles County, California', 'LA County', Area)) %>%
   tidyr::separate(Area, into = c('Area'), sep=' city') %>% 
   group_by(HousingType, Area) %>%
   summarize(Units=sum(Units)/1000) %>%
@@ -51,8 +48,7 @@ data_coarse <- data %>%
                               levels = c('1', '2\u20134', '5\u201319', '20+'))) %>%
   mutate(Area = factor(Area,
                        levels = c("Austin",  "Dallas", "Houston", "Boston", "Chicago", 
-                       "New York", "San Francisco", "Los Angeles")#, 
-                       #"LA County")
+                       "New York", "San Francisco", "Los Angeles", "LA County")
                        )
          ) %>%
   group_by(Area) %>%
@@ -73,7 +69,6 @@ plot_common <-
        
 gg <- ggplot(data_coarse) + plot_common
 
-#setwd("C:/Users/aspector/Documents/R Projects/TX Housing")
 #svg('Figures/comparison-housing-typology-v1.svg', w=10, h=8)
 #print(gg)
 #dev.off()
