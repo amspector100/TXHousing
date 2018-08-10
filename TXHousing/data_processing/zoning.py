@@ -12,7 +12,7 @@ class Zoning_Input():
         center for each city."""
 
     def __init__(self, path, feature, separator, base_zones, proj4string = None, lat = 0, long = 0, zoom = 10,
-                 title = '', crs = None, regulations_path = None):
+                 crs = None, regulations_path = None):
         self.path = path
         self.feature = feature
         self.separator = separator
@@ -21,11 +21,11 @@ class Zoning_Input():
         self.lat = lat
         self.long = long
         self.zoom = zoom
-        self.title = title
         self.crs = crs
         self.regulations_path = regulations_path
 
-    def process_zoning_shapefile(self, overlay = {'-MU':'Multifamily'}, broaden = True, parse_base_zones = True, regulation_features = None, quietly = False):
+    def process_zoning_shapefile(self, overlay = {'-MU':'Multifamily'}, broaden = True, parse_base_zones = True, regulation_features = None,
+                                 to_latlong = True, quietly = False):
         """
         :param broaden: Default true. If true, will decode zoning data into a broader classification (i.e. sf, mf)
             as specified by the zoning input class - this processed zoning data will go in a column labelled "broad_zone."
@@ -36,6 +36,7 @@ class Zoning_Input():
         :param parse_base_zones: Boolean. Default true. If true, will use the regulations path provided by the input to
             parse the base zones of the zoning data.
         :param regulation_features: A list of features to retrieve from the regulation data. Default None.
+        :param to_latlong: If True, will try to transform the data to lat/long.
         :param quietly: Default false. If true, will suppress all print statements and make the function "quiet"
         :type quietly: Boolean
         """
@@ -108,10 +109,12 @@ class Zoning_Input():
         # Manually set CRS if necessary, then transform
         if raw_data.crs is not None:
             raw_data.crs = self.crs
-        try:
-            raw_data = raw_data.to_crs({'init': 'epsg:4326'})
-        except ValueError as e:
-            warnings.warn('Could not transform data to lat/long')
+
+        if to_latlong:
+            try:
+                raw_data = raw_data.to_crs({'init': 'epsg:4326'})
+            except ValueError as e:
+                warnings.warn('Could not transform data to lat/long')
 
         if quietly is not True:
             print('Finished processing zones, mixed use overlay, and crs, took {}'.format(time.time() - time0))
@@ -119,7 +122,7 @@ class Zoning_Input():
         return raw_data
 
 # Downloaded from http://data-nctcoggis.opendata.arcgis.com/datasets/2015-land-use
-north_texas_inputs = Zoning_Input(path = 'data/Zoning Shapefiles/2015_North_Texas_Land_Use/2015_Land_Use.shp',
+north_texas_inputs = Zoning_Input(path = 'data/Zoning/north_texas_land_use_2015/2015_Land_Use.shp',
                                    feature = 'CATEGORY',
                                    separator = 'no_separator',
                                    proj4string = 'EPSG:4326',
@@ -130,11 +133,11 @@ north_texas_inputs = Zoning_Input(path = 'data/Zoning Shapefiles/2015_North_Texa
                                    lat = 32.7767,
                                    long = -96.7970,
                                    zoom = 10,
-                                   title = 'Base Zones in and around Dallas, Texas')
+                                  crs={'init': 'epsg:2276'})
 
 # Downloaded from https://data.austintexas.gov/Locations-and-Maps/Zoning/5rzy-nm5e
 austin_regulations_path = "shared_data/austin zoning standards.csv"
-austin_inputs = Zoning_Input(path = "data/Zoning Shapefiles/austin_zoning/geo_export_571668ee-52f1-4ac9-a4e0-3b8bb348eae7.shp",
+austin_inputs = Zoning_Input(path = "data/Zoning/austin_zoning/geo_export_571668ee-52f1-4ac9-a4e0-3b8bb348eae7.shp",
                               feature = 'zoning_zty',
                               separator = '-',
                               proj4string = 'EPSG:4326',
@@ -143,13 +146,12 @@ austin_inputs = Zoning_Input(path = "data/Zoning Shapefiles/austin_zoning/geo_ex
                               lat = 30.267,
                               long = -97.743,
                               zoom = 9,
-                              title = 'Base Zones in Austin, Texas',
                               crs = {'init': 'epsg:4326'},
                               regulations_path=austin_regulations_path)
 
 # From dallas's open data site
 dallas_regulations_path = 'shared_data/dallas zoning standards.csv'
-dallas_inputs = Zoning_Input(path = "data/Zoning Shapefiles/DallasBaseZoning/BaseZoning.shp",
+dallas_inputs = Zoning_Input(path = "data/Zoning/dallas_zoning/BaseZoning.shp",
                               feature = 'ZONE_DIST',
                               separator = '-',
                               proj4string = 'EPSG:2276',
@@ -160,7 +162,6 @@ dallas_inputs = Zoning_Input(path = "data/Zoning Shapefiles/DallasBaseZoning/Bas
                               lat = north_texas_inputs.lat,
                               long = north_texas_inputs.long,
                               zoom = 9,
-                              title = 'Base Zones in Dallas, Texas',
                               crs = {'init':'epsg:2276'},
                               regulations_path=dallas_regulations_path)
 
@@ -172,8 +173,7 @@ houston_inputs = Zoning_Input(path = None,
                                base_zones = None,
                                lat = 29.7604,
                                long = -95.3698,
-                               zoom = 9,
-                               title = 'Houston Texas')
+                               zoom = 9)
 
 # Selected surrounding cities for Austin ---------------
 # Some notes on methodology, for consistency. I classify:
@@ -182,7 +182,7 @@ houston_inputs = Zoning_Input(path = None,
 # (c) If multifamily housing is permitted but with some restrictions, the area is classified as multifamily housing.
 
 
-round_rock_inputs = Zoning_Input(path = "data/Zoning Shapefiles/round_rock_zoning/ZONING_1.shp",
+round_rock_inputs = Zoning_Input(path = "data/Zoning/round_rock_zoning/ZONING_1.shp",
                                  feature = 'BASE_ZONIN',
                                  separator = '-',
                                  base_zones = {'Single Family':['SF', 'TH', 'SF1', 'SF2', 'SF3', 'SF4', 'SF5', 'SF6'],
@@ -193,7 +193,7 @@ round_rock_inputs = Zoning_Input(path = "data/Zoning Shapefiles/round_rock_zonin
                                  long = austin_inputs.long,
                                  crs = {'init':'epsg:2277'})
 
-pflugerville_inputs = Zoning_Input(path = "data/Zoning Shapefiles/pflugerville_zoning/Zoning_Districts.shp",
+pflugerville_inputs = Zoning_Input(path = "data/Zoning/pflugerville_zoning/Zoning_Districts.shp",
                                    feature = 'ZOINING_TY',
                                    separator = '-',
                                    base_zones = {'Single Family':['A', 'SF'],
@@ -204,7 +204,7 @@ pflugerville_inputs = Zoning_Input(path = "data/Zoning Shapefiles/pflugerville_z
                                    long = austin_inputs.long,
                                    crs = {'init':'epsg:2277'})
 
-georgetown_inputs = Zoning_Input(path = "data/Zoning Shapefiles/georgetown_zoning/Zoning.shp",
+georgetown_inputs = Zoning_Input(path = "data/Zoning/georgetown_zoning/Zoning.shp",
                                    feature = 'ZONE',
                                    separator = '-',
                                    base_zones = {'Single Family':['AG', 'RE', 'RL', 'RS', 'TH'],
@@ -215,7 +215,7 @@ georgetown_inputs = Zoning_Input(path = "data/Zoning Shapefiles/georgetown_zonin
                                    long = austin_inputs.long,
                                    crs = {'init':'epsg:2277'})
 
-cedar_park_inputs = Zoning_Input(path = "data/Zoning Shapefiles/cedar_park_zoning/Zoning__Zoning_Districts.shp",
+cedar_park_inputs = Zoning_Input(path = "data/Zoning/cedar_park_zoning/Zoning__Zoning_Districts.shp",
                                    feature = 'ZoningType',
                                    separator = ' - ',
                                    base_zones = {'Single Family':['RA', 'SR', 'SU', 'UR'],
@@ -226,7 +226,7 @@ cedar_park_inputs = Zoning_Input(path = "data/Zoning Shapefiles/cedar_park_zonin
                                    long = austin_inputs.long,
                                    crs = {'init':'epsg:2277'})
 
-hutto_inputs = Zoning_Input(path = "data/Zoning Shapefiles/hutto_zoning/Zoning_Districts.shp",
+hutto_inputs = Zoning_Input(path = "data/Zoning/hutto_zoning/Zoning_Districts.shp",
                             feature = 'ZONING',
                             separator = 'no_separator',
                             # Not totally sure about urban residential/residential classifications
@@ -252,16 +252,18 @@ def get_austin_surrounding_zones():
     return data
 
 # Paths for historic districts - thankfully do not require much processing -----------------------------------------
-tx_hd_path = "data/Zoning Shapefiles/NationalRegisterPY_shp/NationalRegisterPY.shp"
+tx_hd_path = "data/Zoning/national_register_hist_dists_shp/NationalRegisterPY.shp"
+austin_landmark_path = "data/Zoning/austin_historical_landmarks/geo_export_ce453b58-d8ca-47d4-8934-76d636d24ca3.shp"
 
-austin_landmark_path = "data/Zoning Shapefiles/Historical Landmarks/geo_export_ce453b58-d8ca-47d4-8934-76d636d24ca3.shp"
+dallas_historic_overlay_path = "data/Zoning/dallas_historic_overlay/HistoricOverlay.shp"
+dallas_historic_subdistricts_path = "data/Zoning/dallas_historic_subdistricts/HistoricSubdistricts.shp"
 
-dallas_historic_overlay_path = "data/Zoning Shapefiles/HistoricOverlay_Dallas/HistoricOverlay.shp"
-dallas_historic_subdistricts_path = "data/Zoning Shapefiles/HistoricSubdistricts_Dallas/HistoricSubdistricts.shp"
-
-houston_historic_districts_path = "data/Houston_Historic_Protections/HISTORIC_DISTRICTS_CITY.shp"
-houston_historic_landmarks_path = "data/Houston_Historic_Protections/HISTORICAL_SITES.shp"
+houston_historic_districts_path = "data/Zoning/houston_historic_protections/HISTORIC_DISTRICTS_CITY.shp"
+houston_historic_landmarks_path = "data/Zoning/houston_historic_protections/HISTORICAL_SITES.shp"
 
 # Houston special setbacks and lots
-houston_spec_min_lot_path = "data/Zoning Shapefiles/Houston_Special_Minimum_Building_Lines/Special_Minimum_Building_Lines.shp"
-houston_spec_setbacks_path = "data/Zoning Shapefiles/Houston_Spec_Minimum_Lot/Minimum_Lot_Size.shp"
+houston_spec_setbacks_path = "data/Zoning/houston_spec_minimum_building_lines/Special_Minimum_Building_Lines.shp"
+houston_spec_min_lot_path = "data/Zoning/houston_spec_minimum_lot/Minimum_Lot_Size.shp"
+
+# Civic clubs
+houston_civic_clubs = "data/Zoning/houston_civic_clubs/cohgis.PD.shp"

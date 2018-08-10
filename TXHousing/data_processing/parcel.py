@@ -8,19 +8,23 @@ from ..utilities import simple, spatial_joins, measurements
 from . import boundaries, zoning
 
 # Globals for municipalities -----------------------------------------------------------------------------------------
-austin_parcel_path = "data/Zoning Shapefiles/Austin Land Database 2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
+# Austin
+austin_parcel_path = "data/Parcel/austin_parcels_2016/geo_export_813e97e4-7fde-4e3a-81b3-7ca9e8a89bd0.shp"
 
-dallas_parcel_data_path_2013 = "data/Zoning Shapefiles/Dallas County Parcels 2013/geo_export_9b090abf-d5d9-4c74-a6be-4486e75ee147.shp"
-dallas_parcel_data_path_2016 = "data/Zoning Shapefiles/Dallas County Parcels 2016/geo_export_bd65f212-41ce-4166-804a-5dc5ef85ee84.shp"
+# Dallas
+dallas_county_parcel_path = "data/Parcel/dalllas_county_2018/PARCEL/PARCEL.shp"# 2018
+dallas_county_appraisal_path = 'data/Parcel/dallas_county_parcel_data/ACCOUNT_APPRL_YEAR.csv'
+dallas_county_res_path = 'data/Parcel/dallas_county_parcel_data/res_detail.csv'
+dallas_county_land_path = "data/Parcel/dallas_county_parcel_data/land.csv"
 
-harris_parcel_path_2018 = "data/Zoning Shapefiles/Harris_Parcels_2018/Parcels.shp"
+# Harris
+harris_parcel_path_2018 = "data/Parcel/Harris_Parcels_2018/Parcels.shp"
 
-# Extra parcel feature files and their columns for Harris - unfortunately these are not part of the data.
-harris_parcel_land_path_2018 = "data/Zoning Shapefiles/Harris_Parcel_Land_Features/land.txt"
-harris_parcel_appraisal_path_2018 = "data/Zoning Shapefiles/Harris_Parcel_Land_Features/real_acct.txt"
-harris_parcel_building_res_path_2018 = 'data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_res.txt'
-harris_parcel_building_other_path_2018 = 'data/Zoning Shapefiles/Harris_Parcel_Land_Features/building_other.txt'
-
+# Extra parcel feature files and their columns for Harris - unfortunately the columns are not part of the data.
+harris_parcel_land_path_2018 = "data/Parcel/Harris_Parcel_Land_Features/land.txt"
+harris_parcel_appraisal_path_2018 = "data/Parcel/Harris_Parcel_Land_Features/real_acct.txt"
+harris_parcel_building_res_path_2018 = 'data/Parcel/Harris_Parcel_Land_Features/building_res.txt'
+harris_parcel_building_other_path_2018 = 'data/Parcel/Harris_Parcel_Land_Features/building_other.txt'
 houston_land_columns = ["ACCOUNT", "LINE_NUMBER", "LAND_USE_CODE", "LAND_USE_DSCR", "SITE_CD", "SITE_CD_DSCR",
                         "SITE_ADJ", "UNIT_TYPE", "UNITS", "SIZE_FACTOR", "SITE_FACT", "APPR_OVERRIDE_FACTOR",
                         "APPR_OVERRIDE_REASON", "TOT_ADJ", "UNIT_PRICE", "ADJ_UNIT_PRICE", "VALUE", "OVERRIDE_VALUE"]
@@ -54,7 +58,6 @@ houston_building_other_columns = ["ACCOUNT", "USE_CODE", "BLD_NUM", "IMPRV_TYPE"
                                 "EFFECTIVE_AREA", "BASE_AREA", "PERIMETER", "PERCENT_COMPLETE", "CATEGORY",
                                 "CATEGORY_DSCR", "PROPERTY_NAME", "UNITS", "NET_RENT_AREA", "LEASE_RATE",
                                 "OCCUPANCY_RATE", "TOTAL_INCOME"]
-
 
 class Parcel(boundaries.Boundaries):
     """ Class for Parcel Data.
@@ -309,7 +312,6 @@ class Parcel(boundaries.Boundaries):
         print('Finished processing {} parcel shapefile; took {} since initialization'.format(self.name,
                                                                                              time.time() - self.time0))
 
-
 # Specific processing functions --------------------------------------------------------------------------------------
 
 def process_austin_parcel_data():
@@ -330,29 +332,6 @@ def process_austin_parcel_data():
             return s
     parcel_data['basezone'] = parcel_data['basezone'].apply(format_basezone)
 
-    return parcel_data
-
-def join_dallas_parcel_data():
-    """Joins 2013 and 2016 Dallas parcel data. Hopefully this will never be necessary as it takes a while."""
-
-    time0 = time.time()
-    print('Reading 2013 file')
-    p2013 = gpd.read_file(dallas_parcel_data_path_2013)
-    p2013.drop_duplicates('gis_acct', inplace = True) # Only drops about 700/300K
-    p2013.columns = [str(col) + '_2013' for col in p2013.columns]
-    p2013 = p2013.rename(columns = {'gis_acct_2013': 'gis_acct'})
-
-    print('Finished reading 2013 file, took {}. Now reading 2016 file.'.format(time.time() - time0))
-    p2016 = gpd.read_file(dallas_parcel_data_path_2016)
-    p2016.drop_duplicates('gis_acct', inplace = True) # Only drops about 750/400K
-    p2016.columns = [str(col) + '_2016' for col in p2016.columns]
-    p2016 = p2016.rename(columns = {'gis_acct_2016': 'gis_acct'})
-
-    print('Finished reading 2016 file, took {}. Now merging files.'.format(time.time() - time0))
-    parcel_data = p2016.merge(p2013, on = 'gis_acct')
-    parcel_data = gpd.GeoDataFrame(data = parcel_data[[col for col in parcel_data.columns if 'geometry' not in col]],
-                                   geometry = parcel_data['geometry_2016'])
-    print(parcel_data.columns, parcel_data.index)
     return parcel_data
 
 def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path_2018],
@@ -412,13 +391,15 @@ def process_houston_parcel_data(feature_files = [harris_parcel_building_res_path
 # Cache parcel data --------------------------------------------------------------------------------------------------
 
 def get_cached_municipal_parcel_path(cityname):
-    return 'data/caches/municipal_parcel/{}_municipal_parcel.csv'.format(cityname)
+    return 'data/Caches/municipal_parcel/{}_municipal_parcel.csv'.format(cityname)
 
 def get_cached_all_parcel_path_csv(cityname):
-    return 'data/caches/all_parcel/{}_all_parcel.csv'.format(cityname)
+    return 'data/Caches/all_parcel/{}_all_parcel.csv'.format(cityname)
 
 def get_cached_all_parcel_path_shp(cityname):
-    return 'data/caches/all_parcel/{}_all_parcel.shp'.format(cityname)
+    return 'data/Caches/all_parcel/{}_all_parcel.shp'.format(cityname)
+
+all_dallas_zoning_path_csv = 'data/Zoning/processed_north_texas_data/zones.csv'
 
 # State code dictionary is used for a lot of different counties, mostly around Houston
 state_sptbcode_dictionary = {'Single Family':['A1', 'A2'], 'Multifamily':['A3', 'A4', 'B1', 'B2', 'B3', 'B4']}
@@ -490,7 +471,6 @@ def cache_municipal_parcel_data():
                                        right_keys=['ACCOUNT_NUM', 'ACCOUNT_NUM'],
                                        save_path = get_cached_municipal_parcel_path('dallas'))
 
-
 def cache_all_parcel_data():
     """Creates csvs which store the centroids, area, and other relevant features about each parcel for all of the
     surrounding counties of each core municipality."""
@@ -503,12 +483,12 @@ def cache_all_parcel_data():
     # Houston  --------------------------------------------------------------------------------------------
     # All of these counties use the state code dictionary - manually checked that this is the right thing to do
 
-    fort_bend_parcel_path = 'data/parcels/fort_bend_parcels_2018/CAMASUMMARY.shp'
+    fort_bend_parcel_path = 'data/Parcel/fort_bend_parcels_2018/CAMASUMMARY.shp'
     if os.path.exists(fort_bend_parcel_path) == False:
         raise FileNotFoundError("""Fort Bend County Parcel not in the data directory - use cached data instead or 
             download the raw data from  'https://fbcad.org/District-Information/GIS-Data'.""")
 
-    montgomery_county_parcel_path = "data/parcels/montgomery_parcels_2018/Tax_Parcel_View.shp"  # 2018
+    montgomery_county_parcel_path = "data/Parcel/montgomery_parcels_2018/Tax_Parcel_View.shp"  # 2018
     if os.path.exists(montgomery_county_parcel_path) == False:
         raise FileNotFoundError("""Montgomery County Parcel not in the data directory - use cached data instead or 
             download the raw data from 'https://data-moco.opendata.arcgis.com/datasets/tax-parcel-view'.""")
@@ -568,14 +548,14 @@ def cache_all_parcel_data():
     print('Finished with Houston, global time is {}'.format(time.time() - time0))
 
     # Austin  --------------------------------------------------------------------------------------------
-    travis_county_parcel_path = "data/parcels/travis_county_parcels_2016/Parcels_Travis_2016.shp"  # 2016
-    travis_county_data_path = 'data/parcels/travis_county_parcel_data/land_det.csv'
+    travis_county_parcel_path = "data/Parcel/travis_county_parcels_2016/Parcels_Travis_2016.shp"  # 2016
+    travis_county_data_path = 'data/Parcel/travis_county_parcel_data/land_det.csv'
     if (os.path.exists(travis_county_parcel_path) and os.path.exists(travis_county_data_path)) == False:
         raise FileNotFoundError("""Travis County Parcel Shapes/Data not in the data directory - use cached data 
             instead or download the raw data from https://www.traviscad.org/reports-request/""")
 
-    williamson_county_parcel_path = "data/parcels/williamson_parcels_2016/Parcel_Poly.shp"  # 2017
-    williamson_county_real_improvement_path = "data/parcels/williamson_data_2016b/Improvement.txt"  # 2018
+    williamson_county_parcel_path = "data/Parcel/williamson_parcels_2016/Parcel_Poly.shp"  # 2017
+    williamson_county_real_improvement_path = "data/Parcel/williamson_data_2016b/Improvement.txt"  # 2018
     if (os.path.exists(williamson_county_parcel_path) and
         os.path.exists(williamson_county_real_improvement_path)) == False:
         raise FileNotFoundError("""Williamson County Parcel Shapes/Data not in the data directory - use cached data 
@@ -624,17 +604,17 @@ def cache_all_parcel_data():
     # Dallas -----------------------------------------------------------------------------------------------
 
     # Extra paths for the others. Make sure they exist or raise errors otherwise.
-    collin_county_parcel_path = "data/parcels/collin_county_2018/parcels.shp"  # 2018
-    if os.path.exists(collin_county_parcel_path) == False:        
+    collin_county_parcel_path = "data/Parcel/collin_county_2018/parcels.shp"  # 2018
+    if os.path.exists(collin_county_parcel_path) == False:
         raise FileNotFoundError("""Collin County Parcel not in the data directory - use cached data instead or 
             download the raw data from https://www.collincad.org/downloads.""")
 
-    denton_county_parcel_path = "data/parcels/denton_county_parcels_2018/County_Parcels.shp"  # 2018
+    denton_county_parcel_path = "data/Parcel/denton_county_parcels_2018/County_Parcels.shp"  # 2018
     if os.path.exists(denton_county_parcel_path) == False:
         raise FileNotFoundError("""Denton County Parcel not in the data directory - use cached data instead or 
             download the raw data from https://www.dentoncad.com/forms-and-downloads.""")
 
-    processed_tarrant_county_parcel_path = "data/parcels/processed_tarrant_county_parcels_2018/TADData.shp"
+    processed_tarrant_county_parcel_path = "data/Parcel/processed_tarrant_county_parcels_2018/TADData.shp"
     if os.path.exists(processed_tarrant_county_parcel_path) == False:
         raise FileNotFoundError("""Processed Tarrant County Parcel data not in the data directory. Use the cached
             data or download the raw data from https://www.tad.org/data-download/ and run the 
@@ -709,11 +689,30 @@ def cache_all_parcel_data():
     all_dallas_parcels_csv.to_csv(get_cached_all_parcel_path_csv('dallas'))
     print('Finished with Dallas, global time is {}'.format(time.time() - time0))
 
+def cache_north_texas_zoning_data():
+    """  Because we use the north texas zoning data to validate parcel results, we apply the parcel processing functions
+     to the north texas zoning data and then cache the results.(This is a bit hacky, because you wouldn't expect to see
+     zoning data fit under the parcel class, but so be it.) """
 
+    final_columns = ['account', 'broad_zone', 'zone_feature', 'dist_to_center', 'area_sqft', 'lat', 'long', 'county',
+                     'zipcode', 'place', 'ua']
 
+    def retrieve_north_texas_data():
+        north_texas_data = zoning.north_texas_inputs.process_zoning_shapefile(broaden = False, to_latlong = False)
+        north_texas_data['id'] = north_texas_data.index # The data has no ID so we make a unique one
+        return north_texas_data
 
+    north_texas_data = Parcel(path = None, account_col = 'id', county = 'COUNTY', name = 'NT_Zoning',
+                              processing_function = retrieve_north_texas_data)
 
-dallas_county_parcel_path = "data/parcels/dalllas_county_2018/PARCEL/PARCEL.shp"# 2018
-dallas_county_land_path = "data/parcels/dallas_county_parcel_data/land.csv"
-dallas_county_appraisal_path = 'data/parcels/dallas_county_parcel_data/ACCOUNT_APPRL_YEAR.csv'
-dallas_county_res_path = 'data/parcels/dallas_county_parcel_data/res_detail.csv'
+    north_texas_data.process_parcel_data(broad_zone_feature = 'CATEGORY',
+                                         broad_zone_dictionary  = zoning.north_texas_inputs.base_zones,
+                                         zoning_input = zoning.dallas_inputs,
+                                         bounding_counties = ['Erath', 'Johnson', 'Navarro', 'Hood', 'Palo Pinto',
+                                                                        'Parker', 'Tarrant', 'Kaufman', 'Somervell', 'Wise',
+                                                                        'Collin', 'Hunt', 'Rockwall', 'Dallas', 'Denton',
+                                                                        'Ellis'],
+                                         merge_paths = None)
+    north_texas_data.data = north_texas_data.data[final_columns]
+
+    north_texas_data.data.to_csv(all_dallas_zoning_path_csv)

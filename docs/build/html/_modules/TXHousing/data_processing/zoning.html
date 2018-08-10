@@ -150,19 +150,20 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">simple</span>
 
 <div class="viewcode-block" id="Zoning_Input"><a class="viewcode-back" href="../../../data_processing.html#TXHousing.data_processing.zoning.Zoning_Input">[docs]</a><span class="k">class</span> <span class="nc">Zoning_Input</span><span class="p">():</span>
 
     <span class="sd">&quot;&quot;&quot; Simple class which binds information about zoning datasets. Also, the lat/long features define the city</span>
 <span class="sd">        center for each city.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">separator</span><span class="p">,</span> <span class="n">proj4string</span><span class="p">,</span> <span class="n">base_zones</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">long</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">zoom</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">separator</span><span class="p">,</span> <span class="n">base_zones</span><span class="p">,</span> <span class="n">proj4string</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">long</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">zoom</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
                  <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">crs</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">regulations_path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">feature</span> <span class="o">=</span> <span class="n">feature</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="n">separator</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">proj4string</span> <span class="o">=</span> <span class="n">proj4string</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_zones</span> <span class="o">=</span> <span class="n">base_zones</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proj4string</span> <span class="o">=</span> <span class="n">proj4string</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lat</span> <span class="o">=</span> <span class="n">lat</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">long</span> <span class="o">=</span> <span class="n">long</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zoom</span> <span class="o">=</span> <span class="n">zoom</span>
@@ -192,6 +193,7 @@
         <span class="k">if</span> <span class="n">quietly</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reading file&#39;</span><span class="p">)</span>
         <span class="n">raw_data</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">raw_data</span> <span class="o">=</span> <span class="n">simple</span><span class="o">.</span><span class="n">process_geometry</span><span class="p">(</span><span class="n">raw_data</span><span class="p">,</span> <span class="n">drop_multipolygons</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">quietly</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished reading file, took </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">))</span>
 
@@ -319,8 +321,83 @@
                                <span class="n">zoom</span> <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
                                <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Houston Texas&#39;</span><span class="p">)</span>
 
+<span class="c1"># Selected surrounding cities for Austin ---------------</span>
+<span class="c1"># Some notes on methodology, for consistency. I classify:</span>
+<span class="c1"># (a) Areas which allow both multifamily and single family dwellings as multifamily.</span>
+<span class="c1"># (b) Areas which allow mixed-use development (i.e. commercial + residential) as multifamily in most cases.</span>
+<span class="c1"># (c) If multifamily housing is permitted but with some restrictions, the area is classified as multifamily housing.</span>
 
-<span class="c1"># Paths for historic districts - thankfully do not require much processing</span>
+
+<span class="n">round_rock_inputs</span> <span class="o">=</span> <span class="n">Zoning_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/round_rock_zoning/ZONING_1.shp&quot;</span><span class="p">,</span>
+                                 <span class="n">feature</span> <span class="o">=</span> <span class="s1">&#39;BASE_ZONIN&#39;</span><span class="p">,</span>
+                                 <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                                 <span class="n">base_zones</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Single Family&#39;</span><span class="p">:[</span><span class="s1">&#39;SF&#39;</span><span class="p">,</span> <span class="s1">&#39;TH&#39;</span><span class="p">,</span> <span class="s1">&#39;SF1&#39;</span><span class="p">,</span> <span class="s1">&#39;SF2&#39;</span><span class="p">,</span> <span class="s1">&#39;SF3&#39;</span><span class="p">,</span> <span class="s1">&#39;SF4&#39;</span><span class="p">,</span> <span class="s1">&#39;SF5&#39;</span><span class="p">,</span> <span class="s1">&#39;SF6&#39;</span><span class="p">],</span>
+                                               <span class="s1">&#39;Multifamily&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;MF&#39;</span><span class="p">,</span> <span class="s1">&#39;MU&#39;</span><span class="p">,</span> <span class="s1">&#39;TF&#39;</span><span class="p">],</span>
+                                               <span class="s1">&#39;Other Residential&#39;</span><span class="p">:[],</span>
+                                               <span class="s1">&#39;Other&#39;</span><span class="p">:[]},</span>
+                                 <span class="n">lat</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
+                                 <span class="n">long</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">long</span><span class="p">,</span>
+                                 <span class="n">crs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;init&#39;</span><span class="p">:</span><span class="s1">&#39;epsg:2277&#39;</span><span class="p">})</span>
+
+<span class="n">pflugerville_inputs</span> <span class="o">=</span> <span class="n">Zoning_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/pflugerville_zoning/Zoning_Districts.shp&quot;</span><span class="p">,</span>
+                                   <span class="n">feature</span> <span class="o">=</span> <span class="s1">&#39;ZOINING_TY&#39;</span><span class="p">,</span>
+                                   <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                                   <span class="n">base_zones</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Single Family&#39;</span><span class="p">:[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;SF&#39;</span><span class="p">],</span>
+                                                 <span class="s1">&#39;Multifamily&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;CL3&#39;</span><span class="p">,</span> <span class="s1">&#39;CL4&#39;</span><span class="p">,</span> <span class="s1">&#39;CL5&#39;</span><span class="p">],</span>
+                                                 <span class="s1">&#39;Other Residential&#39;</span><span class="p">:[</span><span class="s1">&#39;MH&#39;</span><span class="p">],</span>
+                                                 <span class="s1">&#39;Other&#39;</span><span class="p">:[]},</span>
+                                   <span class="n">lat</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
+                                   <span class="n">long</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">long</span><span class="p">,</span>
+                                   <span class="n">crs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;init&#39;</span><span class="p">:</span><span class="s1">&#39;epsg:2277&#39;</span><span class="p">})</span>
+
+<span class="n">georgetown_inputs</span> <span class="o">=</span> <span class="n">Zoning_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/georgetown_zoning/Zoning.shp&quot;</span><span class="p">,</span>
+                                   <span class="n">feature</span> <span class="o">=</span> <span class="s1">&#39;ZONE&#39;</span><span class="p">,</span>
+                                   <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                                   <span class="n">base_zones</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Single Family&#39;</span><span class="p">:[</span><span class="s1">&#39;AG&#39;</span><span class="p">,</span> <span class="s1">&#39;RE&#39;</span><span class="p">,</span> <span class="s1">&#39;RL&#39;</span><span class="p">,</span> <span class="s1">&#39;RS&#39;</span><span class="p">,</span> <span class="s1">&#39;TH&#39;</span><span class="p">],</span>
+                                                 <span class="s1">&#39;Multifamily&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;TF&#39;</span><span class="p">,</span> <span class="s1">&#39;MF&#39;</span><span class="p">,</span> <span class="s1">&#39;MU&#39;</span><span class="p">,</span> <span class="s1">&#39;MU-DT&#39;</span><span class="p">,</span> <span class="s1">&#39;MUDT&#39;</span><span class="p">],</span>
+                                                 <span class="s1">&#39;Other Residential&#39;</span><span class="p">:[</span><span class="s1">&#39;MH&#39;</span><span class="p">],</span>
+                                                 <span class="s1">&#39;Other&#39;</span><span class="p">:[]},</span>
+                                   <span class="n">lat</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
+                                   <span class="n">long</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">long</span><span class="p">,</span>
+                                   <span class="n">crs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;init&#39;</span><span class="p">:</span><span class="s1">&#39;epsg:2277&#39;</span><span class="p">})</span>
+
+<span class="n">cedar_park_inputs</span> <span class="o">=</span> <span class="n">Zoning_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/cedar_park_zoning/Zoning__Zoning_Districts.shp&quot;</span><span class="p">,</span>
+                                   <span class="n">feature</span> <span class="o">=</span> <span class="s1">&#39;ZoningType&#39;</span><span class="p">,</span>
+                                   <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39; - &#39;</span><span class="p">,</span>
+                                   <span class="n">base_zones</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Single Family&#39;</span><span class="p">:[</span><span class="s1">&#39;RA&#39;</span><span class="p">,</span> <span class="s1">&#39;SR&#39;</span><span class="p">,</span> <span class="s1">&#39;SU&#39;</span><span class="p">,</span> <span class="s1">&#39;UR&#39;</span><span class="p">],</span>
+                                                 <span class="s1">&#39;Multifamily&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;MU&#39;</span><span class="p">,</span> <span class="s1">&#39;MF&#39;</span><span class="p">],</span>
+                                                 <span class="s1">&#39;Other Residential&#39;</span><span class="p">:[],</span>
+                                                 <span class="s1">&#39;Other&#39;</span><span class="p">:[]},</span>
+                                   <span class="n">lat</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
+                                   <span class="n">long</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">long</span><span class="p">,</span>
+                                   <span class="n">crs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;init&#39;</span><span class="p">:</span><span class="s1">&#39;epsg:2277&#39;</span><span class="p">})</span>
+
+<span class="n">hutto_inputs</span> <span class="o">=</span> <span class="n">Zoning_Input</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/hutto_zoning/Zoning_Districts.shp&quot;</span><span class="p">,</span>
+                            <span class="n">feature</span> <span class="o">=</span> <span class="s1">&#39;ZONING&#39;</span><span class="p">,</span>
+                            <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;no_separator&#39;</span><span class="p">,</span>
+                            <span class="c1"># Not totally sure about urban residential/residential classifications</span>
+                            <span class="n">base_zones</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Single Family&#39;</span><span class="p">:[</span><span class="s1">&#39;Single Family&#39;</span><span class="p">,</span> <span class="s1">&#39;Residential&#39;</span><span class="p">],</span>
+                                          <span class="s1">&#39;Multifamily&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Two Family&#39;</span><span class="p">,</span> <span class="s1">&#39;Multi-Family&#39;</span><span class="p">,</span>
+                                                          <span class="s1">&#39;Urban Residential&#39;</span><span class="p">,</span> <span class="s1">&#39;Co-op District&#39;</span><span class="p">],</span>
+                                          <span class="s1">&#39;Other Residential&#39;</span><span class="p">:[],</span>
+                                          <span class="s1">&#39;Other&#39;</span><span class="p">:[]},</span>
+                            <span class="n">lat</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
+                            <span class="n">long</span> <span class="o">=</span> <span class="n">austin_inputs</span><span class="o">.</span><span class="n">long</span><span class="p">,</span>
+                            <span class="n">crs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;init&#39;</span><span class="p">:</span><span class="s1">&#39;epsg:2277&#39;</span><span class="p">})</span>
+
+<div class="viewcode-block" id="get_austin_surrounding_zones"><a class="viewcode-back" href="../../../data_processing.html#TXHousing.data_processing.zoning.get_austin_surrounding_zones">[docs]</a><span class="k">def</span> <span class="nf">get_austin_surrounding_zones</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Based on the zoning inputs in this file, returns a geodataframe of zoning polygons for Austin AND select</span>
+<span class="sd">     surrounding areas, with two columns: broad_zone and geometry. This is purely a convenience function which wraps a</span>
+<span class="sd">     variety of Zoning_Input.process_zoning_shapefile calls. &quot;&quot;&quot;</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">geometry</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">round_rock_inputs</span><span class="p">,</span> <span class="n">georgetown_inputs</span><span class="p">,</span> <span class="n">pflugerville_inputs</span><span class="p">,</span> <span class="n">hutto_inputs</span><span class="p">,</span> <span class="n">cedar_park_inputs</span><span class="p">,</span> <span class="n">austin_inputs</span><span class="p">]</span>
+    <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+        <span class="n">to_add</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">process_zoning_shapefile</span><span class="p">()[[</span><span class="s1">&#39;broad_zone&#39;</span><span class="p">,</span> <span class="s1">&#39;geometry&#39;</span><span class="p">]]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">data</span><span class="p">,</span> <span class="n">to_add</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+<span class="c1"># Paths for historic districts - thankfully do not require much processing -----------------------------------------</span>
 <span class="n">tx_hd_path</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/NationalRegisterPY_shp/NationalRegisterPY.shp&quot;</span>
 
 <span class="n">austin_landmark_path</span> <span class="o">=</span> <span class="s2">&quot;data/Zoning Shapefiles/Historical Landmarks/geo_export_ce453b58-d8ca-47d4-8934-76d636d24ca3.shp&quot;</span>

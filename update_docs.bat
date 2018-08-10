@@ -4,8 +4,8 @@ git checkout master
 
 REM build docs
 cd docs
-make clean
-make html
+call make clean
+call make html
 cd ..
 
 REM commit and push
@@ -28,7 +28,7 @@ git rm docs -rf
 
 REM Move it to the root and remove the docs directory
 git checkout master docs/build/html
-xcopy .\docs\build\html .\ /E
+call xcopy .\docs\build\html .\ /E
 git rm docs -rf
 
 REM Add and push

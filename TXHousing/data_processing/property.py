@@ -95,8 +95,11 @@ class Property_Input():
         raw_data = pd.read_csv(self.path, index_col = self.index_col)
 
         # Only consider specific geographic subset
-        if self.geo_filter_values != 'all':
-            raw_data = raw_data.loc[raw_data[self.geo_filter].isin(self.geo_filter_values), :]
+        if geo_filter_values is None:
+            geo_filter_values = self.geo_filter_values
+
+        if geo_filter_values != 'all':
+            raw_data = raw_data.loc[raw_data[self.geo_filter].isin(geo_filter_values), :]
 
         # Separate metadata and data
         if self.source == 'Zillow':
@@ -163,27 +166,27 @@ class Property_Input():
                 plt.show()
 
 # Zillow inputs --
-sfhomes_nbhd = Property_Input(path = 'data/Zillow Data/sfhomes_neighborhood.csv',
+sfhomes_nbhd = Property_Input(path = 'data/Zillow/sfhomes_neighborhood.csv',
                         source = 'Zillow')
 
-inventoryraw = Property_Input(path = "data/Zillow Data/inventoryraw_zip.csv",
+inventoryraw = Property_Input(path = "data/Zillow/inventoryraw_zip.csv",
                             source = 'Zillow')
 
-medpricecuts = Property_Input(path = "data/Zillow Data/medpricecut_zip.csv",
+medpricecuts = Property_Input(path = "data/Zillow/medpricecut_zip.csv",
                             source = 'Zillow')
 
-allhomeprices = Property_Input(path = 'data/Zillow Data/allhomeprice_zip.csv',
+allhomeprices = Property_Input(path = 'data/Zillow/allhomeprice_zip.csv',
                              source = 'Zillow')
 
 # Realtor inputs --
-realtor_hotness_data = Property_Input(path = "data/RDC_MarketHotness_Monthly_Zip.csv",
+realtor_hotness_data = Property_Input(path = "data/Realtor/RDC_MarketHotness_Monthly_Zip.csv",
                                       source = 'Realtor')
 
-realtor_core_inventory = Property_Input(path = 'data/RDC_InventoryCoreMetrics_Zip.csv',
+realtor_core_inventory = Property_Input(path = 'data/Realtor/RDC_InventoryCoreMetrics_Zip.csv',
                                  source = 'Realtor', geo_filter_values = 'all')
 
-realtor_core_inventory_sf = Property_Input(path = "data/RDC_InventoryCoreMetrics_Zip_sfh.csv",
+realtor_core_inventory_sf = Property_Input(path = "data/Realtor/RDC_InventoryCoreMetrics_Zip_sfh.csv",
                                  source = 'Realtor', geo_filter_values = 'all')
 
-realtor_core_inventory_mf = Property_Input(path = "data/RDC_InventoryCoreMetrics_Zip_cth.csv",
+realtor_core_inventory_mf = Property_Input(path = "data/Realtor/RDC_InventoryCoreMetrics_Zip_cth.csv",
                                  source = 'Realtor', geo_filter_values = 'all')

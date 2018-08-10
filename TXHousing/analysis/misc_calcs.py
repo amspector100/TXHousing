@@ -1,7 +1,6 @@
 """Miscellaneous calculations"""
 
 import numpy as np
-import pandas as pd
 import geopandas as gpd
 from .. import utilities
 from ..data_processing import boundaries, zoning

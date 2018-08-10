@@ -275,7 +275,10 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">gdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_external_gdf</span><span class="p">(</span><span class="n">gdf</span><span class="p">,</span> <span class="n">geometry_column</span> <span class="o">=</span> <span class="n">geometry_column</span><span class="p">)</span>
+        <span class="c1"># If the user is passing in a spatial index, do not process the data because this will cause index errors</span>
+        <span class="k">if</span> <span class="s1">&#39;points_spatial_index&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">or</span> <span class="s1">&#39;small_points_spatial_index&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">gdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_external_gdf</span><span class="p">(</span><span class="n">gdf</span><span class="p">,</span> <span class="n">geometry_column</span> <span class="o">=</span> <span class="n">geometry_column</span><span class="p">)</span>
+
         <span class="n">geometry_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_of_external_gdf</span><span class="p">(</span><span class="n">gdf</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">geometry_type</span> <span class="o">==</span> <span class="s1">&#39;Polygon&#39;</span><span class="p">:</span>
@@ -338,11 +341,12 @@
 
 
 <div class="viewcode-block" id="ZipBoundaries"><a class="viewcode-back" href="../../../data_processing.html#TXHousing.data_processing.boundaries.ZipBoundaries">[docs]</a><span class="k">class</span> <span class="nc">ZipBoundaries</span><span class="p">(</span><span class="n">Boundaries</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Class for Zipcode Boundaries Data, wraps Boundaries class.</span>
+    <span class="sd">&quot;&quot;&quot; Class for Zipcode Boundaries Data, wraps Boundaries class. You cannot pass subset_by or subset if you pass the</span>
+<span class="sd">    ziplist parameter, but otherwise all the init parameters are the same.</span>
 
 <span class="sd">     :param ziplist: A list of zipcodes to subset to.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ziplist</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounding_counties</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounding_polygon</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ziplist</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounding_counties</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounding_polygon</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># Put zips as strings</span>
         <span class="k">if</span> <span class="n">ziplist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

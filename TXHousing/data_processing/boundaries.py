@@ -3,20 +3,20 @@ from ..utilities import simple, measurements, spatial_joins
 import geopandas as gpd
 import pandas as pd
 import warnings
-import shapely.geometry
 import os
 
 # One exception is that this is needed for utilities, so the places path is listed there.
 texas_places_path = measurements.texas_places_path
 
 # All other boundaries paths are listed here.
-csa_path = "data/cb_2017_us_csa_500k/cb_2017_us_csa_500k.shp"
-cbsa_path =  "data/cb_2017_us_cbsa_500k/cb_2017_us_cbsa_500k.shp"
-ua_path = "data/cb_2017_us_ua10_500k/cb_2017_us_ua10_500k.shp"
+csa_path = "data/Census/cb_2017_us_csa_500k/cb_2017_us_csa_500k.shp"
+cbsa_path =  "data/Census/cb_2017_us_cbsa_500k/cb_2017_us_cbsa_500k.shp"
+ua_path = "data/Census/cb_2017_us_ua10_500k/cb_2017_us_ua10_500k.shp"
 
-zip_boundaries_path = "data/cb_2017_us_zcta510_500k/cb_2017_us_zcta510_500k.shp"
-county_boundaries_path = "data/cb_2017_us_county_500k/cb_2017_us_county_500k.shp"
-texas_blocks_path = "data/ACS_2016_5YR_BG_48_TEXAS.gdb"
+zip_boundaries_path = "data/Census/cb_2017_us_zcta510_500k/cb_2017_us_zcta510_500k.shp"
+county_boundaries_path = "data/Census/cb_2017_us_county_500k/cb_2017_us_county_500k.shp"
+texas_blocks_path = "data/Census/ACS_2016_5YR_BG_48_TEXAS.gdb"
+zillow_nbhds_path = "data/Zillow/ZillowNeighborhoods-TX/ZillowNeighborhoods-TX.shp"
 
 # This is the percent of land in each block group that is zoned as residential land. The function below calculates it for
 # Austin and Dallas to improve accuracy of some population-based calculations.

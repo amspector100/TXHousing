@@ -89,6 +89,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-TXHousing.analysis.permit_graphs">permit_graphs module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-TXHousing.analysis.parcel_graphs">parcel_graphs module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-TXHousing.analysis.parcel_graphs">misc_calcs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-TXHousing.analysis.suburbs">suburbs module</a></li>
 </ul>
 </li>
 </ul>
@@ -390,9 +391,38 @@ the GeoJson object.</li>
 <span id="zoning-graphs-module"></span><h2>zoning_graphs module<a class="headerlink" href="#module-TXHousing.analysis.zoning_graphs" title="Permalink to this headline">¶</a></h2>
 <p>Graphs which mostly rely on zoning data</p>
 <dl class="function">
-<dt id="TXHousing.analysis.zoning_graphs.plot_broad_zones_dallas">
-<code class="descclassname">TXHousing.analysis.zoning_graphs.</code><code class="descname">plot_broad_zones_dallas</code><span class="sig-paren">(</span><em>number_zones=100000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/zoning_graphs.html#plot_broad_zones_dallas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.zoning_graphs.plot_broad_zones_dallas" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots an actual map of the closest broad_zones to the Dallas core</p>
+<dt id="TXHousing.analysis.zoning_graphs.add_counties">
+<code class="descclassname">TXHousing.analysis.zoning_graphs.</code><code class="descname">add_counties</code><span class="sig-paren">(</span><em>ax</em>, <em>county_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/zoning_graphs.html#add_counties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.zoning_graphs.add_counties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a matplotlib axis, adds texas county outlines to it</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.analysis.zoning_graphs.map_broad_zones">
+<code class="descclassname">TXHousing.analysis.zoning_graphs.</code><code class="descname">map_broad_zones</code><span class="sig-paren">(</span><em>data</em>, <em>county_list</em>, <em>name</em>, <em>minlat</em>, <em>maxlat</em>, <em>minlong</em>, <em>maxlong</em>, <em>save_path</em>, <em>colordic=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/zoning_graphs.html#map_broad_zones"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.zoning_graphs.map_broad_zones" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots an actual map of broad_zones in a data source within the lat/long bounds. If you want to do this for Austin
+or Dallas, just use the map_broad_zones_dallas_austin wrapper.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> – A gdf including a geometry and base_zone column.</li>
+<li><strong>county_list</strong> – A list of county outlines to plot on the data.</li>
+<li><strong>name</strong> – A name to be used in titling the egraph.</li>
+<li><strong>maxlat</strong><strong>, </strong><strong>minlong</strong><strong>, </strong><strong>maxlong</strong> (<em>minlat</em><em>,</em>) – Bounds of the graph</li>
+<li><strong>save_path</strong> – A path at which to save the map.</li>
+<li><strong>colordic</strong> – Dictionary which maps broad_zones to colors.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.analysis.zoning_graphs.map_broad_zones_dallas_austin">
+<code class="descclassname">TXHousing.analysis.zoning_graphs.</code><code class="descname">map_broad_zones_dallas_austin</code><span class="sig-paren">(</span><em>plot_austin=True</em>, <em>plot_dallas=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/zoning_graphs.html#map_broad_zones_dallas_austin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.zoning_graphs.map_broad_zones_dallas_austin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for map_broad_zones, just plots them around austin/dallas.</p>
 </dd></dl>
 
 <dl class="function">
@@ -415,6 +445,12 @@ the GeoJson object.</li>
 includes areas zoned as non-single family, which we might want to exclude in the future.</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="TXHousing.analysis.zoning_graphs.plot_zone_income_histogram">
+<code class="descclassname">TXHousing.analysis.zoning_graphs.</code><code class="descname">plot_zone_income_histogram</code><span class="sig-paren">(</span><em>save_path='Figures/Zoning/income_housing_typology.svg'</em>, <em>cache_path='shared_data/calculations/zoning_income_data.csv'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/zoning_graphs.html#plot_zone_income_histogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.zoning_graphs.plot_zone_income_histogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the distribution of incomes conditional on broad zones in Austin and Dallas</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-TXHousing.analysis.permit_graphs">
 <span id="permit-graphs-module"></span><h2>permit_graphs module<a class="headerlink" href="#module-TXHousing.analysis.permit_graphs" title="Permalink to this headline">¶</a></h2>
@@ -435,65 +471,79 @@ of the zipcode.</p>
 </div>
 <div class="section" id="module-TXHousing.analysis.parcel_graphs">
 <span id="parcel-graphs-module"></span><h2>parcel_graphs module<a class="headerlink" href="#module-TXHousing.analysis.parcel_graphs" title="Permalink to this headline">¶</a></h2>
-<p>Graphs which mostly rely on parcel data</p>
+<p>Graphs which mostly rely on municipal parcel data. Note that all of these graphs rely on the cached parcel data in
+csv format, not the actual parcel data, which is processed and cached in the data_processing package.</p>
 <dl class="function">
-<dt id="TXHousing.analysis.parcel_graphs.get_parcel_feature_outfile">
-<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">get_parcel_feature_outfile</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#get_parcel_feature_outfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.parcel_graphs.get_parcel_feature_outfile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Path for caches used in plot_percent_undeveloped</p>
+<dt id="TXHousing.analysis.parcel_graphs.calc_parking_costs">
+<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">calc_parking_costs</code><span class="sig-paren">(</span><em>save_path='Figures/property_value_histogram.svg'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#calc_parking_costs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.parcel_graphs.calc_parking_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates average land costs within 1 mile of the city center in Austin, Dallas, Houston. Relies on cached
+municipal parcel data. These are a bit conservative figures because they use lot size instead of base area of the
+actual building.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.analysis.parcel_graphs.plot_percent_undeveloped">
+<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">plot_percent_undeveloped</code><span class="sig-paren">(</span><em>save_path='Figures/Zoning/percent_undeveloped.svg'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#plot_percent_undeveloped"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.parcel_graphs.plot_percent_undeveloped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the percent of land which is undeveloped (using base_area features and area calculations) conditional
+on distance from city center and broad_zone. Based on cached municipal parcel data.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="TXHousing.analysis.parcel_graphs.plot_singlefamily_lotsizes">
-<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">plot_singlefamily_lotsizes</code><span class="sig-paren">(</span><em>calculate=False</em>, <em>cache_path='data/caches/Cached_Lotsize_Data_v2.csv'</em>, <em>save_path='Figures/Bucket 2/sf_lotsizes.svg'</em>, <em>width=10</em>, <em>height=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#plot_singlefamily_lotsizes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.parcel_graphs.plot_singlefamily_lotsizes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots the actual average single family lotsize by distance from city center in the TX Triangle, calculated from
-parcel data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>calculate</strong> – If true, recalculate the averages. If not, will try to read the data from the cache_path.</li>
-<li><strong>cache_path</strong> – The location at which to save a csv of cached averages.</li>
-<li><strong>save_path</strong> – The location at which to save the final graph.</li>
-<li><strong>width</strong> – The width of the final graph, in inches or pixels (depends on file format)</li>
-<li><strong>height</strong> – The height of the final graph, in inches or pixels (depends on the file format)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
+<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">plot_singlefamily_lotsizes</code><span class="sig-paren">(</span><em>save_path='Figures/Zoning/sf_lotsizes.svg'</em>, <em>width=10</em>, <em>height=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#plot_singlefamily_lotsizes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.parcel_graphs.plot_singlefamily_lotsizes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots average lotsizes of single family homes in Houston conditional on distance from city center. This uses
+cached municipal parcel data.</p>
 </dd></dl>
 
 </div>
 <div class="section" id="module-TXHousing.analysis.parcel_graphs">
 <span id="misc-calcs-module"></span><h2>misc_calcs module<a class="headerlink" href="#module-TXHousing.analysis.parcel_graphs" title="Permalink to this headline">¶</a></h2>
-<p>Graphs which mostly rely on parcel data</p>
+<p>Graphs which mostly rely on municipal parcel data. Note that all of these graphs rely on the cached parcel data in
+csv format, not the actual parcel data, which is processed and cached in the data_processing package.</p>
 <dl class="function">
 <dt>
-<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">get_parcel_feature_outfile</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#get_parcel_feature_outfile"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Path for caches used in plot_percent_undeveloped</p>
+<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">calc_parking_costs</code><span class="sig-paren">(</span><em>save_path='Figures/property_value_histogram.svg'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#calc_parking_costs"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculates average land costs within 1 mile of the city center in Austin, Dallas, Houston. Relies on cached
+municipal parcel data. These are a bit conservative figures because they use lot size instead of base area of the
+actual building.</p>
 </dd></dl>
 
 <dl class="function">
 <dt>
-<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">plot_singlefamily_lotsizes</code><span class="sig-paren">(</span><em>calculate=False</em>, <em>cache_path='data/caches/Cached_Lotsize_Data_v2.csv'</em>, <em>save_path='Figures/Bucket 2/sf_lotsizes.svg'</em>, <em>width=10</em>, <em>height=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#plot_singlefamily_lotsizes"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Plots the actual average single family lotsize by distance from city center in the TX Triangle, calculated from
-parcel data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>calculate</strong> – If true, recalculate the averages. If not, will try to read the data from the cache_path.</li>
-<li><strong>cache_path</strong> – The location at which to save a csv of cached averages.</li>
-<li><strong>save_path</strong> – The location at which to save the final graph.</li>
-<li><strong>width</strong> – The width of the final graph, in inches or pixels (depends on file format)</li>
-<li><strong>height</strong> – The height of the final graph, in inches or pixels (depends on the file format)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
+<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">plot_percent_undeveloped</code><span class="sig-paren">(</span><em>save_path='Figures/Zoning/percent_undeveloped.svg'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#plot_percent_undeveloped"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculates the percent of land which is undeveloped (using base_area features and area calculations) conditional
+on distance from city center and broad_zone. Based on cached municipal parcel data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="descclassname">TXHousing.analysis.parcel_graphs.</code><code class="descname">plot_singlefamily_lotsizes</code><span class="sig-paren">(</span><em>save_path='Figures/Zoning/sf_lotsizes.svg'</em>, <em>width=10</em>, <em>height=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/parcel_graphs.html#plot_singlefamily_lotsizes"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Plots average lotsizes of single family homes in Houston conditional on distance from city center. This uses
+cached municipal parcel data.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-TXHousing.analysis.suburbs">
+<span id="suburbs-module"></span><h2>suburbs module<a class="headerlink" href="#module-TXHousing.analysis.suburbs" title="Permalink to this headline">¶</a></h2>
+<p>This file contains most of the graphing for the suburbs analysis. It does not rely on raw parcel data, but the
+cached versions instead.</p>
+<dl class="function">
+<dt id="TXHousing.analysis.suburbs.analyze_land_use_by_metro">
+<code class="descclassname">TXHousing.analysis.suburbs.</code><code class="descname">analyze_land_use_by_metro</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/suburbs.html#analyze_land_use_by_metro"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.suburbs.analyze_land_use_by_metro" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates mean and median lot size as well as the land use by municipality around Austin, Dallas, or Houston,
+then caches them in shared_data/calculations.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.analysis.suburbs.suburbs_choropleth">
+<code class="descclassname">TXHousing.analysis.suburbs.</code><code class="descname">suburbs_choropleth</code><span class="sig-paren">(</span><em>name, zoning_input, colors=['purple', 'red', 'orange', 'yellow', 'white'], method='linear'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/suburbs.html#suburbs_choropleth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.suburbs.suburbs_choropleth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Folium choropleths of land use, lotsize, and more by municipality in the suburbs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="TXHousing.analysis.suburbs.texas_job_centers">
+<code class="descclassname">TXHousing.analysis.suburbs.</code><code class="descname">texas_job_centers</code><span class="sig-paren">(</span><em>num_polygons=4000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TXHousing/analysis/suburbs.html#texas_job_centers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TXHousing.analysis.suburbs.texas_job_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Choropleth of the percent of workers who work in their place of residence for Austin, Dallas, Houston</p>
 </dd></dl>
 
 </div>
