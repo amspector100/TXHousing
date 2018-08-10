@@ -50,9 +50,8 @@ project. This is currently unavailable but hopefully will become available soon.
 After cloning the package and setting up the data, you should first run the two test modules, test_processing and 
 test_utilities. These are **not** comprehensive testing suites but will let you know if anything is going
 catastrophically inside the utilities or data processing subpackages. To run them, you should simply navigate to the 
-test directory inside the repo and run:
-
-python 
+test directory inside the repo and run the files. (Possibly to avoid import errors you may have to add a couple 
+of paths to sys - this will be bug tested in the future.)
 
 If you have not downloaded the data directory, you will need to generate a couple of data caches before running analysis.
 You can generate them by running the R/tarrant-parcel-processing.R script and the generate_caches.py script, in that order. 
