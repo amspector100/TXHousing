@@ -1,8 +1,9 @@
 """Tests the data_processing package."""
 
 import os
+
 from TXHousing.data_processing import zoning, property, parcel, permit, boundaries
-import TXHousing.chdir # This changes the directory to the parent directory
+import TXhousing.chdir
 
 import unittest
 import warnings
@@ -46,9 +47,9 @@ class TestZoningProcessing(unittest.TestCase):
         self.assertTrue(os.path.exists(zoning.dallas_historic_subdistricts_path),
                         'Dallas historic subdistricts data is not in the data directory. Download it from https://gis.dallascityhall.com/shapefileDownload.aspx')
         self.assertTrue(os.path.exists(zoning.houston_historic_districts_path),
-                        'Houston historic districts data is not in the data directory. It is currently unavailable online. Email the package maintainer to get it.')
+                        'Houston historic districts data is not in the data directory. It is currently unavailable online, but is part of the shared_data repository.')
         self.assertTrue(os.path.exists(zoning.houston_historic_landmarks_path),
-                        'Houston historic landmarks data is not in the data directory. It is currently unavailable online. Email the package maintainer to get it.')
+                        'Houston historic landmarks data is not in the data directory. It is currently unavailable online, but is part of the shared_data repository.')
 
 
     # Test processing function
