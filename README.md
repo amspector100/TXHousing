@@ -1,6 +1,6 @@
 # TXHousing
 
-Analysis of housing regulations in Texas. Hosted on this repo in the aim of making the research somewhat reproducible. 
+Analysis of housing regulations in Texas, hosted on this repo in the aim of making the research reproducible. 
 This repo is mostly finished but still under a bit of development. If you have questions, check out the 
 documentation [linked here](https://amspector100.github.io/TXHousing) or email other questions to amspector100@gmail.com.
 
@@ -12,12 +12,13 @@ which help streamline the code in the analysis package. For documentation of the
 [amspector100.github.io/TXHousing](https://amspector100.github.io/TXHousing). 
 
 We did use some R code, which lives in the R subdirectory. It's very simple, so it's not packaged and there's no official 
-documentation site - but there might be in the future!
+documentation site - but there might be in the future! (It might also eventually migrate to Python).
 
 ## General Requirements
 
-We're working on setting up a more official list of software requirements, but this project basically draws upon most of 
-the geospatial stack in R/Python. 
+This project basically draws upon most of the geospatial stack in R/Python. For a more specific list of requirements,
+see the requirements.txt file within the TXHousing subdirectory and the (relatively primitive) DESCRIPTION file in the
+R subdirectory.
 
 ## Setup & Steps to Reproduce
 
