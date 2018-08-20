@@ -1,0 +1,29 @@
+Package: TXHousing
+Type: Package
+Title: Texas Housing R Code
+Version: 0.1.0
+Author: Asher Spector and Connor Harris
+Maintainer: Asher Spector <amspector100@gmail.com>
+Description: A couple of basic scripts which take advantages of R's geospatial stack
+to generate graphs and caches for the project. These may eventually be migrated to
+Python - currently this is not really a full package. 
+License: CC0
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 2.10)
+Imports:
+  tidyverse,
+  ggplot2,
+  data.table,
+  forcats,
+  readr,
+  RColorBrewer,
+  sf,
+  broom,
+  maptools,
+  bit64,
+  geosphere,
+  stringr
+  
+
+
